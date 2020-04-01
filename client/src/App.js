@@ -6,6 +6,7 @@ import 'bootstrap/dist/js/bootstrap.bundle';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import TestPage from './pages/TestPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 class App extends Component {
   render() {
@@ -17,10 +18,12 @@ class App extends Component {
           <div id="page-content-wrapper">
             <Navbar />
 
+            <div class="container-fluid mt-4">
             <Switch>
               <Route path="/" component={TestPage} exact />
+                <Route component={NotFoundPage} />
             </Switch>
-
+            </div>
           </div>
         </div>
       </Router>
