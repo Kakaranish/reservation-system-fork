@@ -1,0 +1,71 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700&display=swap");
+
+#sidebar-title {
+  font-family: "Source Sans Pro", sans-serif;
+  color: white;
+  letter-spacing: 1.7px;
+  font-weight: bold;
+}
+
+.icon {
+  max-width: 19px;
+  margin-right: 8px;
+  filter: invert(0.8);
+}
+
+.sidebar {
+  background: #43425d;
+}
+
+.sidebar-item {
+  color: rgb(187, 187, 187);
+  background: #43425d;
+}
+
+.sidebar-item:hover {
+  color: white;
+  background: #4E4D6E;
+}
+
+.sidebar-item:hover > .icon {
+  filter:invert(1);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+  min-height: 100vh;
+  margin-left: -15rem;
+  -webkit-transition: margin 0.25s ease-out;
+  -moz-transition: margin 0.25s ease-out;
+  -o-transition: margin 0.25s ease-out;
+  transition: margin 0.25s ease-out;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: normal;
+}
+
+#sidebar-wrapper .sidebar-heading {
+  padding: 0.875rem 1.25rem;
+  font-size: 1.2rem;
+}
+
+#sidebar-wrapper .list-group {
+  width: 15rem;
+}
+
+@media (min-width: 768px) {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+
+  #page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: -15rem;
+  }
+}
