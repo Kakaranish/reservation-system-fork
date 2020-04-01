@@ -9,6 +9,7 @@ import reservationsIcon from '../assets/icons/sidebar/reservations.svg';
 import roomsIcon from '../assets/icons/sidebar/rooms.svg';
 import settingsIcon from '../assets/icons/sidebar/settings.svg';
 import helpIcon from '../assets/icons/sidebar/help.svg';
+import RoomFilterPage from "../pages/RoomFilterPage";
 
 const Sidebar = () => {
     return (
@@ -21,20 +22,19 @@ const Sidebar = () => {
             </div>
             <div className="list-group list-group-flush">
 
-                <Link to={TestPage}>
+                <Link to="/">
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={homeIcon} className="icon" />
                         <>Dashboard</>
                     </div>
                 </Link>
 
-                <Link to={TestPage}>
+                <Link to="/filter-rooms" >
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={roomsIcon} className="icon" />
                         <>Conference Rooms</>
                     </div>
                 </Link>
-
 
                 <Link to={TestPage}>
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
