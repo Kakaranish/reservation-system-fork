@@ -1,0 +1,78 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;700&display=swap");
+
+.login,
+.image {
+  min-height: 100vh;
+}
+
+#signin-container {
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 400;
+}
+
+#left-side-img {
+  background-image: url("../images/login-page-bg.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+#title {
+  font-family: "Source Sans Pro", sans-serif;
+  letter-spacing: 2.5px;
+  color: #43425d;
+  text-align: center;
+  font-weight: bold;
+}
+
+#subtitle {
+  text-align: center;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  color: rgb(173, 173, 173);
+}
+
+input[type="text"],
+select.form-control {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #e7e7e7;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+input[type="text"]:focus,
+select.form-control:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+input[type="password"],
+select.form-control {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #e7e7e7;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+input[type="password"]:focus,
+select.form-control:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#signin-button {
+  background-color: #43425d;
+  color: white;
+}
+
+#singup-button {
+  font-weight: 400;
+  background-color: white;  
+  border: 1px solid #43425d;
+  color: #43425d;
+
+}
