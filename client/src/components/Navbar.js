@@ -7,7 +7,7 @@ import "../assets/css/Navbar.css";
 
 const toggleMenu = event => {
   event.preventDefault();
-  $("#wrapper").toggleclassName("toggled");
+  $("#wrapper").toggleClass("toggled");
 }
 
 const Navbar = () => {

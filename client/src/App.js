@@ -8,17 +8,21 @@ import Navbar from './components/Navbar';
 import TestPage from './pages/TestPage';
 import RoomFilterPage from './pages/RoomFilterPage';
 import NotFoundPage from './pages/NotFoundPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 class App extends Component {
   render() {
     return (
       <Router>
+        <Route path="/login" component={LoginPage} />
+
+        <Route path="/register" component={RegisterPage} />
+
         <div class="d-flex" id="wrapper">
           <Sidebar />
-
           <div id="page-content-wrapper">
             <Navbar />
-
             <div class="container-fluid mt-4">
               <Switch>
                 <Route path="/" component={TestPage} exact />
