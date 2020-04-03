@@ -10,14 +10,15 @@ import RoomFilterPage from './pages/RoomFilterPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import RoomsPage from "./pages/RoomsPage";
 
 class App extends Component {
   render() {
     return (
       <Router>
-        <Route path="/login" component={LoginPage} />
+        {/* <Route path="/login" component={LoginPage} />
 
-        <Route path="/register" component={RegisterPage} />
+        <Route path="/register" component={RegisterPage} /> */}
 
         <div class="d-flex" id="wrapper">
           <Sidebar />
@@ -27,6 +28,7 @@ class App extends Component {
               <Switch>
                 <Route path="/" component={TestPage} exact />
                 <Route path="/filter-rooms" component={RoomFilterPage} />
+                <Route path="/rooms" component={RoomsPage} />
                 <Route component={NotFoundPage} />
               </Switch>
             </div>

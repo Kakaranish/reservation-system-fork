@@ -13,11 +13,12 @@ const dbName = 'reservation-system';
 const resSystemDbClient = dbClient();
 
 router.get('/rooms', async (req, res) => {
+    console.log(req.query);
     const startDateMs = Date.parse(req.body.startDate);
     const startDate = startDateMs ? new Date(startDateMs) : null;
     const endDateMs = Date.parse(req.body.endDate);
     const endDate = endDateMs ? new Date(endDateMs) : null;
-
+    
     let errors = [];
     if (!startDate) errors.push(`'startDate' is not ISO 8601 datetime format.`);
     if (!endDate) errors.push(`'endDate' is not ISO 8601 datetime format.`);
@@ -78,8 +79,8 @@ router.post('/create-room', async (req, res) => {
             capacity: req.body.capacity,
             pricePerDay: req.body.pricePerDay,
             description: req.body.description,
-            amenities: req.body.amenities ? JSON.parse(req.body.amenities) : [],
-            availability: req.body.availability ? JSON.parse(req.body.availability) : []
+            amenities: req.body.amenities,
+            availability: req.body.availability
         };
         const processingErrors = processRoomJson(roomJson);
         if (processingErrors.length) {
@@ -88,28 +89,29 @@ router.post('/create-room', async (req, res) => {
             })
         };
 
-        if (!req.files) {
-            return res.status(400).json({
-                errors: ["No file uploaded"]
-            });
-        }
-        const file = req.files.file;
-        const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/")
-        const newFilename = uuidv4() + path.extname(file.name);
+        // if (!req.files) {
+        //     return res.status(400).json({
+        //         errors: ["No file uploaded"]
+        //     });
+        // }
 
-        file.mv(`${uploadDirPath}/${newFilename}`, error => {
-            if (error) {
-                console.log(error)
-                return res.status(500).json({
-                    message: `Error: ${error}`
-                });
-            }
-        });
+        // const file = req.files.file;
+        // const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/")
+        // const newFilename = uuidv4() + path.extname(file.name);
 
-        roomJson.photo = `/uploads/${newFilename}`;
+        // file.mv(`${uploadDirPath}/${newFilename}`, error => {
+        //     if (error) {
+        //         console.log(error)
+        //         return res.status(500).json({
+        //             message: `Error: ${error}`
+        //         });
+        //     }
+        // });
+
+        // roomJson.photo = `/uploads/${newFilename}`;
 
         try {
-            const insertedId = await resSystemDbClient.withDb(dbName, async db => {
+            const insertedId = await resSystemDbClient.withDb(async db => {
                 return await db.collection('rooms').insertOne(roomJson).then(result => {
                     return result.insertedId;
                 });

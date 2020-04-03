@@ -45,6 +45,11 @@ const RegisterPage = () => {
                                             <div className="col-12 mt-3">
                                                 <input type="password" name="password" className="form-control" id="password" placeholder="Password..." />
                                             </div>
+
+
+                                            <div className="mt-3">
+                                                <input type="password" name="confirmedPassword" className="form-control" id="confirmedPassword" placeholder="Confirm Password..." />
+                                            </div>
                                         </div>
 
                                         <div class="custom-control custom-checkbox mt-4">

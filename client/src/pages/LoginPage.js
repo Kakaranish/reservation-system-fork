@@ -36,10 +36,6 @@ const LoginPage = () => {
                                             <input type="password" name="password" className="form-control" id="password" placeholder="Password..." />
                                         </div>
 
-                                        <div className="mt-4">
-                                            <input type="password" name="confirmedPassword" className="form-control" id="confirmedPassword" placeholder="Confirm Password..." />
-                                        </div>
-
                                         <div className="row">
                                             <div className="col-12 col-md-6">
                                                 <button className="btn btn-lg btn-block btn-login text-uppercase mb-2 mt-5 primary-btn" type="submit">

@@ -10,6 +10,7 @@ require('./auth');
 
 const app = express();
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(fileUpload());
 app.use('/', RoomRouter);

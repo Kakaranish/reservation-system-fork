@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
 import { Range } from 'rc-slider';
 import 'rc-slider/assets/index.css';
-const RoomFilterPage = () => {
+import QueryString from "query-string";
+import moment from 'moment';
 
+const RoomFilterPage = (props) => {
     const [dateInterval, setDateInterval] = useState({
         from: new Date(new Date().setUTCHours(0, 0, 0, 0)),
         to: new Date(new Date().setUTCHours(0, 0, 0, 0))
@@ -52,6 +55,7 @@ const RoomFilterPage = () => {
         });
     }
 
+
     return (
         <div className="px-3">
             <div className="row">
@@ -96,9 +100,20 @@ const RoomFilterPage = () => {
                 </div>
             </div>
 
+
             <div className="row mt-md-5 mt-2">
                 <div className="offset-3 col-6 ">
-                    <button type="button" class="btn btn-primary btn-lg btn-block">Search Rooms!</button>
+                    <Link to={{
+                        pathname: "rooms",
+                        search: QueryString.stringify({
+                            fromDate: moment(dateInterval.from).format("DD-MM-YYYY"),
+                            toDate: moment(dateInterval.to).format("DD-MM-YYYY"),
+                            fromPrice: priceInterval.start,
+                            toPrice: priceInterval.end
+                        })
+                    }}>
+                        <button type="button" class="btn btn-primary btn-lg btn-block">Search Rooms!</button>
+                    </Link>
                 </div>
             </div>
         </div >
