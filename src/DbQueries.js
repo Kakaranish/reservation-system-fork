@@ -28,20 +28,20 @@ const userWithIdExists = async (db, userId) => {
  * @param {ObjectID} 
  */
 const otherReservationOnGivenRoomAndDateIntervalExists = async (db, roomId, dateInterval) => {
-    const startDate = dateInterval.startDate;
-    const endDate = dateInterval.endDate;
+    const fromDate = dateInterval.fromDate;
+    const toDate = dateInterval.toDate;
     const reservation = await db.collection('reservations').findOne({
         "roomId": roomId,
         $or: [
             {
                 $and: [
-                    { "startDate": { $gte: startDate } },
-                    { "startDate": { $lte: endDate } }
+                    { "fromDate": { $gte: fromDate } },
+                    { "toDate": { $lte: toDate } }
                 ]
             },
             {
-                "startDate": { $lte: startDate },
-                "endDate": { $gte: startDate }
+                "fromDate": { $lte: fromDate },
+                "toDate": { $gte: fromDate }
             }
         ]
     });
@@ -67,9 +67,14 @@ const getRoomsIds = async db => {
     return (await roomsCursor.toArray()).map(x => x["_id"]);
 };
 
-const getAvailableRoomsIds = async (db, dateInterval) => {
+const getAvailableRoomsIds = async (db, searchData) => {
     const roomIds = await getRoomsIds(db);
+    const dateInterval = {
+        fromDate: searchData.fromDate,
+        toDate: searchData.toDate
+    };
     let availableRooms = [];
+
     await Promise.all(roomIds.map(async (roomId) => {
         const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists(db, roomId, dateInterval);
         if (isAvailable) availableRooms.push(roomId);

@@ -4,35 +4,42 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import dbClient from "../DbClient";
 import passport from "passport";
+import moment from "moment";
 
 require('../auth');
 const dbActions = require('../DbQueries');
 const router = express.Router();
-const dbName = 'reservation-system';
 
 const resSystemDbClient = dbClient();
 
+/*
+    ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*/
 router.get('/rooms', async (req, res) => {
-    console.log(req.query);
-    const startDateMs = Date.parse(req.body.startDate);
-    const startDate = startDateMs ? new Date(startDateMs) : null;
-    const endDateMs = Date.parse(req.body.endDate);
-    const endDate = endDateMs ? new Date(endDateMs) : null;
-    
-    let errors = [];
-    if (!startDate) errors.push(`'startDate' is not ISO 8601 datetime format.`);
-    if (!endDate) errors.push(`'endDate' is not ISO 8601 datetime format.`);
+    const errors = [];
+    const fromDate = moment.utc(req.query.fromDate, moment.ISO_8601, true);
+    if(!fromDate.isValid()) errors.push(`'fromDate' is not ISO 8601 datetime format.`);
+    const toDate = moment.utc(req.query.toDate, moment.ISO_8601, true);
+    if(!toDate.isValid()) errors.push(`'toDate' is not ISO 8601 datetime format.`);
+    const fromPrice = preparePrice(req.query.fromPrice);
+    if(!fromPrice) errors.push(`'fromPrice' is not valid float number.`);
+    const toPrice = preparePrice(req.query.toPrice);
+    if(!toPrice) errors.push(`'toPrice' is not valid float number.`);
+
     if (errors.length > 0) return res.json({
         "errors": errors
     });
 
-    const dateInterval = {
-        "startDate": startDate,
-        "endDate": endDate
+    const searchData = {
+        fromDate: fromDate,
+        toDate: toDate,
+        fromPrice: fromPrice,
+        toPrice: toPrice
     };
+
     try {
         const dbResult = await resSystemDbClient.withDb(async db => {
-            const availableRoomsIds = await dbActions.getAvailableRoomsIds(db, dateInterval);
+            const availableRoomsIds = await dbActions.getAvailableRoomsIds(db, searchData);
             const roomPreviews = await dbActions.getRoomPreviews(db, availableRoomsIds);
             return roomPreviews;
         });
@@ -143,6 +150,13 @@ const processRoomJson = roomJson => {
     if (!roomJson.availability.length) errors.push("Room must be avaialble for at least one DoW.")
 
     return errors;
+}
+
+const preparePrice = value => {
+    if (!value) return null;
+    else if (typeof (value) === 'number') return value.toFixed(2);
+    else if (/\d+(\.\d{1,2})?$/.test(value)) return parseFloat(value);
+    else return null;
 }
 
 export default router;

@@ -55,7 +55,6 @@ const RoomFilterPage = (props) => {
         });
     }
 
-
     return (
         <div className="px-3">
             <div className="row">
@@ -99,7 +98,6 @@ const RoomFilterPage = (props) => {
                     {priceInterval.end} PLN
                 </div>
             </div>
-
 
             <div className="row mt-md-5 mt-2">
                 <div className="offset-3 col-6 ">
