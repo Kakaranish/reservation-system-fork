@@ -20,11 +20,11 @@ class App extends Component {
 
         <Route path="/register" component={RegisterPage} /> */}
 
-        <div class="d-flex" id="wrapper">
+        <div className="d-flex" id="wrapper">
           <Sidebar />
           <div id="page-content-wrapper">
             <Navbar />
-            <div class="container-fluid mt-4">
+            <div className="container-fluid mt-4">
               <Switch>
                 <Route path="/" component={TestPage} exact />
                 <Route path="/filter-rooms" component={RoomFilterPage} />

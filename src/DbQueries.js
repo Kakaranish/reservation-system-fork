@@ -94,7 +94,7 @@ const getRoomPreview = async (db, roomId) => {
         location: room.location,
         capacity: room.capacity,
         photo: room.photo,
-        pricePerday: room.pricePerDay,
+        pricePerDay: room.pricePerDay,
     }
     return roomPreview;
 }

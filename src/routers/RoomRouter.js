@@ -43,8 +43,8 @@ router.get('/rooms', async (req, res) => {
             const roomPreviews = await dbActions.getRoomPreviews(db, availableRoomsIds);
             return roomPreviews;
         });
-        res.status(500).json({
-            "roomIds": dbResult
+        res.status(200).json({
+            "rooms": dbResult
         });
     } catch (error) {
         console.log(`Error: ${error}`);
