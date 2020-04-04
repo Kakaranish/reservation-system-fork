@@ -1,5 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;700&display=swap");
+
 #content-container {
-  background: #F0F0F7;
+  background: #f0f0f7;
+}
+
+.global-font {
+  font-family: "Source Sans Pro", sans-serif;
+}
+
+.title-color {
+  color: #43425d;
 }
 
 .primary-btn {

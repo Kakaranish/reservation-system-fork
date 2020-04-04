@@ -19,6 +19,7 @@
     "query-string": "^6.11.1",
     "rc-slider": "^9.2.4",
     "react": "^16.13.1",
+    "react-big-calendar": "^0.24.1",
     "react-bootstrap": "^1.0.0",
     "react-bootstrap-sidebar": "0.0.1",
     "react-calendar": "^3.0.1",

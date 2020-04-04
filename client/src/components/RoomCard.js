@@ -63,7 +63,7 @@ const RoomCard = ({ roomData }) => {
                             {
                                 roomData.amenities.sort().map(amenity => {
                                     let img_src = images("./" + mapAmenityNameToAssetFilename(amenity));
-                                    return <img className="room-card-amenity" src={img_src} alt={amenity} key={roomData["_id"]} />
+                                    return <img className="room-card-amenity" src={img_src} alt={amenity} key={`${amenity}-${roomData["_id"]}`} />
                                 })
                             }
                         </div>

@@ -15,8 +15,11 @@ const ImageUploader = (params) => {
 
     const onChange = async event => {
         const file = event.target.files[0];
+        if (!file || !isFileImageType(file)) {
+            setPreviewPath(null);
+            return;
+        }
         const path = URL.createObjectURL(file);
-        console.log(path);
         setPreviewPath(path);
         handleFileChange(file);
     };
@@ -28,11 +31,12 @@ const ImageUploader = (params) => {
                 <label className="custom-file-label" htmlFor="uploadedFile">Choose file</label>
             </div>
 
-            {!previewPath
-                ? null
-                : <div className="text-center mt-4 mb-2">
-                    <img src={previewPath} className="img-fluid" />
-                </div>
+            {
+                !previewPath
+                    ? null
+                    : <div className="text-center mt-4 mb-2">
+                        <img src={previewPath} className="img-fluid" />
+                    </div>
             }
 
         </React.Fragment>

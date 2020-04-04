@@ -7,7 +7,7 @@ import 'rc-slider/assets/index.css';
 import QueryString from "query-string";
 import moment from 'moment';
 
-const RoomFilterPage = (props) => {
+const RoomFilterPage = () => {
     const [dateInterval, setDateInterval] = useState({
         from: new Date(new Date().setUTCHours(0, 0, 0, 0)),
         to: new Date(new Date().setUTCHours(0, 0, 0, 0))
@@ -69,7 +69,7 @@ const RoomFilterPage = (props) => {
                 </div>
                 <div className="col-lg-6">
                     <div className="row justify-content-center">
-                        <Calendar onChange={fromDateOnChange} value={dateInterval.from} />
+                        <Calendar onChange={fromDateOnChange} value={dateInterval.from} minDate={new Date()} maxDate={moment().add(6, 'months').toDate()} />
                     </div>
                     <div className="row justify-content-center">
                         <b>From</b>
@@ -78,7 +78,7 @@ const RoomFilterPage = (props) => {
 
                 <div className="col-lg-6">
                     <div className="row justify-content-center">
-                        <Calendar onChange={toDateOnChange} value={dateInterval.to} />
+                        <Calendar onChange={toDateOnChange} value={dateInterval.to} minDate={new Date()} maxDate={moment().add(6, 'months').toDate()}  />
                     </div>
                     <div className="row justify-content-center">
                         <b>To</b>
