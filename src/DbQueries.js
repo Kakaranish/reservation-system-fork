@@ -61,7 +61,7 @@ const getRoomsIds = async db => {
         capacity: 0,
         pricePerDay: 0,
         amenities: 0,
-        availability: 0,
+        dows: 0,
         photo: 0
     });
     return (await roomsCursor.toArray()).map(x => x["_id"]);
@@ -95,6 +95,7 @@ const getRoomPreview = async (db, roomId) => {
         capacity: room.capacity,
         photo: room.photo,
         pricePerDay: room.pricePerDay,
+        amenities: room.amenities
     }
     return roomPreview;
 }
