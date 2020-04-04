@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import queryString from "query-string";
 import moment from 'moment';
 import axios from "axios";
+import RoomCard from "../components/RoomCard";
 
 const resolveQueryParams = queryParams => {
 	let fromDate = moment.utc(queryParams.fromDate, "DD-MM-YYYY", true);
@@ -30,6 +31,7 @@ const RoomsPage = (props) => {
 
 	const [rooms, setRooms] = useState(null);
 	useEffect(() => {
+		const intervalLength = resolvedQueryParams.toDate.diff(resolvedQueryParams.fromDate, 'days');
 		const getRooms = async queryParams => {
 			const result = await axios.get('/rooms', {
 				params: {
@@ -39,8 +41,10 @@ const RoomsPage = (props) => {
 					toDate: queryParams.toDate.toISOString()
 				}
 			});
+
+			result.data.rooms.forEach(room =>
+				room.totalPrice = room.pricePerDay * intervalLength);
 			setRooms(result.data.rooms);
-			console.log(result.data);
 		};
 		getRooms(resolvedQueryParams);
 	}, []);
@@ -53,19 +57,13 @@ const RoomsPage = (props) => {
 			<p>From price: {resolvedQueryParams.fromPrice}</p>
 			<p>To price: {resolvedQueryParams.toPrice}</p>
 
-			{
-				!rooms
-					? null
-					: rooms.map(room => {
-						return (
-							<div style={{borderBottom: "1px solid red"}}>
-								<p>Name: {room.name}</p>
-								<p>Location: {room.location}</p>
-								<p>Price per day: {room.pricePerDay}</p>
-							</div>
-						);
-					})
-			}
+			<div className="row">
+				{
+					!rooms
+						? null
+						: rooms.map(roomData => <RoomCard key={roomData["_id"]} roomData={roomData} />)
+				}
+			</div>
 		</div>
 	);
 };
