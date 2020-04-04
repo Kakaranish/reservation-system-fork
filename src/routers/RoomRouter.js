@@ -145,7 +145,6 @@ router.post('/create-room', async (req, res) => {
 });
 
 const processRoomJson = roomJson => {
-    console.log(roomJson);
     let errors = [];
     if (!roomJson.name) errors.push("'name' is not provided");
     if (!roomJson.location) errors.push("'location' is not provided");

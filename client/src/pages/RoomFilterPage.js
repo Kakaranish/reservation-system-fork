@@ -56,26 +56,31 @@ const RoomFilterPage = (props) => {
     }
 
     return (
-        <div className="px-3">
+        <div>
             <div className="row">
                 <div className="col-12">
                     <h3>Set your preferences about conference rooms</h3>
                 </div>
             </div>
-            <div className="row mt-2">
+
+            <div className="row">
                 <div className="col-12">
                     <h4>When you need conference room?</h4>
                 </div>
                 <div className="col-lg-6">
-                    <Calendar onChange={fromDateOnChange} value={dateInterval.from} />
-                    <div className="text-center">
+                    <div className="row justify-content-center">
+                        <Calendar onChange={fromDateOnChange} value={dateInterval.from} />
+                    </div>
+                    <div className="row justify-content-center">
                         <b>From</b>
                     </div>
                 </div>
 
                 <div className="col-lg-6">
-                    <Calendar onChange={toDateOnChange} value={dateInterval.to} />
-                    <div className="text-center">
+                    <div className="row justify-content-center">
+                        <Calendar onChange={toDateOnChange} value={dateInterval.to} />
+                    </div>
+                    <div className="row justify-content-center">
                         <b>To</b>
                     </div>
                 </div>

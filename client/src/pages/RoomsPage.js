@@ -51,11 +51,8 @@ const RoomsPage = (props) => {
 
 	return (
 		<div>
-			<p>Rooms</p>
-			<p>From date: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")}</p>
-			<p>To date: {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</p>
-			<p>From price: {resolvedQueryParams.fromPrice}</p>
-			<p>To price: {resolvedQueryParams.toPrice}</p>
+			<p>From date: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} | To date: {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</p>
+			<p>From price: {resolvedQueryParams.fromPrice} | To price: {resolvedQueryParams.toPrice}</p>
 
 			<div className="row">
 				{
