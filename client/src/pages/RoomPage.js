@@ -3,32 +3,11 @@ import { ObjectID } from "mongodb";
 import axios from 'axios';
 import '../assets/css/RoomPage.css';
 import noImagePlaceholder from "../assets/icons/no-image.svg";
-import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from "moment";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import ReservationCalendar from "../components/ReservationCalendar";
 
 const images = require.context('../assets/images/amenities', true);
-
-moment.locale('ko', {
-    week: {
-        dow: 1,
-        doy: 1
-    }
-});
-const localizer = momentLocalizer(moment);
-
-const mapAmenityNameToAssetFilename = amenityName => {
-    switch (amenityName) {
-        case "amtTV":
-            return "tv.svg";
-        case "amtMicrophone":
-            return "mic.svg";
-        case "amtProjector":
-            return "projector.svg";
-        case "amtPhone":
-            return "phone.svg";
-    }
-}
 
 const RoomPage = ({ match }) => {
     const roomId = match.params.id;
@@ -68,93 +47,11 @@ const RoomPage = ({ match }) => {
         }
     ];
 
-    /**
-     * @param {Array} reservations 
-     */
-    const mapReservationsToEvents = reservations => {
-        return reservations.map(reservation => {
-            return {
-                start: reservation.start,
-                end: moment(reservation.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
-                title: reservation.title,
-                type: reservation.type
-            };
-        })
+    const [selectedInterval, setSelectedInterval] = useState(null);
+    const onSelectedInterval = passedSelectedInterval => {
+        setSelectedInterval(passedSelectedInterval)
     }
 
-    const [events, setEvents] = useState({
-        dateIntervals: mapReservationsToEvents(existingReservations)
-    });
-    const [selectedInterval, setSelectedInterval] = useState(null);
-
-    const onSelectSlot = slotInfo => {
-        const newEvent = {
-            start: slotInfo.start,
-            end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
-            title: "POTENTIAL RESERVATION",
-            type: "user",
-            allDay: true
-        };
-
-        const probablyColidingEvents = !selectedInterval
-            ? events.dateIntervals
-            : events.dateIntervals.slice(0, -1);
-        const overlapWithOtherEvent = probablyColidingEvents.some(event =>
-            newEvent.start.getTime() <= event.end.getTime() &&
-            newEvent.end.getTime() >= event.start.getTime());
-        if (overlapWithOtherEvent) return;
-
-        setSelectedInterval(newEvent);
-        setEvents({
-            dateIntervals: [...probablyColidingEvents, newEvent]
-        });
-    };
-
-    const customEventPropGetter = event => {
-        if (event.type === "user") {
-            return {
-                style: {
-                    backgroundColor: "#00b33c",
-                    color: "white",
-                    textAlign: "center"
-                }
-            }
-        }
-        else if (event.type === "reserved") {
-            return {
-                style: {
-                    backgroundColor: "#ff8566",
-                    color: "white",
-                    textAlign: "center"
-                }
-            }
-        }
-        return {
-            style: {
-                backgroundColor: "#e6e6e6",
-                color: "#8c8c8c",
-                textAlign: "center"
-            }
-        }
-    };
-    const MyCalendar = () => (
-        <div>
-            <Calendar
-                defaultDate={moment().toDate()}
-                views={["month"]}
-                localizer={localizer}
-                startAccessor="start"
-                events={events.dateIntervals}
-                endAccessor="end"
-                eventPropGetter={customEventPropGetter}
-                style={{ height: 500 }}
-                selectable={true}
-                onSelectSlot={onSelectSlot}
-                min={moment().toDate()}
-                max={moment().add(5, "days").toDate()}
-            />
-        </div>
-    )
 
     if (!ObjectID.isValid(roomId)) {
         return (
@@ -175,7 +72,9 @@ const RoomPage = ({ match }) => {
                         return <div className="container bg-white">
                             <div className="row">
                                 <div className="col-12">
-                                    <h3 className="room-page-title pt-3 pb-3">{room.name}</h3>
+                                    <h3 className="room-page-title pt-3 pb-3" style={{ borderBottom: "1.2px solid rgba(216, 216, 216, 0.63)" }}>
+                                        {room.name}
+                                    </h3>
                                 </div>
                             </div>
 
@@ -206,7 +105,16 @@ const RoomPage = ({ match }) => {
                                     </div>
                                 </div>
                             </div>
-                            <MyCalendar />
+
+                            <div className="row mt-3">
+                                <div className="col-12 text-center mb-2 ">
+                                    <h3>Conference Room Timesheet</h3>
+                                </div>
+
+                                <div className="col-12">
+                                    <ReservationCalendar onSelectedInterval={onSelectedInterval} reservations={existingReservations} />
+                                </div>
+                            </div>
                         </div>
                     })()
                 }
@@ -216,5 +124,18 @@ const RoomPage = ({ match }) => {
 
     );
 };
+
+const mapAmenityNameToAssetFilename = amenityName => {
+    switch (amenityName) {
+        case "amtTV":
+            return "tv.svg";
+        case "amtMicrophone":
+            return "mic.svg";
+        case "amtProjector":
+            return "projector.svg";
+        case "amtPhone":
+            return "phone.svg";
+    }
+}
 
 export default RoomPage;
