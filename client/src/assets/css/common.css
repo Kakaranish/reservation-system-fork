@@ -1,0 +1,16 @@
+.primary-btn {
+  background-color: #43425d;
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: #63628a;
+  color: white;
+}
+
+.checkbox-with-accent
+  .custom-control-input:checked
+  ~ .custom-control-label::before {
+  background-color: #43425d;
+  border: 0;
+}

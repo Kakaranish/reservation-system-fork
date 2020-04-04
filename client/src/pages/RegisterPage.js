@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import '../assets/css/auth.css';
+import '../assets/css/common.css';
 
 const RegisterPage = () => {
     return (
@@ -47,13 +48,13 @@ const RegisterPage = () => {
                                             </div>
 
 
-                                            <div className="mt-3">
+                                            <div className="col-12 mt-3">
                                                 <input type="password" name="confirmedPassword" className="form-control" id="confirmedPassword" placeholder="Confirm Password..." />
                                             </div>
                                         </div>
 
-                                        <div class="custom-control custom-checkbox mt-4">
-                                            <input type="checkbox" class="custom-control-input custom-checkbox" id="customCheck" name="example1" />
+                                        <div class="custom-control checkbox-with-accent mt-4">
+                                            <input type="checkbox" class="custom-control-input checkbox-with-accent" id="customCheck" name="example1" />
                                             <label class="custom-control-label" for="customCheck">
                                                 I agree with terms and conditions
                                             </label>

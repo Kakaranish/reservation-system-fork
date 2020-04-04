@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
 import '../assets/css/auth.css';
+import '../assets/css/common.css';
 
 const LoginPage = () => {
     return (

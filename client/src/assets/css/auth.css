@@ -70,16 +70,6 @@ select.form-control:focus {
   box-shadow: none;
 }
 
-.primary-btn {
-  background-color: #43425d;
-  color: white;
-}
-
-.primary-btn:hover {
-  background-color: #63628a;
-  color: white;
-}
-
 .secondary-btn {
   font-weight: 400;
   background-color: white;
@@ -94,23 +84,19 @@ select.form-control:focus {
   color: #63628a;
 }
 
-.custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-  background-color: #43425d;
-}
-
 .have-already-account {
   color: "rgb(173, 173, 173)";
   font-weight: 300;
 }
 
 .have-already-account:hover {
-    text-decoration: underline;
-    text-decoration-color: #63628a;
+  text-decoration: underline;
+  text-decoration-color: #63628a;
 }
 
 a:-webkit-any-link {
-    text-decoration: none;
-    align-items: center;
-    color: inherit;
-    justify-content: inherit;
-  }
+  text-decoration: none;
+  align-items: center;
+  color: inherit;
+  justify-content: inherit;
+}
