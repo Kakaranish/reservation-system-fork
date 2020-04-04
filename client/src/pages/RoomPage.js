@@ -49,7 +49,6 @@ const RoomPage = ({ match }) => {
         if (ObjectID.isValid(roomId)) getRoom(roomId);
     }, []);
 
-
     const existingReservations = [
         {
             start: moment.utc('2020-04-01').startOf('day').toDate(),
@@ -60,11 +59,16 @@ const RoomPage = ({ match }) => {
             start: moment.utc('2020-04-04').startOf('day').toDate(),
             end: moment.utc('2020-04-06').startOf('day').toDate(),
             title: "res2"
+        },
+        {
+            start: moment.utc('2020-04-08').startOf('day').toDate(),
+            end: moment.utc('2020-04-10').startOf('day').toDate(),
+            title: "RESERVED",
+            type: "reserved"
         }
     ];
 
     /**
-     * 
      * @param {Array} reservations 
      */
     const mapReservationsToEvents = reservations => {
@@ -73,7 +77,7 @@ const RoomPage = ({ match }) => {
                 start: reservation.start,
                 end: moment(reservation.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
                 title: reservation.title,
-                x: "XDDDDDD"
+                type: reservation.type
             };
         })
     }
@@ -83,13 +87,12 @@ const RoomPage = ({ match }) => {
     });
     const [selectedInterval, setSelectedInterval] = useState(null);
 
-
     const onSelectSlot = slotInfo => {
         const newEvent = {
             start: slotInfo.start,
             end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
             title: "POTENTIAL RESERVATION",
-            isCreatedByUser: true,
+            type: "user",
             allDay: true
         };
 
@@ -107,33 +110,33 @@ const RoomPage = ({ match }) => {
         });
     };
 
-    // const eventStyleGetter = (event, start, end, isSelected) => {
-    //     let style;
-    //     if (event.isCreatedByUser) {
-    //         style = {
-    //             backgroundColor: "red",
-    //             borderRadius: '0px',
-    //             opacity: 0.8,
-    //             color: 'black',
-    //             border: '0px',
-    //             display: 'block'
-    //         };
-    //     }
-    //     else {
-    //         style = {
-    //             backgroundColor: "blue",
-    //             borderRadius: '0px',
-    //             opacity: 0.8,
-    //             color: 'black',
-    //             border: '0px',
-    //             display: 'block'
-    //         };
-    //     }
-    //     return {
-    //         style: style
-    //     };
-    // }
-
+    const customEventPropGetter = event => {
+        if (event.type === "user") {
+            return {
+                style: {
+                    backgroundColor: "#00b33c",
+                    color: "white",
+                    textAlign: "center"
+                }
+            }
+        }
+        else if (event.type === "reserved") {
+            return {
+                style: {
+                    backgroundColor: "#ff8566",
+                    color: "white",
+                    textAlign: "center"
+                }
+            }
+        }
+        return {
+            style: {
+                backgroundColor: "#e6e6e6",
+                color: "#8c8c8c",
+                textAlign: "center"
+            }
+        }
+    };
     const MyCalendar = () => (
         <div>
             <Calendar
@@ -143,13 +146,7 @@ const RoomPage = ({ match }) => {
                 startAccessor="start"
                 events={events.dateIntervals}
                 endAccessor="end"
-                // components={
-                //     {
-                //         day: {
-                //             event
-                //         }
-                //     }
-                // }
+                eventPropGetter={customEventPropGetter}
                 style={{ height: 500 }}
                 selectable={true}
                 onSelectSlot={onSelectSlot}
@@ -210,8 +207,6 @@ const RoomPage = ({ match }) => {
                                 </div>
                             </div>
                             <MyCalendar />
-
-
                         </div>
                     })()
                 }
