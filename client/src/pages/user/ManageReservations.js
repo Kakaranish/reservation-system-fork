@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import PendingReservation from "../components/admin/PendingReservation";
-import AcceptedReservation from "../components/admin/AcceptedReservation";
-import CancelledReservation from "../components/admin/CancelledReservation";
-import RejectedReservation from "../components/admin/RejectedReservation";
+import PendingReservation from "../../components/user/PendingReservation";
+import OtherReservation from '../../components/user/OtherReservation';
 
 const ManageReservations = () => {
     const [pendingContent, setPendingContent] = useState(null);
@@ -12,49 +10,35 @@ const ManageReservations = () => {
     const [cancelledContent, setCancelledContent] = useState(null);
     const [currentTab, setCurrentTab] = useState("pending");
 
-
-    const onAcceptReservation = async reservationId => {
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
-        await axios.post(`/accept-reservation/`, {}, {
+    const onCancelReservation = async reservationId => {
+        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlOGEyY2JjNTQzYWU0MDNhYWI3NWQxMiIsImVtYWlsIjoic3Rhc2lla2dydXoxQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NjExMzc0Mn0.7rOzSpnsHDtrLwnCLgRroQ6ldwiFklxUT2ih_WOm16g";
+        await axios.post('/user/cancel-reservation', {}, {
             data: {
                 reservationId: reservationId
             },
             params: {
                 secret_token: secret_token
             }
-        });
+        })
         window.location.reload();
-    };
-
-    const onRejectReservation = async reservationId => {
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
-        await axios.post(`/reject-reservation/`, {}, {
-            data: {
-                reservationId: reservationId
-            },
-            params: {
-                secret_token: secret_token
-            }
-        });
-        window.location.reload();
-    };
+    }
 
     useEffect(() => {
-        console.log(currentTab);
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
+        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlOGEyY2JjNTQzYWU0MDNhYWI3NWQxMiIsImVtYWlsIjoic3Rhc2lla2dydXoxQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NjExMzc0Mn0.7rOzSpnsHDtrLwnCLgRroQ6ldwiFklxUT2ih_WOm16g";
+        const userId = "5e8659b0c853a3155c0a4be1";
         const fetchTabContent = async () => {
             if (currentTab === "cancelled") {
                 if (cancelledContent) return;
-                const content = await axios.get('/admin/cancelled-reservations', {
+                const content = await axios.get(`/user/cancelled-reservations/${userId}`, {
                     params: {
                         secret_token: secret_token
-                    }
+                    },
                 });
                 setCancelledContent(content.data);
             }
             else if (currentTab === "accepted") {
                 if (acceptedContent) return;
-                const content = await axios.get(`/admin/accepted-reservations/`, {
+                const content = await axios.get(`/user/accepted-reservations/${userId}`, {
                     params: {
                         secret_token: secret_token
                     }
@@ -63,7 +47,7 @@ const ManageReservations = () => {
             }
             else if (currentTab === "rejected") {
                 if (rejectedContent) return;
-                const content = await axios.get(`/admin/rejected-reservations/`, {
+                const content = await axios.get(`/user/rejected-reservations/${userId}`, {
                     params: {
                         secret_token: secret_token
                     }
@@ -72,14 +56,13 @@ const ManageReservations = () => {
             }
             else {
                 if (pendingContent) return;
-                const content = await axios.get(`/admin/pending-reservations/`, {
+                const content = await axios.get(`/user/pending-reservations/${userId}`, {
                     params: {
                         secret_token: secret_token
                     }
                 });
                 setPendingContent(content.data);
             }
-
         };
         fetchTabContent();
     }, [currentTab]);
@@ -120,8 +103,7 @@ const ManageReservations = () => {
                                             return <PendingReservation
                                                 key={reservation["_id"]}
                                                 reservation={reservation}
-                                                onAcceptReservation={onAcceptReservation}
-                                                onRejectReservation={onRejectReservation} />
+                                                onCancelReservation={onCancelReservation} />
                                         })
                                     }
                                 </div>
@@ -136,10 +118,9 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         acceptedContent.map(reservation => {
-                                            return <AcceptedReservation
+                                            return <OtherReservation
                                                 key={reservation["_id"]}
-                                                reservation={reservation}
-                                                onRejectReservation={onRejectReservation} />
+                                                reservation={reservation} />
                                         })
                                     }
                                 </div>
@@ -154,10 +135,9 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         rejectedContent.map(reservation => {
-                                            return <RejectedReservation
+                                            return <OtherReservation
                                                 key={reservation["_id"]}
-                                                reservation={reservation}
-                                                onAcceptReservation={onAcceptReservation} />
+                                                reservation={reservation} />
                                         })
                                     }
                                 </div>
@@ -172,7 +152,9 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         cancelledContent.map(reservation => {
-                                            return <CancelledReservation reservation={reservation} />
+                                            return <OtherReservation
+                                                key={reservation["_id"]}
+                                                reservation={reservation} />
                                         })
                                     }
                                 </div>

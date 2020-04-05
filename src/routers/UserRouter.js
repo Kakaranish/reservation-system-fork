@@ -127,15 +127,14 @@ router.get('/cancel-reservation/:reservationId', async (req, res) => {
 
 const getReservationWtihStatus = async (userId, status, res) => {
     try {
-        const pendingReservations = await resSystemDbClient.withDb(async db => {
-            if (!await dbActions.userWithIdExists(db, userId)) return null;
+        const reservations = await resSystemDbClient.withDb(async db => {
             return await dbActions.getReservationsWithStatusForUser(db, userId, status)
         });
-        console.log(pendingReservations);
-        if (!pendingReservations) return res.json({
+        console.log(reservations);
+        if (!reservations) return res.json({
             message: `Error: User with id ${req.params.userId} does not exist`
         });
-        res.status(200).json(pendingReservations);
+        res.status(200).json(reservations);
     } catch (error) {
         console.log(`Error: ${error}`);
         res.status(500).json({
