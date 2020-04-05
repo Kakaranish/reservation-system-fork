@@ -184,7 +184,7 @@ const getReservationsWithStatus = async (db, status) => {
             startDate: reservation.startDate,
             endDate: reservation.endDate,
             pricePerDay: reservation.pricePerDay,
-            totalprice: reservation.totalPrice,
+            totalPrice: reservation.totalPrice,
             userEmail: reservation.user.email,
             roomName: reservation.room.name,
             roomLocation: reservation.room.location,

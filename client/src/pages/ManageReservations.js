@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
+import PendingReservation from "../components/admin/PendingReservation";
+import AcceptedReservation from "../components/admin/AcceptedReservation";
+import CancelledReservation from "../components/admin/CancelledReservation";
+import RejectedReservation from "../components/admin/RejectedReservation";
 
 const ManageReservations = () => {
     const [pendingContent, setPendingContent] = useState(null);
@@ -9,6 +13,22 @@ const ManageReservations = () => {
     const [currentTab, setCurrentTab] = useState("pending");
 
 
+    const onAcceptReservation = async reservationId => {
+        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
+        await axios.post(`/accept-reservation/`, {}, {
+            data: {
+                reservationId: reservationId
+            },
+            params: {
+                secret_token: secret_token
+            }
+        });
+        window.location.reload();
+    };
+
+    const onRejectReservation = async reservationId => {
+        // TODO:
+    };
 
     useEffect(() => {
         console.log(currentTab);
@@ -21,7 +41,7 @@ const ManageReservations = () => {
                         secret_token: secret_token
                     }
                 });
-                setCancelledContent(content);
+                setCancelledContent(content.data);
             }
             else if (currentTab === "accepted") {
                 if (acceptedContent) return;
@@ -30,7 +50,7 @@ const ManageReservations = () => {
                         secret_token: secret_token
                     }
                 });
-                setAcceptedContent(content);
+                setAcceptedContent(content.data);
             }
             else if (currentTab === "rejected") {
                 if (rejectedContent) return;
@@ -39,7 +59,7 @@ const ManageReservations = () => {
                         secret_token: secret_token
                     }
                 });
-                setRejectedContent(content);
+                setRejectedContent(content.data);
             }
             else {
                 if (pendingContent) return;
@@ -48,7 +68,7 @@ const ManageReservations = () => {
                         secret_token: secret_token
                     }
                 });
-                setPendingContent(content);
+                setPendingContent(content.data);
             }
 
         };
@@ -86,45 +106,13 @@ const ManageReservations = () => {
                             ? null
                             : <>
                                 <div className="container p-4">
-                                    <div class="card p-1 border-0">
-                                        <div class="row no-gutters">
-                                            <div class="col-auto">
-                                                <img src="https://picsum.photos/200" class="img-fluid" alt="" />
-                                            </div>
-                                            <div class="col pb-3">
-                                                <div class="card-block px-4">
-                                                    <h4 class="card-title room-page-title">Some title</h4>
-                                                    <p class="card-text">
-                                                        Who's making reservation?: <b>Stanislaw Gruz</b>
-                                                    </p>
-                                                    <p class="card-text">
-                                                        When?: <b>2020-04-20 - 2020-04-22</b>
-                                                    </p>
-                                                    <p class="card-text">
-                                                        Pice Per Day: <b>222PLN</b>
-                                                    </p>
-                                                    <p class="card-text">
-                                                        Total Price: <b>444PLN</b>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="card-footer w-100 bg-white border-0 mt-sm-2 px-0">
-                                                <div className="row">
-                                                    <div className="col-6">
-                                                        <button className="btn btn-block text-uppercase mb-2 btn-success" type="submit">
-                                                            Accept
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="col-6">
-                                                        <button className="btn btn-block text-uppercase mb-2 btn-danger" type="submit">
-                                                            Reject
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {
+                                        pendingContent.map(reservation => {
+                                            return <PendingReservation reservation={reservation}
+                                                onAcceptReservation={onAcceptReservation}
+                                                onRejectReservation={onRejectReservation} />
+                                        })
+                                    }
                                 </div>
                             </>
                     }
@@ -134,6 +122,14 @@ const ManageReservations = () => {
                         !acceptedContent
                             ? null
                             : <>
+                                <div className="container p-4">
+                                    {
+                                        acceptedContent.map(reservation => {
+                                            return <AcceptedReservation reservation={reservation}
+                                                onRejectReservation={onRejectReservation} />
+                                        })
+                                    }
+                                </div>
                             </>
                     }
                 </div>
@@ -142,6 +138,14 @@ const ManageReservations = () => {
                         !rejectedContent
                             ? null
                             : <>
+                                <div className="container p-4">
+                                    {
+                                        rejectedContent.map(reservation => {
+                                            return <RejectedReservation reservation={reservation}
+                                                onAcceptReservation={onAcceptReservation} />
+                                        })
+                                    }
+                                </div>
                             </>
                     }
                 </div>
@@ -150,6 +154,13 @@ const ManageReservations = () => {
                         !cancelledContent
                             ? null
                             : <>
+                                <div className="container p-4">
+                                    {
+                                        cancelledContent.map(reservation => {
+                                            return <CancelledReservation reservation={reservation} />
+                                        })
+                                    }
+                                </div>
                             </>
                     }
                 </div>
