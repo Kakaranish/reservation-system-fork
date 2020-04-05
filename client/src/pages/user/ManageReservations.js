@@ -70,6 +70,7 @@ const ManageReservations = () => {
 
     return (
         <>
+            <h3 className="title">Manage Your Reservations</h3>
             <ul className="nav nav-tabs" id="reservation-tabs" role="tablist">
                 <li className="nav-item">
                     <a className="nav-link active" id="pending-tab" data-toggle="tab"

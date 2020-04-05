@@ -35,17 +35,18 @@ const Sidebar = () => {
                     </div>
                 </Link>
 
-                <Link to={TestPage}>
+
+                <Link to="/user/manage-reservations">
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={reservationsIcon} className="icon" />
                         <>Your Reservations</>
                     </div>
                 </Link>
 
-                <Link to={TestPage}>
+                <Link to="/admin/manage-reservations">
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={settingsIcon} className="icon" />
-                        <>Settings</>
+                        <>Admin Reservations</>
                     </div>
                 </Link>
 
