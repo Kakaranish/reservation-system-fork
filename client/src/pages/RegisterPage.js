@@ -1,9 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from 'axios';
 import '../assets/css/auth.css';
 import '../assets/css/common.css';
 
 const RegisterPage = () => {
+
+    const [validationErrors, setValidationErrors] = useState(null);
+
+    const handleOnSubmit = async event => {
+        event.preventDefault();
+
+        const errors = [];
+        const formData = new FormData(event.target);
+        if (formData.get("password") !== formData.get("confirmedPassword")) {
+            errors.push("Passwords are different");
+        }
+
+        const result = await axios.post('/user/check-if-email-available', {}, {
+            data: {
+                email: formData.get("email")
+            }
+        });
+
+        if (result.data.available === false) {
+            errors.push("Other user has account with this email");
+        }
+
+        if (errors.length > 0) {
+            setValidationErrors(errors);
+            return;
+        }
+
+        await axios.post('/account/singup', {}, {
+            data: {
+                email: formData.get("email"),
+                password: formData.get("password"),
+                firstName: formData.get("firstName"),
+                lastName: formData.get("lastName")
+            }
+        });
+
+        window.location = `/login`;
+    }
+
     return (
         <div id="auth-container" className="container-fluid">
             <div className="row no-gutter">
@@ -26,36 +66,35 @@ const RegisterPage = () => {
                                         Fill all fields and joins us!
                                     </p>
 
-                                    <form>
-
+                                    <form onSubmit={handleOnSubmit}>
                                         <div className="row mt-5">
                                             <div className="col-md-6 col-12">
-                                                <input type="text" name="firstName" className="form-control" id="firstName" placeholder="First Name..." />
+                                                <input type="text" name="firstName" className="form-control" id="firstName" placeholder="First Name..." required />
                                             </div>
 
                                             <div className="col-md-6 col-12 mt-md-0 mt-3">
-                                                <input type="text" name="lastName" className="form-control" id="lastName" placeholder="Last Name..." />
+                                                <input type="text" name="lastName" className="form-control" id="lastName" placeholder="Last Name..." required />
                                             </div>
                                         </div>
 
                                         <div className="row">
                                             <div className="col-12 mt-3">
-                                                <input type="text" name="email" className="form-control" id="email" placeholder="Email..." />
+                                                <input type="text" name="email" className="form-control" id="email" placeholder="Email..." required />
                                             </div>
 
                                             <div className="col-12 mt-3">
-                                                <input type="password" name="password" className="form-control" id="password" placeholder="Password..." />
+                                                <input type="password" name="password" className="form-control" id="password" placeholder="Password..." required />
                                             </div>
 
 
                                             <div className="col-12 mt-3">
-                                                <input type="password" name="confirmedPassword" className="form-control" id="confirmedPassword" placeholder="Confirm Password..." />
+                                                <input type="password" name="confirmedPassword" className="form-control" id="confirmedPassword" placeholder="Confirm Password..." required />
                                             </div>
                                         </div>
 
-                                        <div class="custom-control checkbox-with-accent mt-4">
-                                            <input type="checkbox" class="custom-control-input checkbox-with-accent" id="customCheck" name="example1" />
-                                            <label class="custom-control-label" for="customCheck">
+                                        <div className="custom-control checkbox-with-accent mt-4">
+                                            <input type="checkbox" className="custom-control-input checkbox-with-accent" id="customCheck" name="example1" required />
+                                            <label className="custom-control-label" htmlFor="customCheck">
                                                 I agree with terms and conditions
                                             </label>
                                         </div>
@@ -74,7 +113,21 @@ const RegisterPage = () => {
                                             </div>
                                         </div>
 
-
+                                        {
+                                            !validationErrors
+                                                ? null
+                                                :
+                                                <div className="col-12 mt-2">
+                                                    <h4 className="text-danger">Validation errors</h4>
+                                                    <ul>
+                                                        {
+                                                            validationErrors.map((error, i) => {
+                                                                return <li key={`val-err-${i}`} className="text-danger font-weight-bold">{error}</li>
+                                                            })
+                                                        }
+                                                    </ul>
+                                                </div>
+                                        }
                                     </form>
                                 </div>
                             </div>

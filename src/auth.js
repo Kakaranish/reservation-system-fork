@@ -26,6 +26,8 @@ passport.use('singup', new localStrategy({
         const user = {
             "email": email,
             "password": encryptedPassword,
+            "firstName": req.body.firstName,
+            "lastName": req.body.lastName,
             "role": userRole
         };
 

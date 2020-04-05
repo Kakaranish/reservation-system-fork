@@ -124,6 +124,27 @@ router.post('/cancel-reservation/:reservationId', async (req, res) => {
     })(req, res);
 });
 
+router.post('/check-if-email-available', async (req, res) => {
+    const userEmail = req.body.email;
+    if (!userEmail) return res.status(400).json({
+        message: "'email' was not provided"
+    });
+
+    try {
+        const userExists = await resSystemDbClient.withDb(async db => {
+            return await dbActions.userWithEmailExists(db, userEmail);
+        });
+        return res.status(200).json({
+            "available": !userExists
+        });
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({
+            message: "Error: Internal server error"
+        });
+    }
+});
+
 const getReservationWtihStatus = async (userId, status, res) => {
     try {
         const reservations = await resSystemDbClient.withDb(async db => {

@@ -87,6 +87,14 @@ const userWithIdExists = async (db, userId) => {
 
 /**
  * @param {Db} db 
+ * @param {String} email
+ */
+const userWithEmailExists = async (db, email) => {
+    return await db.collection('users').findOne({ email: email }) ? true : false;
+};
+
+/**
+ * @param {Db} db 
  * @param {ObjectID} 
  */
 const otherReservationOnGivenRoomAndDateIntervalExists = async (db, roomId, dateInterval) => {
@@ -330,5 +338,6 @@ module.exports = {
     rejectAllPendingAndSuccessReservationsForRoom,
     getReservationsWithStatus,
     getAcceptedReservationsForDateIntervalForRoom,
-    getReservationsWithStatusForUser
+    getReservationsWithStatusForUser,
+    userWithEmailExists
 };
