@@ -12,15 +12,23 @@ const ReservationCalendar = ({ onSelectedInterval, reservations, dows, dateInter
         }
     });
 
+    const notAvailableEvents = getEventsForDows(dows, dateIntervalToGenerate);
     const [selectedInterval, setSelectedInterval] = useState(null);
     const [events, setEvents] = useState({
-        dateIntervals: mapReservationsToEvents(reservations)
+        dateIntervals: [...notAvailableEvents]
     });
 
     const onSelectSlot = slotInfo => {
+        const userDateInterval = {
+            start: moment(slotInfo.start).startOf('day'),
+            end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds')
+        }
+
+        if (userDateIntervalIsOutOfRange(userDateInterval, dateIntervalToGenerate)) return;
+
         const newEvent = {
-            start: slotInfo.start,
-            end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
+            start: userDateInterval.start.toDate(),
+            end: userDateInterval.end.toDate(),
             title: "YOUR SELECTION",
             type: "user",
             allDay: true
@@ -39,8 +47,8 @@ const ReservationCalendar = ({ onSelectedInterval, reservations, dows, dateInter
             dateIntervals: [...probablyColidingEvents, newEvent]
         });
         onSelectedInterval({
-            "fromDate": newEvent.start,
-            "toDate": newEvent.end
+            "fromDate": userDateInterval.start,
+            "toDate": userDateInterval.end
         });
     };
 
@@ -57,8 +65,6 @@ const ReservationCalendar = ({ onSelectedInterval, reservations, dows, dateInter
                 style={{ height: 500 }}
                 selectable={true}
                 onSelectSlot={onSelectSlot}
-                min={moment().toDate()} //TODO
-                max={moment().add(5, "days").toDate()} //TODO
             />
         </div>
     );
@@ -104,6 +110,66 @@ const mapReservationsToEvents = reservations => {
             type: reservation.type
         };
     })
+};
+
+const userDateIntervalIsOutOfRange = (userDateInterval, legalDateInterval) => {
+    return userDateInterval.start.valueOf() < legalDateInterval.start.valueOf() ||
+        userDateInterval.end.valueOf() > legalDateInterval.end.valueOf();
+};
+
+const getEventsForDows = (dows, dateIntervalToGenerate) => {
+    const availability = dows.map(dow => legalDows[dow]);
+    const nonAvailability = Object.values(legalDows).filter(dow => !availability.includes(dow)).sort();
+    const consecutiveDowsInts = getIntIntervalsFromIntArray(nonAvailability);
+    const weeksBetween = dateIntervalToGenerate.end.diff(dateIntervalToGenerate.start, 'week');
+
+    const dowEvents = [];
+    const daysInWeek = 7;
+    for (let weekIndex = 0; weekIndex < weeksBetween; weekIndex++) {
+        consecutiveDowsInts.forEach(consecutiveInts => {
+            dowEvents.push({
+                start: moment().startOf('week').add(weekIndex * daysInWeek + (consecutiveInts.start - 1), 'days').toDate(),
+                end: moment().startOf('week').add(weekIndex * daysInWeek + consecutiveInts.end, 'days').subtract(1, 'milliseconds').toDate(),
+                title: "N/A",
+                type: "n/a"
+            })
+        });
+    }
+    return dowEvents;
+};
+
+const getIntIntervalsFromIntArray = intArray => {
+    let currentInterval = {
+        start: undefined,
+        end: undefined
+    };
+    const intIntervals = [];
+    intArray.forEach(currentInt => {
+        if (!currentInterval.start) {
+            currentInterval.start = currentInt;
+            currentInterval.end = currentInt;
+            return;
+        }
+
+        const isNext = currentInt === currentInterval.end + 1;
+        if (isNext) {
+            currentInterval.end = currentInt;
+            return;
+        }
+
+        intIntervals.push(currentInterval);
+        currentInterval = {
+            start: currentInt,
+            end: currentInt
+        };
+    });
+    intIntervals.push(currentInterval);
+    return intIntervals;
 }
+
+const legalDows = {
+    "dowMonday": 1, "dowTuesday": 2, "dowWednesday": 3, "dowThursday": 4,
+    "dowFriday": 5, "dowSaturday": 6, "dowSunday": 7
+};
 
 export default ReservationCalendar;

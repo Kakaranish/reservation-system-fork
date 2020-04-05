@@ -21,7 +21,6 @@ const Sidebar = () => {
                 </div>
             </div>
             <div className="list-group list-group-flush">
-
                 <Link to="/">
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={homeIcon} className="icon" />

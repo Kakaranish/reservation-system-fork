@@ -63,6 +63,11 @@ const RoomPage = ({ match }) => {
         );
     }
 
+    const dateIntervalToGenerate = {
+        start: moment().startOf('day'),
+        end: moment().startOf('day').add(6, 'months')
+    };
+
     return (
         <div className="row">
             <div className="col-12">
@@ -109,19 +114,44 @@ const RoomPage = ({ match }) => {
                             <div className="row mt-3">
                                 <div className="col-12 text-center mb-2 ">
                                     <h3>Conference Room Timesheet</h3>
+                                    <p className="subtitle">Drag on calendar to make reservation selection</p>
                                 </div>
 
                                 <div className="col-12">
-                                    <ReservationCalendar onSelectedInterval={onSelectedInterval} reservations={existingReservations} />
+                                    <ReservationCalendar
+                                        onSelectedInterval={onSelectedInterval}
+                                        dateIntervalToGenerate={dateIntervalToGenerate}
+                                        reservations={existingReservations}
+                                        dows={room.dows} />
                                 </div>
+
+                                {
+                                    !selectedInterval
+                                        ?
+                                        <div className="col-12 mt-3">
+                                            <button type="submit" className="btn btn-block secondary-btn" disabled={true}>Make reservation</button>
+                                        </div>
+                                        :
+                                        <>
+                                            <div className="col-12">
+                                                Selected date interval: <b>{selectedInterval.fromDate.format("DD-MM-YYYY")} - {selectedInterval.toDate.format("DD-MM-YYYY")}</b>
+                                            </div>
+
+                                            <div className="col-12">
+                                                Total Price: <b>{calculateTotalPrice(room, selectedInterval)}PLN</b>
+                                            </div>
+
+                                            <div className="col-12 mt-3">
+                                                <button type="submit" className="btn btn-block primary-btn">Make reservation</button>
+                                            </div>
+                                        </>
+                                }
                             </div>
                         </div>
                     })()
                 }
             </div>
         </div>
-
-
     );
 };
 
@@ -137,5 +167,10 @@ const mapAmenityNameToAssetFilename = amenityName => {
             return "phone.svg";
     }
 }
+
+const calculateTotalPrice = (room, selectedInterval) => {
+    const days = selectedInterval.toDate.diff(selectedInterval.fromDate, 'days') + 1;
+    return room.pricePerDay * days;
+};
 
 export default RoomPage;

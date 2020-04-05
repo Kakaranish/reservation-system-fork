@@ -31,7 +31,7 @@ const RoomsPage = (props) => {
 
 	const [rooms, setRooms] = useState(null);
 	useEffect(() => {
-		const intervalLength = resolvedQueryParams.toDate.diff(resolvedQueryParams.fromDate, 'days');
+		const intervalLength = resolvedQueryParams.toDate.diff(resolvedQueryParams.fromDate, 'days') + 1;
 		const getRooms = async queryParams => {
 			const result = await axios.get('/rooms', {
 				params: {
@@ -50,29 +50,32 @@ const RoomsPage = (props) => {
 	}, []);
 
 	return (
-		<div>
-			<div className="row">
-				{
-					!rooms
-						? null
-						: rooms.length > 0
-							? <div>
-								<ul>
-									<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
-									<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
-								</ul>
+		<>
+			{
+				!rooms
+					? null
+					: rooms.length > 0
+						?
+						<>
+							<ul className="global-font">
+								<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
+								<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
+							</ul>
+
+							<div className="row">
 								{rooms.map(roomData => <RoomCard key={`room-${roomData["_id"]}`} roomData={roomData} />)}
 							</div>
-							: <div>
-								<h3>There is no rooms for following criterias:</h3>
-								<ul>
-									<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
-									<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
-								</ul>
-							</div>
-				}
-			</div>
-		</div>
+						</>
+						:
+						<div>
+							<h3>There is no rooms for following criterias:</h3>
+							<ul>
+								<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
+								<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
+							</ul>
+						</div>
+			}
+		</>
 	);
 };
 
