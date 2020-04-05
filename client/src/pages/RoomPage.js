@@ -71,7 +71,7 @@ const RoomPage = ({ match }) => {
 
     const makeReservationOnClick = async () => {
         // Temp & not valuable :)
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlN2M5ZTZiZmJlNGNhMTc5NjdiNzlmZSIsImVtYWlsIjoiYXJlay5rb3QyQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NTIyNTMyN30.m5_TJ_MQRf4xFCBkrSIuka3lG3hje2NdSOYDGTc7LHs";
+        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
         const userId = "5e8659b0c853a3155c0a4be1";
 
         try {

@@ -1,4 +1,5 @@
 import { Db } from "mongodb";
+import moment from "moment";
 /**
  * @param {Db} db 
  * @param {ObjectID} roomId
@@ -27,7 +28,12 @@ const changeReservationStatus = async (db, reservationId, newStatus) => {
 
     await db.collection('reservations').updateOne(
         { '_id': reservationId },
-        { $set: { status: newStatus } }
+        {
+            $set: {
+                status: newStatus,
+                updateDate: moment.utc().toDate()
+            }
+        }
     );
     return reservation
 }
@@ -42,7 +48,8 @@ const rejectAllPendingReservationsForRoom = async (db, roomId) => {
         status: "PENDING"
     }, {
         $set: {
-            status: "REJECTED"
+            status: "REJECTED",
+            updateDate: moment.utc().toDate()
         }
     });
 };
