@@ -49,29 +49,4 @@ const userWithIdExists = async (db, userId) => {
     return await db.collection('users').findOne("_id", userId) ? true : false;
 };
 
-/**
- * @param {Db} db 
- * @param {ObjectID} 
- */
-const otherReservationOnGivenRoomAndDateIntervalExists = async (db, roomId, dateInterval) => {
-    const startDate = dateInterval.startDate;
-    const endDate = dateInterval.endDate;
-    const reservation = await db.collection('reservations').findOne({
-        "roomId": roomId,
-        $or: [
-            {
-                $and: [
-                    { "startDate": { $gte: startDate } },
-                    { "startDate": { $lte: endDate } }
-                ]
-            },
-            {
-                "startDate": { $lte: startDate },
-                "endDate": { $gte: startDate }
-            }
-        ]
-    });
-    return reservation ? true : false;
-};
-
 export default DbClient;

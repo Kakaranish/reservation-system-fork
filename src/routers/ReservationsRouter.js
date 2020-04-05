@@ -2,6 +2,7 @@ import express from "express";
 import dbClient from '../DbClient';
 import { ObjectID } from "mongodb";
 import passport from "passport";
+import moment from 'moment';
 require('../auth');
 const dbActions = require('../DbQueries')
 
@@ -76,6 +77,39 @@ router.post('/create-reservation', async (req, res) => {
     })(req, res);
 });
 
+router.get('/reservations/:roomid', async (req, res) => {
+    const errors = [];
+    const roomId = req.params.roomid;
+    if (!ObjectID.isValid(roomId)) errors.push(`Error: '${roomId} is not valid ObjectID'`);
+    const fromDate = moment.utc(req.query.fromDate, "YYYY-MM-DD", true);
+    if (!fromDate.isValid()) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
+    const toDate = moment.utc(req.query.toDate, "YYYY-MM-DD", true);
+    if (!toDate.isValid()) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
+    if (errors.length > 0) return res.status(400).json({
+        "errors": errors
+    });
+
+    const searchData = {
+        roomId: roomId,
+        fromDate: fromDate.toDate(),
+        toDate: toDate.toDate()
+    };
+    console.log(searchData);
+
+    try {
+        const dbResult = await resSystemDbClient.withDb(async db => {
+            return await dbActions.getReservationsForRoom(db, searchData);
+        });
+        res.status(200).json(dbResult);
+
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({
+            message: "Error: Internal error"
+        });
+    }
+})
+
 // ADMIN
 router.post('/accept-reservation', async (req, res) => {
     passport.authenticate('jwt', { session: false }, async (error, user) => {
@@ -83,10 +117,42 @@ router.post('/accept-reservation', async (req, res) => {
             message: "Unauthorized access"
         });
         if (user.role !== "ADMIN") return res.status(401).json({
-            message: "OK. You're logged in but you have to be admin to do this"
+            message: "OK. Maybe you're logged in but you have to be admin to do this"
         });
 
-        await changeReservationStatus(req, res, "ACCEPTED");
+        if (!ObjectID.isValid(req.body.reservationId)) {
+            res.status(400).json({
+                message: `Error: '${req.body.reservationId}' is invalid ObjectID`
+            });
+        }
+        const reservationId = new ObjectID(req.body.reservationId);
+
+        try {
+            const dbResult = await resSystemDbClient.withDb(async db => {
+                const reservation = await dbActions.changeReservationStatus(
+                    db, reservationId, "ACCEPTED");
+                if(!reservation) return reservation;
+                
+                const roomId = reservation.roomId;
+                await dbActions.rejectAllPendingReservationsForRoom(db, roomId);
+                
+                return reservation;
+            });
+    
+            if (!dbResult) return res.status(400).json({
+                message: `There is no reservation with id ${reservationId}`
+            });
+    
+            return res.status(200).json({
+                message: "OK"
+            });
+        } catch (error) {
+            console.log(`Error: ${error}`);
+            res.status(500).json({
+                message: "Error: Internal server error"
+            });
+        }
+
     })(req, res);
 });
 
@@ -134,6 +200,7 @@ router.delete('/delete-reservation', async (req, res) => {
             });
         }
         const reservationId = new ObjectID(req.body.reservationId);
+
         try {
             const nDeletedRows = await resSystemDbClient.withDb(async db => {
                 return await db.collection('reservations')
@@ -167,33 +234,13 @@ const changeReservationStatus = async (req, res, newStatus) => {
     const reservationId = new ObjectID(req.body.reservationId);
     try {
         const dbResult = await resSystemDbClient.withDb(async db => {
-            const reservation = await db.collection('reservations').findOne({
-                "_id": reservationId
-            });
-            if (!reservation) return {
-                type: "ERR",
-                message: `Error: There is no reservation with id '${reservationId}'`
-            };
-
-            if (reservation.status === newStatus) return {
-                type: "ERR",
-                message: `Error: Reservation '${reservationId}' is already ${newStatus}`
-            };
-
-            await db.collection('reservations').updateOne(
-                { '_id': reservationId },
-                { $set: { status: newStatus } }
-            );
-            return {
-                type: "OK"
-            };
+            return dbActions.changeReservationStatus(db, reservationId, newStatus);
         });
 
-        if (dbResult.type === "ERR") {
-            return res.status(400).json({
-                message: dbResult.message
-            });
-        }
+        if (!dbResult) return res.status(400).json({
+            message: `There is no reservation with id ${reservationId}`
+        });
+
         return res.status(200).json({
             message: "OK"
         });
@@ -206,16 +253,11 @@ const changeReservationStatus = async (req, res, newStatus) => {
 };
 
 const prepareReservation = req => {
-    const startDateMs = Date.parse(req.body.startDate);
-    const endDateMs = Date.parse(req.body.endDate);
-
+    const startDate = moment.utc(req.body.startDate, "YYYY-MM-DD", true);
+    const endDate = moment.utc(req.body.endDate, "YYYY-MM-DD", true);
     return {
-        startDate: startDateMs
-            ? new Date(startDateMs)
-            : null,
-        endDate: endDateMs
-            ? new Date(endDateMs)
-            : null,
+        startDate: startDate.isValid() ? startDate.toDate() : null,
+        endDate: endDate.isValid() ? endDate.toDate() : null,
         userId: ObjectID.isValid(req.body.userId)
             ? new ObjectID(req.body.userId)
             : null,
@@ -229,8 +271,8 @@ const prepareReservation = req => {
 
 const validateReservation = reservation => {
     let errors = [];
-    if (!reservation.startDate) errors.push(`'startDate' is not ISO 8601 datetime format.`)
-    if (!reservation.endDate) errors.push(`'endDate' is not ISO 8601 datetime format.`)
+    if (!reservation.startDate) errors.push(`'startDate' is 'YYYY-MM-DD' date format.`)
+    if (!reservation.endDate) errors.push(`'endDate' is not 'YYYY-MM-DD' date format.`)
     if (!reservation.userId) errors.push(`'userId' is not correct ObjectID`);
     if (!reservation.roomId) errors.push(`'roomId' is not correct ObjectID`);
     if (!reservation.pricePerDay) errors.push(`'pricePerDay' is not valid price`);

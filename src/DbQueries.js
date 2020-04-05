@@ -9,10 +9,42 @@ const roomWithIdExists = async (db, roomId) => {
 
 /**
  * @param {Db} db 
- * @param {ObjectID} roomId
+ * @param {ObjectID} reservationId
  */
 const reservationWithIdExists = async (db, reservationId) => {
     return await db.collection('reservations').findOne({ "_id": reservationId }) ? true : false;
+};
+
+/**
+ * @param {Db} db 
+ * @param {ObjectID} reservationId
+ */
+const changeReservationStatus = async (db, reservationId, newStatus) => {
+    const reservation = await db.collection('reservations').findOne({
+        "_id": reservationId
+    });
+    if (!reservation) return null;
+
+    await db.collection('reservations').updateOne(
+        { '_id': reservationId },
+        { $set: { status: newStatus } }
+    );
+    return reservation
+}
+
+/**
+ * @param {Db} db 
+ * @param {ObjectID} roomId
+ */
+const rejectAllPendingReservationsForRoom = async (db, roomId) => {
+    await db.collection('reservations').updateMany({
+        roomId: roomId,
+        status: "PENDING"
+    }, {
+        $set: {
+            status: "REJECTED"
+        }
+    });
 };
 
 /**
@@ -28,22 +60,11 @@ const userWithIdExists = async (db, userId) => {
  * @param {ObjectID} 
  */
 const otherReservationOnGivenRoomAndDateIntervalExists = async (db, roomId, dateInterval) => {
-    const fromDate = dateInterval.fromDate;
-    const toDate = dateInterval.toDate;
     const reservation = await db.collection('reservations').findOne({
         "roomId": roomId,
-        $or: [
-            {
-                $and: [
-                    { "fromDate": { $gte: fromDate } },
-                    { "toDate": { $lte: toDate } }
-                ]
-            },
-            {
-                "fromDate": { $lte: fromDate },
-                "toDate": { $gte: fromDate }
-            }
-        ]
+        "status": "ACCEPTED",
+        "startDate": { $lte: dateInterval.endDate },
+        "endDate": { $gte: dateInterval.startDate }
     });
     return reservation ? true : false;
 };
@@ -84,6 +105,22 @@ const getAvailableRoomsIds = async (db, searchData) => {
 
 /**
  * @param {Db} db
+ */
+const getReservationsForRoom = async (db, searchData) => {
+    const reservations = await db.collection('reservations').find({
+        "roomId": searchData.roomId,
+        "status": "ACCEPTED",
+        $and: [
+            { "fromDate": { $gte: searchData.fromDate } },
+            { "toDate": { $lte: searchData.toDate } }
+        ]
+    }).toArray();
+    console.log(reservations);
+    return reservations;
+};
+
+/**
+ * @param {Db} db
  * @param {ObjectID} roomId 
  */
 const getRoomPreview = async (db, roomId) => {
@@ -118,5 +155,8 @@ module.exports = {
     otherReservationOnGivenRoomAndDateIntervalExists,
     getRoomsIds,
     getAvailableRoomsIds,
-    getRoomPreviews
+    getRoomPreviews,
+    getReservationsForRoom,
+    changeReservationStatus,
+    rejectAllPendingReservationsForRoom
 };
