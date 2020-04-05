@@ -138,7 +138,7 @@ const getAvailableRoomsIds = async (db, searchData) => {
  * @param {Db} db
  */
 const getReservationsForRoom = async (db, searchData) => {
-    const reservations = await db.collection('reservations').find({
+    return await db.collection('reservations').find({
         "roomId": searchData.roomId,
         "status": "ACCEPTED",
         $and: [
@@ -146,8 +146,6 @@ const getReservationsForRoom = async (db, searchData) => {
             { "toDate": { $lte: searchData.toDate } }
         ]
     }).toArray();
-    console.log(reservations);
-    return reservations;
 };
 
 /**
@@ -246,6 +244,19 @@ const getRoomPreviews = async (db, roomIds) => {
     return roomPreviews;
 }
 
+/**
+ * @param {Db} db 
+ * @param {ObjectID} userId
+ * @param {String} status
+ */
+
+const getReservationsWithStatusForUser = async (db, userId, status) => {
+    return await db.collection('reservations').find({
+        userId: userId,
+        status: status
+    }).toArray();
+};
+
 module.exports = {
     roomWithIdExists,
     userWithIdExists,
@@ -258,5 +269,6 @@ module.exports = {
     changeReservationStatus,
     rejectAllPendingAndSuccessReservationsForRoom,
     getReservationsWithStatus,
-    getAcceptedReservationsForDateIntervalForRoom
+    getAcceptedReservationsForDateIntervalForRoom,
+    getReservationsWithStatusForUser
 };

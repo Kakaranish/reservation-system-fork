@@ -4,6 +4,8 @@ import fileUpload from "express-fileupload";
 import RoomRouter from "./routers/RoomRouter";
 import ReservationsRouter from "./routers/ReservationsRouter";
 import AccountRouter from "./routers/AccountRouter";
+import AdminRouter from './routers/AdminRouter';
+import UserRouter from './routers/UserRouter';
 
 require('dotenv').config()
 require('./auth');
@@ -16,6 +18,8 @@ app.use(fileUpload());
 app.use('/', RoomRouter);
 app.use('/', ReservationsRouter);
 app.use('/account', AccountRouter);
+app.use('/admin', AdminRouter);
+app.use('/user', UserRouter);
 
 app.use((err, req, res) => {
     console.log(`Error: ${err}`)
