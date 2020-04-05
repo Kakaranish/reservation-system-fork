@@ -128,6 +128,73 @@ const getReservationsForRoom = async (db, searchData) => {
 
 /**
  * @param {Db} db
+ * @param {String} status
+ */
+const getReservationsWithStatus = async (db, status) => {
+    const reservations = await db.collection('reservations').aggregate([
+        {
+            "$match": {
+                status: status
+            }
+        },
+        {
+            "$lookup" : {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user"
+            }
+        },
+        {
+            "$unwind": "$user"
+        },
+        {
+            "$project": {
+                "user._id": 0,
+                "user.role": 0,
+                "user.password": 0
+            }
+        },
+        {
+            "$lookup": {
+                from: "rooms",
+                localField: "roomId",
+                foreignField: "_id",
+                as: "room"
+            }
+        },
+        {
+            "$unwind": "$room"
+        },
+        {
+            "$project": {
+                "room._id": 0,
+                "room.capacity": 0,
+                "room.description": 0,
+                "room.pricePerDay": 0,
+                "room.amenities": 0,
+                "room.dows": 0
+            }
+        }
+    ]).toArray();
+
+    return reservations.map(reservation => {
+        return {
+            "_id": reservation["_id"],
+            startDate: reservation.startDate,
+            endDate: reservation.endDate,
+            pricePerDay: reservation.pricePerDay,
+            totalprice: reservation.totalPrice,
+            userEmail: reservation.user.email,
+            roomName: reservation.room.name,
+            roomLocation: reservation.room.location,
+            roomPhoto: reservation.room.photo
+        }
+    });
+}
+
+/**
+ * @param {Db} db
  * @param {ObjectID} roomId 
  */
 const getRoomPreview = async (db, roomId) => {
@@ -165,5 +232,6 @@ module.exports = {
     getRoomPreviews,
     getReservationsForRoom,
     changeReservationStatus,
-    rejectAllPendingReservationsForRoom
+    rejectAllPendingReservationsForRoom,
+    getReservationsWithStatus
 };

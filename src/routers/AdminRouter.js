@@ -20,9 +20,7 @@ router.get('/pending-reservations', async (req, res) => {
 
         try {
             const pendingReservations = await resSystemDbClient.withDb(async db => {
-                return await db.collection('reservations').find({
-                    status: "PENDING"
-                }).toArray();
+                return await dbActions.getReservationsWithStatus(db, "PENDING");
             });
             res.status(200).json(pendingReservations);
         } catch (error) {
