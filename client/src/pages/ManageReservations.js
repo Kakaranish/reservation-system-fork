@@ -27,7 +27,16 @@ const ManageReservations = () => {
     };
 
     const onRejectReservation = async reservationId => {
-        // TODO:
+        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
+        await axios.post(`/reject-reservation/`, {}, {
+            data: {
+                reservationId: reservationId
+            },
+            params: {
+                secret_token: secret_token
+            }
+        });
+        window.location.reload();
     };
 
     useEffect(() => {
@@ -77,30 +86,30 @@ const ManageReservations = () => {
 
     return (
         <>
-            <ul class="nav nav-tabs" id="reservation-tabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="pending-tab" data-toggle="tab"
+            <ul className="nav nav-tabs" id="reservation-tabs" role="tablist">
+                <li className="nav-item">
+                    <a className="nav-link active" id="pending-tab" data-toggle="tab"
                         onClick={() => setCurrentTab("pending")}
                         href="#pending" role="tab" aria-controls="pending" aria-selected="true">Pending</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="accepted-tab" data-toggle="tab"
+                <li className="nav-item">
+                    <a className="nav-link" id="accepted-tab" data-toggle="tab"
                         onClick={() => setCurrentTab("accepted")}
                         href="#accepted" role="tab" aria-controls="accepted" aria-selected="false">Accepted</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="rejected-tab" data-toggle="tab"
+                <li className="nav-item">
+                    <a className="nav-link" id="rejected-tab" data-toggle="tab"
                         onClick={() => setCurrentTab("rejected")}
                         href="#rejected" role="tab" aria-controls="rejected" aria-selected="false">Rejected</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="cancelled-tab" data-toggle="tab"
+                <li className="nav-item">
+                    <a className="nav-link" id="cancelled-tab" data-toggle="tab"
                         onClick={() => setCurrentTab("cancelled")}
                         href="#cancelled" role="tab" aria-controls="cancelled" aria-selected="false">Cancelled</a>
                 </li>
             </ul>
-            <div id="reservationTabsContent" class="tab-content bg-white">
-                <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+            <div id="reservationTabsContent" className="tab-content bg-white">
+                <div className="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
                     {
                         !pendingContent
                             ? null
@@ -108,7 +117,9 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         pendingContent.map(reservation => {
-                                            return <PendingReservation reservation={reservation}
+                                            return <PendingReservation
+                                                key={reservation["_id"]}
+                                                reservation={reservation}
                                                 onAcceptReservation={onAcceptReservation}
                                                 onRejectReservation={onRejectReservation} />
                                         })
@@ -117,7 +128,7 @@ const ManageReservations = () => {
                             </>
                     }
                 </div>
-                <div class="tab-pane fade" id="accepted" role="tabpanel" aria-labelledby="accepted-tab">
+                <div className="tab-pane fade" id="accepted" role="tabpanel" aria-labelledby="accepted-tab">
                     {
                         !acceptedContent
                             ? null
@@ -125,7 +136,9 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         acceptedContent.map(reservation => {
-                                            return <AcceptedReservation reservation={reservation}
+                                            return <AcceptedReservation
+                                                key={reservation["_id"]}
+                                                reservation={reservation}
                                                 onRejectReservation={onRejectReservation} />
                                         })
                                     }
@@ -133,7 +146,7 @@ const ManageReservations = () => {
                             </>
                     }
                 </div>
-                <div class="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
+                <div className="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
                     {
                         !rejectedContent
                             ? null
@@ -141,7 +154,9 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         rejectedContent.map(reservation => {
-                                            return <RejectedReservation reservation={reservation}
+                                            return <RejectedReservation
+                                                key={reservation["_id"]}
+                                                reservation={reservation}
                                                 onAcceptReservation={onAcceptReservation} />
                                         })
                                     }
@@ -149,7 +164,7 @@ const ManageReservations = () => {
                             </>
                     }
                 </div>
-                <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
+                <div className="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
                     {
                         !cancelledContent
                             ? null

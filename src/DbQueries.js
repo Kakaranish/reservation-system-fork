@@ -42,10 +42,20 @@ const changeReservationStatus = async (db, reservationId, newStatus) => {
  * @param {Db} db 
  * @param {ObjectID} roomId
  */
-const rejectAllPendingReservationsForRoom = async (db, roomId) => {
+const rejectAllPendingAndSuccessReservationsForRoom = async (db, roomId, reservationId) => {
     await db.collection('reservations').updateMany({
         roomId: roomId,
-        status: "PENDING"
+        "_id": {
+            "$ne": reservationId
+        },
+        $or: [
+            {
+                status: "PENDING"
+            },
+            {
+                status: "ACCEPTED"
+            }
+        ]
     }, {
         $set: {
             status: "REJECTED",
@@ -232,6 +242,6 @@ module.exports = {
     getRoomPreviews,
     getReservationsForRoom,
     changeReservationStatus,
-    rejectAllPendingReservationsForRoom,
+    rejectAllPendingAndSuccessReservationsForRoom,
     getReservationsWithStatus
 };

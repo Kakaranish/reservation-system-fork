@@ -138,7 +138,7 @@ router.post('/accept-reservation', async (req, res) => {
                 if(!reservation) return reservation;
                 
                 const roomId = reservation.roomId;
-                await dbActions.rejectAllPendingReservationsForRoom(db, roomId);
+                await dbActions.rejectAllPendingAndSuccessReservationsForRoom(db, roomId, reservationId);
                 
                 return reservation;
             });
