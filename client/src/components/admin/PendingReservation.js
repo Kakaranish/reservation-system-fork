@@ -1,4 +1,5 @@
 import React from "react";
+import moment from "moment";
 
 const PendingReservation = ({ reservation, onAcceptReservation, onRejectReservation }) => {
 
@@ -25,7 +26,7 @@ const PendingReservation = ({ reservation, onAcceptReservation, onRejectReservat
                             Who's making reservation?: <b>{reservation.userEmail}</b>
                         </p>
                         <p class="card-text">
-                            When?: <b>2020-04-20 - 2020-04-22</b>
+                            When?: <b>{moment(reservation.startDate).format("YYYY-MM-DD")} - {moment(reservation.endDate).format("YYYY-MM-DD")}</b>
                         </p>
                         <p class="card-text">
                             Pice Per Day: <b>{reservation.pricePerDay}PLN</b>

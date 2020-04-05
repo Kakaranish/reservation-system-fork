@@ -53,7 +53,7 @@ router.post('/create-reservation', async (req, res) => {
                 reservation.status = "PENDING";
                 reservation.createDate = moment.utc().toDate();
                 reservation.updateDate = moment.utc().toDate();
-                
+
                 const reservationId = await db.collection('reservations')
                     .insertOne(reservation)
                     .then(result => result.insertedId);
@@ -98,7 +98,6 @@ router.get('/reservations/:roomid', async (req, res) => {
         fromDate: fromDate.toDate(),
         toDate: toDate.toDate()
     };
-    console.log(searchData);
 
     try {
         const dbResult = await resSystemDbClient.withDb(async db => {
@@ -135,18 +134,18 @@ router.post('/accept-reservation', async (req, res) => {
             const dbResult = await resSystemDbClient.withDb(async db => {
                 const reservation = await dbActions.changeReservationStatus(
                     db, reservationId, "ACCEPTED");
-                if(!reservation) return reservation;
-                
+                if (!reservation) return reservation;
+
                 const roomId = reservation.roomId;
                 await dbActions.rejectAllPendingAndSuccessReservationsForRoom(db, roomId, reservationId);
-                
+
                 return reservation;
             });
-    
+
             if (!dbResult) return res.status(400).json({
                 message: `There is no reservation with id ${reservationId}`
             });
-    
+
             return res.status(200).json({
                 message: "OK"
             });
@@ -227,6 +226,35 @@ router.delete('/delete-reservation', async (req, res) => {
             });
         }
     })(req, res);
+});
+
+router.get('/accepted-reservations/:roomid', async (req, res) => {
+    const errors = [];
+    if (!ObjectID.isValid(req.params.roomid)) errors.push(`Error: '${req.params.roomid} is not valid ObjectID'`);
+    const fromDate = moment.utc(req.query.fromDate, "YYYY-MM-DD", true);
+    if (!fromDate.isValid()) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
+    const toDate = moment.utc(req.query.toDate, "YYYY-MM-DD", true);
+    if (!toDate.isValid()) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
+    if (errors.length > 0) return res.status(400).json({
+        "errors": errors
+    });
+
+    const roomId = new ObjectID(req.params.roomid);
+    const dateInterval = {
+        startDate: fromDate.toDate(),
+        endDate: toDate.toDate()
+    }
+    try {
+        const reservations = await resSystemDbClient.withDb(async db => {
+            return await dbActions.getAcceptedReservationsForDateIntervalForRoom(db, roomId, dateInterval);
+        });
+        res.status(200).json(reservations);
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({
+            message: "Error: Internal error"
+        });
+    }
 });
 
 const changeReservationStatus = async (req, res, newStatus) => {

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from "moment";
+import axios from "axios";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-const ReservationCalendar = ({ onSelectedInterval, reservations, dows, dateIntervalToGenerate }) => {
+const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToGenerate }) => {
     const localizer = momentLocalizer(moment);
     moment.locale('ko', {
         week: {
@@ -13,10 +14,34 @@ const ReservationCalendar = ({ onSelectedInterval, reservations, dows, dateInter
     });
 
     const notAvailableEvents = getEventsForDows(dows, dateIntervalToGenerate);
+
     const [selectedInterval, setSelectedInterval] = useState(null);
     const [events, setEvents] = useState({
-        dateIntervals: [...notAvailableEvents]
+        dateIntervals: []
     });
+
+    useEffect(() => {
+        const getEventsForRoomReservations = async (roomId) => {
+            try {
+                const result = await axios.get(`/accepted-reservations/${roomId}`, {
+                    params: {
+                        fromDate: dateIntervalToGenerate.start.format('YYYY-MM-DD'),
+                        toDate: dateIntervalToGenerate.end.format("YYYY-MM-DD")
+                    }
+                });
+                const reservations = result.data;
+                const reservationEvents = mapReservationsToEvents(reservations);
+                setEvents({
+                    dateIntervals: [...notAvailableEvents, ...reservationEvents]
+                });
+            } catch (error) {
+                // Some error handling...
+                console.log(error);
+            }
+        }
+
+        getEventsForRoomReservations(roomId);
+    }, []);
 
     const onSelectSlot = slotInfo => {
         const userDateInterval = {
@@ -98,20 +123,6 @@ const customEventPropGetter = event => {
     }
 };
 
-/**
- * @param {Array} reservations 
- */
-const mapReservationsToEvents = reservations => {
-    return reservations.map(reservation => {
-        return {
-            start: reservation.start,
-            end: moment(reservation.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
-            title: reservation.title,
-            type: reservation.type
-        };
-    })
-};
-
 const userDateIntervalIsOutOfRange = (userDateInterval, legalDateInterval) => {
     return userDateInterval.start.valueOf() < legalDateInterval.start.valueOf() ||
         userDateInterval.end.valueOf() > legalDateInterval.end.valueOf();
@@ -170,6 +181,21 @@ const getIntIntervalsFromIntArray = intArray => {
 const legalDows = {
     "dowMonday": 1, "dowTuesday": 2, "dowWednesday": 3, "dowThursday": 4,
     "dowFriday": 5, "dowSaturday": 6, "dowSunday": 7
+};
+
+/**
+ * @param {Array} reservations 
+ */
+const mapReservationsToEvents = reservations => {
+    console.log(reservations)
+    return reservations.map(reservation => {
+        return {
+            start: moment(reservation.startDate).startOf('day').toDate(),
+            end: moment(reservation.endDate).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
+            title: "RESERVED",
+            type: "reserved"
+        };
+    })
 };
 
 export default ReservationCalendar;

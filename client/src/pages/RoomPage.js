@@ -12,14 +12,19 @@ const images = require.context('../assets/images/amenities', true);
 
 const RoomPage = ({ match }) => {
     const roomId = match.params.id;
+
+    const dateIntervalToGenerate = {
+        start: moment().startOf('day'),
+        end: moment().startOf('day').add(6, 'months')
+    };
+
     const [message, setMessage] = useState(null);
     const [room, setRoom] = useState(null);
 
     useEffect(() => {
         const getRoom = async roomId => {
-            let result;
             try {
-                result = await axios(`/rooms/${roomId}`);
+                const result = await axios(`/rooms/${roomId}`);
                 setRoom(result.data);
             }
             catch (error) {
@@ -29,30 +34,10 @@ const RoomPage = ({ match }) => {
         if (ObjectID.isValid(roomId)) getRoom(roomId);
     }, []);
 
-    const existingReservations = [
-        {
-            start: moment.utc('2020-04-01').startOf('day').toDate(),
-            end: moment.utc('2020-04-02').startOf('day').toDate(),
-            title: "res1"
-        },
-        {
-            start: moment.utc('2020-04-04').startOf('day').toDate(),
-            end: moment.utc('2020-04-06').startOf('day').toDate(),
-            title: "res2"
-        },
-        {
-            start: moment.utc('2020-04-08').startOf('day').toDate(),
-            end: moment.utc('2020-04-10').startOf('day').toDate(),
-            title: "RESERVED",
-            type: "reserved"
-        }
-    ];
-
     const [selectedInterval, setSelectedInterval] = useState(null);
     const onSelectedInterval = passedSelectedInterval => {
         setSelectedInterval(passedSelectedInterval)
     }
-
 
     if (!ObjectID.isValid(roomId)) {
         return (
@@ -63,11 +48,6 @@ const RoomPage = ({ match }) => {
             </div>
         );
     }
-
-    const dateIntervalToGenerate = {
-        start: moment().startOf('day'),
-        end: moment().startOf('day').add(6, 'months')
-    };
 
     const makeReservationOnClick = async () => {
         // Temp & not valuable :)
@@ -147,8 +127,8 @@ const RoomPage = ({ match }) => {
                             <ReservationCalendar
                                 onSelectedInterval={onSelectedInterval}
                                 dateIntervalToGenerate={dateIntervalToGenerate}
-                                reservations={existingReservations}
-                                dows={room.dows} />
+                                dows={room.dows}
+                                roomId={roomId} />
                         </div>
 
                         {
@@ -166,7 +146,9 @@ const RoomPage = ({ match }) => {
                                     </div>
 
                                     <div className="col-12 mt-3">
-                                        <CreatedReservationModal selectedDateInterval={selectedInterval} reservationMakeOnClick={makeReservationOnClick} />
+                                        <CreatedReservationModal
+                                            selectedDateInterval={selectedInterval}
+                                            reservationMakeOnClick={makeReservationOnClick} />
                                     </div>
                                 </>
                         }

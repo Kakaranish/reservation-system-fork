@@ -18,6 +18,20 @@ const reservationWithIdExists = async (db, reservationId) => {
 
 /**
  * @param {Db} db 
+ * @param {ObjectID} roomId
+ */
+const getAcceptedReservationsForDateIntervalForRoom = async (db, roomId, dateInterval) => {
+    console.log(dateInterval)
+    return await db.collection('reservations').find({
+        roomId: roomId,
+        status: "ACCEPTED",
+        startDate: { $lte: dateInterval.endDate },
+        endDate: { $gte: dateInterval.startDate }
+    }).toArray();
+}
+
+/**
+ * @param {Db} db 
  * @param {ObjectID} reservationId
  */
 const changeReservationStatus = async (db, reservationId, newStatus) => {
@@ -148,7 +162,7 @@ const getReservationsWithStatus = async (db, status) => {
             }
         },
         {
-            "$lookup" : {
+            "$lookup": {
                 from: "users",
                 localField: "userId",
                 foreignField: "_id",
@@ -243,5 +257,6 @@ module.exports = {
     getReservationsForRoom,
     changeReservationStatus,
     rejectAllPendingAndSuccessReservationsForRoom,
-    getReservationsWithStatus
+    getReservationsWithStatus,
+    getAcceptedReservationsForDateIntervalForRoom
 };
