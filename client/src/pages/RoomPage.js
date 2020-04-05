@@ -6,6 +6,7 @@ import noImagePlaceholder from "../assets/icons/no-image.svg";
 import moment from "moment";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import ReservationCalendar from "../components/ReservationCalendar";
+import CreatedReservationModal from '../components/CreatedRervationModal';
 
 const images = require.context('../assets/images/amenities', true);
 
@@ -67,6 +68,11 @@ const RoomPage = ({ match }) => {
         start: moment().startOf('day'),
         end: moment().startOf('day').add(6, 'months')
     };
+
+    const makeReservationOnClick = () => {
+        // TODO:
+        window.location.reload();
+    }
 
     return (
         <div className="row">
@@ -142,7 +148,7 @@ const RoomPage = ({ match }) => {
                                             </div>
 
                                             <div className="col-12 mt-3">
-                                                <button type="submit" className="btn btn-block primary-btn">Make reservation</button>
+                                                <CreatedReservationModal selectedDateInterval={selectedInterval} reservationMakeOnClick={makeReservationOnClick} />
                                             </div>
                                         </>
                                 }
