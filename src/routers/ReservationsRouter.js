@@ -19,6 +19,7 @@ router.post('/create-reservation', async (req, res) => {
         let reservation = prepareReservation(req);
         let errors = validateReservation(reservation);
         if (errors.length > 0) {
+            console.log(errors);
             return res.status(400).json({
                 "errors": errors
             });
@@ -50,6 +51,9 @@ router.post('/create-reservation', async (req, res) => {
                 }
 
                 reservation.status = "PENDING";
+                reservation.createDate = moment.utc().toDate();
+                reservation.updateDate = moment.utc().toDate();
+                
                 const reservationId = await db.collection('reservations')
                     .insertOne(reservation)
                     .then(result => result.insertedId);
@@ -271,7 +275,7 @@ const prepareReservation = req => {
 
 const validateReservation = reservation => {
     let errors = [];
-    if (!reservation.startDate) errors.push(`'startDate' is 'YYYY-MM-DD' date format.`)
+    if (!reservation.startDate) errors.push(`'startDate' is not 'YYYY-MM-DD' date format.`)
     if (!reservation.endDate) errors.push(`'endDate' is not 'YYYY-MM-DD' date format.`)
     if (!reservation.userId) errors.push(`'userId' is not correct ObjectID`);
     if (!reservation.roomId) errors.push(`'roomId' is not correct ObjectID`);
