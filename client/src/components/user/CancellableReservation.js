@@ -31,7 +31,7 @@ const PendingReservation = ({ reservation, onCancelReservation }) => {
                 <div className="card-footer w-100 bg-white border-0 mt-sm-2 px-0">
                     <div className="row">
                         <div className="col-12">
-                            <button className="btn btn-block text-uppercase mb-2 btn-success" onClick={onCancel}>
+                            <button className="btn btn-block text-uppercase mb-2 btn-danger" onClick={onCancel}>
                                 Cancel
                             </button>
                         </div>

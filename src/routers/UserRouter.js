@@ -88,7 +88,7 @@ router.get('/cancelled-reservations/:userId', async (req, res) => {
     })(req, res);
 });
 
-router.get('/cancel-reservation/:reservationId', async (req, res) => {
+router.post('/cancel-reservation/:reservationId', async (req, res) => {
     passport.authenticate('jwt', { session: false }, async (error, user) => {
         if (!user.role) return res.status(401).json({
             message: "Unauthorized access"
@@ -102,7 +102,6 @@ router.get('/cancel-reservation/:reservationId', async (req, res) => {
                 message: `Error: ${req.params.reservationId} is not valid reservationId`
             });
         }
-
         const reservationId = new ObjectID(req.params.reservationId);
         try {
             const pendingReservations = await resSystemDbClient.withDb(async db => {

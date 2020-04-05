@@ -21,7 +21,6 @@ const reservationWithIdExists = async (db, reservationId) => {
  * @param {ObjectID} roomId
  */
 const getAcceptedReservationsForDateIntervalForRoom = async (db, roomId, dateInterval) => {
-    console.log(dateInterval)
     return await db.collection('reservations').find({
         roomId: roomId,
         status: "ACCEPTED",
@@ -49,7 +48,7 @@ const changeReservationStatus = async (db, reservationId, newStatus) => {
             }
         }
     );
-    return reservation
+    return true;
 }
 
 /**

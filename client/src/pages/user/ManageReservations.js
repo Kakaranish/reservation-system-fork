@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import PendingReservation from "../../components/user/PendingReservation";
+import CancellableReservation from "../../components/user/CancellableReservation";
 import OtherReservation from '../../components/user/OtherReservation';
 
 const ManageReservations = () => {
@@ -12,15 +12,16 @@ const ManageReservations = () => {
 
     const onCancelReservation = async reservationId => {
         const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlOGEyY2JjNTQzYWU0MDNhYWI3NWQxMiIsImVtYWlsIjoic3Rhc2lla2dydXoxQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NjExMzc0Mn0.7rOzSpnsHDtrLwnCLgRroQ6ldwiFklxUT2ih_WOm16g";
-        await axios.post('/user/cancel-reservation', {}, {
-            data: {
-                reservationId: reservationId
-            },
-            params: {
-                secret_token: secret_token
-            }
-        })
-        window.location.reload();
+        try {
+            await axios.post(`/user/cancel-reservation/${reservationId}`, {}, {
+                params: {
+                    secret_token: secret_token
+                }
+            });
+            window.location.reload();
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     useEffect(() => {
@@ -100,7 +101,7 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         pendingContent.map(reservation => {
-                                            return <PendingReservation
+                                            return <CancellableReservation
                                                 key={reservation["_id"]}
                                                 reservation={reservation}
                                                 onCancelReservation={onCancelReservation} />
@@ -118,9 +119,10 @@ const ManageReservations = () => {
                                 <div className="container p-4">
                                     {
                                         acceptedContent.map(reservation => {
-                                            return <OtherReservation
+                                            return <CancellableReservation
                                                 key={reservation["_id"]}
-                                                reservation={reservation} />
+                                                reservation={reservation}
+                                                onCancelReservation={onCancelReservation} />
                                         })
                                     }
                                 </div>
