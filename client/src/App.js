@@ -1,40 +1,40 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { BrowserRouter, Switch } from "react-router-dom";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
+import DashboardLayoutRoute from './pages/layouts/DashbordLayoutRoute';
 import TestPage from './pages/TestPage';
 import RoomFilterPage from './pages/RoomFilterPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import RoomsPage from "./pages/RoomsPage";
+import RoomPage from "./pages/RoomPage";
+import CreateRoomPage from './pages/CreateRoomPage';
+import AdminManageReservations from './pages/admin/ManageReservations';
+import UserManageReservations from './pages/user/ManageReservations';
+import EmptyLayoutRoute from './pages/layouts/EmptyLayoutRoute';
 
 class App extends Component {
   render() {
     return (
-      <Router>
-        {/* <Route path="/login" component={LoginPage} />
+      <BrowserRouter>
+        <Switch>
+          <DashboardLayoutRoute path="/" component={TestPage} exact />
+          <DashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
+          <DashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
+          <DashboardLayoutRoute path="/create-room" component={CreateRoomPage} />
+          <DashboardLayoutRoute path="/admin/manage-reservations" component={AdminManageReservations} />
+          <DashboardLayoutRoute path="/user/manage-reservations" component={UserManageReservations} />
+          <DashboardLayoutRoute path="/rooms" component={RoomsPage} />
 
-        <Route path="/register" component={RegisterPage} /> */}
+          <EmptyLayoutRoute path="/login" component={LoginPage} />
+          <EmptyLayoutRoute path="/register" component={RegisterPage} />
 
-        <div className="d-flex" id="wrapper">
-          <Sidebar />
-          <div id="page-content-wrapper">
-            <Navbar />
-            <div className="container-fluid mt-4">
-              <Switch>
-                <Route path="/" component={TestPage} exact />
-                <Route path="/filter-rooms" component={RoomFilterPage} />
-                <Route path="/rooms" component={RoomsPage} />
-                <Route component={NotFoundPage} />
-              </Switch>
-            </div>
-          </div>
-        </div>
-      </Router>
+          <DashboardLayoutRoute component={NotFoundPage} />
+        </Switch>
+      </BrowserRouter>
     );
   }
 }
