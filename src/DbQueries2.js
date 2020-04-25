@@ -25,13 +25,6 @@ const userWithIdExists = async userId => {
     return User.exists({ _id: userId });
 }
 
-/**
- * @param {String} email 
- */
-const userWithEmailExists = async email => {
-    return User.exists({ email: email });
-}
-
 const getRoomIds = async () => {
     return Room.find({}).select('id');
 }
@@ -141,6 +134,27 @@ const getAvailableRoomIds = async (dateInterval) => {
     }).select('_id');
 }
 
+// TODO: !!!!!!!!!!!!!!
+/**
+ * @param {Object} searchData
+ * @param {String} searchData.fromDate
+ * @param {String} searchData.toDate
+ */
+const getAvailableRoomPreviews = async (dateInterval) => {
+    const roomIds = (await getRoomIds())
+        .map(record => record.id);
+
+    let availableRooms = [];
+    await Promise.all(roomIds.map(async (roomId) => {
+        const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists(
+            roomId, dateInterval)
+        if (isAvailable) availableRooms.push(
+            await getRoomPreview(roomId)
+        );
+    }));
+    return availableRooms;
+}
+
 /**
  * @param {Object} searchData 
  * @param {mongoose.Types.ObjectId} searchData.roomId
@@ -196,7 +210,6 @@ module.exports = {
     roomWithIdExists,
     reservationWithIdExists,
     userWithIdExists,
-    userWithEmailExists,
     getRoomIds,
     getAcceptedReservationsForDateIntervalForRoom,
     changeReservationStatus,
@@ -207,5 +220,6 @@ module.exports = {
     getAvailableRoomIds,
     getReservationsForRoom,
     getReservationsWithStatus,
-    getReservationsWithStatusForUser
+    getReservationsWithStatusForUser,
+    getAvailableRoomPreviews
 };
