@@ -1,4 +1,5 @@
 import moment from 'moment';
+import mongoose from 'mongoose';
 
 /**
  * @param {Number | String} value 
@@ -24,5 +25,17 @@ const parseIsoDatetime = datetime => {
         : null;
 }
 
+/**
+ * 
+ * @param {String} objectId 
+ * @returns {mongoose.}
+ */
+const parseObjectId = objectId => {
+    return mongoose.Types.ObjectId.isValid(objectId)
+        ? mongoose.Types.ObjectId(objectId)
+        : null;
+}
+
 exports.preparePrice = preparePrice;
 exports.parseIsoDatetime = parseIsoDatetime;
+exports.parseObjectId = parseObjectId;

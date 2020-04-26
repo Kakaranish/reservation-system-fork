@@ -5,6 +5,8 @@ import passport from "passport";
 import moment from 'moment';
 import '../auth';
 const preparePrice = require('../common').preparePrice;
+const parseIsoDatetime = require('../common').parseIsoDatetime;
+const parseObjectId = require('../common').parseObjectId;
 
 import { ObjectID } from "mongodb";
 const dbActions = require('../DbQueries')
@@ -43,8 +45,8 @@ router.post('/create-reservation', async (req, res) => {
                     }
                 }
                 const dateInterval = {
-                    "startDate": reservation.startDate,
-                    "endDate": reservation.endDate
+                    fromDate: reservation.fromDate,
+                    toDate: reservation.toDate
                 };
                 if (await dbActions.otherReservationOnGivenRoomAndDateIntervalExists(db, reservation.roomId, dateInterval)) {
                     return {
@@ -244,8 +246,8 @@ router.get('/accepted-reservations/:roomid', async (req, res) => {
 
     const roomId = new ObjectID(req.params.roomid);
     const dateInterval = {
-        startDate: fromDate.toDate(),
-        endDate: toDate.toDate()
+        fromDate: fromDate.toDate(),
+        toDate: toDate.toDate()
     }
     try {
         const reservations = await resSystemDbClient.withDb(async db => {
@@ -287,27 +289,40 @@ const changeReservationStatus = async (req, res, newStatus) => {
     }
 };
 
+/**
+ * @param {Object} req 
+ * @param {String} req.body.fromDate
+ * @param {String} req.body.toDate
+ * @param {String} req.body.userId
+ * @param {String} req.body.roomId
+ * @param {String} req.pricePerDay
+ * @param {String} req.totalPrice
+ */
 const prepareReservation = req => {
-    const startDate = moment.utc(req.body.startDate, "YYYY-MM-DD", true);
-    const endDate = moment.utc(req.body.endDate, "YYYY-MM-DD", true);
     return {
-        startDate: startDate.isValid() ? startDate.toDate() : null,
-        endDate: endDate.isValid() ? endDate.toDate() : null,
-        userId: ObjectID.isValid(req.body.userId)
-            ? new ObjectID(req.body.userId)
-            : null,
-        roomId: ObjectID.isValid(req.body.roomId)
-            ? new ObjectID(req.body.roomId)
-            : null,
+        fromDate: parseIsoDatetime(req.body.fromDate),
+        toDate: parseIsoDatetime(req.body.ToDate),
+        userId: parseObjectId(req.body.userId),
+        roomId: parseObjectId(req.body.roomId),
         pricePerDay: preparePrice(req.body.pricePerDay),
         totalPrice: preparePrice(req.body.totalPrice)
     };
 }
 
+/**
+ * 
+ * @param {Object} reservation
+ * @param {moment.Moment} reservation.fromDate
+ * @param {moment.Moment} reservation.toDate
+ * @param {mongoose.Types.ObjectId} reservation.userId
+ * @param {mongoose.Types.ObjectId} reservation.roomId
+ * @param {Number} reservation.pricePerDay
+ * @param {Number} reservation.totalPrice
+ */
 const validateReservation = reservation => {
     let errors = [];
-    if (!reservation.startDate) errors.push(`'startDate' is not 'YYYY-MM-DD' date format.`)
-    if (!reservation.endDate) errors.push(`'endDate' is not 'YYYY-MM-DD' date format.`)
+    if (!reservation.fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' date format.`)
+    if (!reservation.toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' date format.`)
     if (!reservation.userId) errors.push(`'userId' is not correct ObjectID`);
     if (!reservation.roomId) errors.push(`'roomId' is not correct ObjectID`);
     if (!reservation.pricePerDay) errors.push(`'pricePerDay' is not valid price`);
@@ -316,4 +331,5 @@ const validateReservation = reservation => {
 };
 
 export default router;
+exports.prepareReservation = prepareReservation;
 exports.validateReservation = validateReservation;
