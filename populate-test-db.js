@@ -7,7 +7,7 @@ import moment, { ISO_8601 } from 'moment';
 require('dotenv').config();
 
 const currentDbVarName = process.env.MONGO_CURRENT_DB_URI;
-const dbName = process.env.TEST_DB_NAME;
+const dbName = process.env.DB_NAME_TEST;
 
 mongoose.connect(process.env[currentDbVarName], {
     dbName: dbName,
@@ -53,7 +53,7 @@ const users = [
     new User({
         _id: mongoose.Types.ObjectId('5ea54fe32d431462827c2c5e'),
         email: "user@mail.com",
-        password: "123",
+        password: "$2a$10$vI8aWBnW3fID.ZQ4/zo1G.a29kwv8V6jU5L4nb.F5/EJxDqZ/w6DG", // hashed '123'
         firstName: "user",
         lastName: "user-lastname",
         role: "USER"
@@ -61,7 +61,7 @@ const users = [
     new User({
         _id: mongoose.Types.ObjectId("5ea5501566815162f73bad80"),
         email: "admin@mail.com",
-        password: "123",
+        password: "$2a$10$vI8aWBnW3fID.ZQ4/zo1G.a29kwv8V6jU5L4nb.F5/EJxDqZ/w6DG", // hashed '123'
         firstName: 'admin',
         lastName: 'admin-lastname',
         role: "ADMIN"

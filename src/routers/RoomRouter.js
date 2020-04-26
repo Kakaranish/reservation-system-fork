@@ -139,6 +139,9 @@ router.post('/create-room', async (req, res) => {
     })(req, res);
 });
 
+/**
+ * @param {Object} roomJson 
+ */
 const processRoomJson = roomJson => {
     let errors = [];
     if (!roomJson.name) errors.push("'name' is not provided");
@@ -147,7 +150,7 @@ const processRoomJson = roomJson => {
     roomJson.capacity = parseInt(roomJson.capacity);
     if (!roomJson.capacity) errors.push("'capacity' is not provided or it's not integer");
 
-    roomJson.pricePerDay = parseFloat(roomJson.pricePerDay);
+    roomJson.pricePerDay = preparePrice(roomJson.pricePerDay);
     if (!roomJson.pricePerDay) errors.push("'pricePerDay' is not provided or it's not float");
 
     let amenitiesError = validateAmenities(roomJson.amenities);
@@ -186,7 +189,7 @@ const validateAmenities = amenities => {
 }
 
 /**
- * @param {Array} dows 
+ * @param {String} dows 
  */
 const validateDows = dows => {
     const availableDows = ["dowMonday", "dowTuesday", "dowWednesday",
@@ -196,8 +199,9 @@ const validateDows = dows => {
     try {
         parsedDows = JSON.parse(dows);
     } catch (error) {
-        return `Dows: ${error}`;
+        return `'dows': ${error}`;
     }
+
     if (!Array.isArray(parsedDows) || parsedDows.length === 0) {
         return "'dows' must be non-empty array";
     }
@@ -208,6 +212,9 @@ const validateDows = dows => {
     return null;
 }
 
+/**
+ * @param {Number | String} value 
+ */
 const preparePrice = value => {
     if (!value) return null;
     else if (typeof (value) === 'number') {
@@ -220,3 +227,6 @@ const preparePrice = value => {
 
 export default router;
 exports.preparePrice = preparePrice;
+exports.validateDows = validateDows;
+exports.validateAmenities = validateAmenities;
+exports.processRoomJson = processRoomJson;
