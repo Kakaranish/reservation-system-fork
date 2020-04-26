@@ -4,26 +4,6 @@ import Room from './models/room-model';
 import Reservation from './models/reservation-model';
 import User from './models/user-model';
 
-/**
- * @param {mongoose.Types.ObjectId} roomId 
- */
-const roomWithIdExists = async roomId => {
-    return Room.exists({ _id: roomId });
-}
-
-/**
- * @param {mongoose.Types.ObjectId} reservationId 
- */
-const reservationWithIdExists = async reservationId => {
-    return Reservation.exists({ _id: reservationId });
-}
-
-/**
- * @param {mongoose.Types.ObjectId} userId 
- */
-const userWithIdExists = async userId => {
-    return User.exists({ _id: userId });
-}
 
 const getRoomIds = async () => {
     return Room.find({}).select('id');
@@ -208,9 +188,6 @@ const getReservationsWithStatusForUser = async (userId, status) => {
 }
 
 module.exports = {
-    roomWithIdExists,
-    reservationWithIdExists,
-    userWithIdExists,
     getRoomIds,
     getAcceptedReservationsForDateIntervalForRoom,
     changeReservationStatus,

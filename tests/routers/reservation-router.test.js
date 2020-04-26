@@ -106,6 +106,69 @@ describe('validateReservation', () => {
     });
 });
 
+const roomForGettingReservation = '5ea5e3423724e5ff90e7df45';
+const reservationsForRoom = [
+    '5ea5e6b2f0322ac00ff284ac',
+    '5ea5e3beb9f264420ea8799d'
+];
+
+describe('/room/:roomId/reservations', () => {
+    it('When roomId is not valid ObjectId then error is returned', async () => {
+        // Assert: 
+        const invalidObjectId = "INALID";
+
+        // Act:
+        const result = await request.get(`/rooms/${invalidObjectId}/reservations`)
+        .query({
+            fromDate: '2020-05-01T00:00:00.000Z',
+            toDate: '2020-05-02T00:00:00.000Z'
+        });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('ObjectId')).toBe(true);
+    });
+
+    it('When one of dates is not valid iso datetime then error is returned', async () => {
+        // Act:
+        const result = await request.get(`/rooms/${roomForGettingReservation}/reservations`)
+        .query({
+            fromDate: 'INVALID',
+            toDate: '2020-05-02T00:00:00.000Z'
+        });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('fromDate')).toBe(true);
+    });
+
+    it('When correct query values and parameter are provided then valid reservation are returned', async () => {
+        // Act:
+        const result = await request.get(`/rooms/${roomForGettingReservation}/reservations`)
+        .query({
+            fromDate: '2020-05-01T00:00:00.000Z',
+            toDate: '2020-05-02T00:00:00.000Z'
+        });
+    
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body).toHaveLength(2);
+        reservationsForRoom.forEach(reservationId => {
+            expect(result.body.some(x => x._id === reservationId)).toBe(true)
+        });
+
+        const reservation1 = result.body.filter(x => x._id === reservationsForRoom[0])[0];
+        expect(reservation1.fromDate).toBe('2020-05-01T00:00:00.000Z');
+        expect(reservation1.toDate).toBe('2020-05-01T00:00:00.000Z');
+        
+        const reservation2 = result.body.filter(x => x._id === reservationsForRoom[1])[0];
+        expect(reservation2.fromDate).toBe('2020-05-02T00:00:00.000Z');
+        expect(reservation2.toDate).toBe('2020-05-02T00:00:00.000Z');
+    });
+});
+
 afterAll(() => {
     mongoose.connection.close();
 });
