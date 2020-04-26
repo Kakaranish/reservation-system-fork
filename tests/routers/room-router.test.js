@@ -484,7 +484,7 @@ describe('/rooms/create', () => {
         expect(result.body.errors[0].includes('file')).toBe(true);
     });
 
-    it('To rename', async () => {
+    it('When user token provided and form filled correctly then room is created', async () => {
         // Arrange:
         const cwd = path.resolve(__dirname, "..", "assets");
 
@@ -492,6 +492,44 @@ describe('/rooms/create', () => {
         const result = await request.post('/rooms/create')
             .query({
                 secret_token: testUserToken
+            })
+            .field('name', 'Some name')
+            .field('location', 'Some location')
+            .field('capacity', '123')
+            .field('pricePerDay', '22.22')
+            .field('amenities', JSON.stringify(["amtTV", "amtProjector"]))
+            .field('dows', JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"]))
+            .attach('file', `${cwd}/some-image.png`);
+
+        // Assert:
+        try {
+            expect.anything(result.body.roomId);
+            expect(result.body.photoUrl);
+        }
+        catch (error) {
+            throw error;
+        }
+        finally {
+            if (result.body.roomId) {
+                await Room.deleteOne({ _id: result.body.roomId });
+            }
+
+            if (result.body.photoUrl) {
+                const photoPath = path.resolve(__dirname, "..", "..", "client", "public")
+                    + result.body.photoUrl;
+                await fs.unlink(photoPath);
+            }
+        }
+    });
+
+    it('When admin token provided and form filled correctly then room is created', async () => {
+        // Arrange:
+        const cwd = path.resolve(__dirname, "..", "assets");
+
+        // Act:
+        const result = await request.post('/rooms/create')
+            .query({
+                secret_token: testAdminToken
             })
             .field('name', 'Some name')
             .field('location', 'Some location')
