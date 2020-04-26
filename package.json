@@ -5,14 +5,15 @@
   "main": "server.js",
   "scripts": {
     "start": "npx nodemon --inspect=2137 --exec babel-node src/server.js",
-    "debug": "npx nodemon --exec babel-node src/server.js"
+    "populate-test-db": "npx babel-node populate-test-db.js",
   },
   "author": "Stanislaw Gruz",
   "license": "ISC",
   "dependencies": {
+    "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@babel/node": "^7.8.7",
-    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
