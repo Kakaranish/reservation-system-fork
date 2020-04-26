@@ -4,8 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "npx nodemon --inspect=2137 --exec babel-node src/server.js",
+    "start": "npx nodemon --inspect=2137 --exec babel-node src/start.js",
+    "debug": "npx nodemon --exec babel-node src/start.js",
     "populate-test-db": "npx babel-node populate-test-db.js",
+    "test": "jest"
   },
   "author": "Stanislaw Gruz",
   "license": "ISC",
@@ -28,6 +30,18 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
+    "regenerator-runtime": "^0.13.5",
     "uuid": "^7.0.2"
+  },
+  "devDependencies": {
+    "jest": "^25.4.0",
+    "supertest": "^4.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/client/"
+    ]
   }
 }

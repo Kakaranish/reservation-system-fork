@@ -1,11 +1,12 @@
 import passport from "passport";
 import bcryptjs from "bcryptjs";
 import User from './models/user-model';
+import 'regenerator-runtime';
 
 require('dotenv').config();
-const localStrategy = require('passport-local').Strategy;
+const LocalStrategy = require('passport-local').Strategy;
 
-passport.use('singup', new localStrategy({
+passport.use('singup', new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password',
     passReqToCallback: true
@@ -46,7 +47,7 @@ passport.use('singup', new localStrategy({
 }
 }));
 
-passport.use('login', new localStrategy({
+passport.use('login', new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password'
 }, async (email, password, done) => {
