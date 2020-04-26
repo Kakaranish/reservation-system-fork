@@ -1,14 +1,20 @@
 import app from '../../src/app';
 import mongoose from 'mongoose';
 const preparePrice = require('../../src/routers/RoomRouter').preparePrice;
+const validateDows = require('../../src/routers/RoomRouter').validateDows;
+const validateAmenities = require('../../src/routers/RoomRouter').validateAmenities;
+const processRoomJson = require('../../src/routers/RoomRouter').processRoomJson;
 
 require('dotenv').config();
 const supertest = require('supertest');
 const request = supertest(app);
 
+const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
+const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU1MDE1NjY4MTUxNjJmNzNiYWQ4MCIsImVtYWlsIjoiYWRtaW5AbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifSwiaWF0IjoxNTg3OTExNDA3fQ.pMoZZUYhgkiVKPhsT-uVO8n9FWEdiG4JrIJjSDcnX3g';
+
 beforeAll(() => {
     mongoose.connect(process.env.MONGO_LOCAL_URI, {
-        dbName: process.env.TEST_DB_NAME,
+        dbName: process.env.DB_NAME_TEST,
         useNewUrlParser: true,
         useUnifiedTopology: true
     });
@@ -18,7 +24,7 @@ describe('preparePrice', () => {
     it('When price is string without digits then null is returned', () => {
         // Arrange:
         const price = "not-number";
-        
+
         // Act:
         const result = preparePrice(price);
 
@@ -29,18 +35,18 @@ describe('preparePrice', () => {
     it('When price is negative number then null is returned', () => {
         // Arrange:
         const price = -12;
-        
+
         // Act:
         const result = preparePrice(price);
 
         // Assert:
         expect(result).toBe(null);
     });
- 
+
     it('When price is string and does not match regex then null is returned', () => {
         // Arrange:
         const price = "s123.22s";
-        
+
         // Act:
         const result = preparePrice(price);
 
@@ -51,7 +57,7 @@ describe('preparePrice', () => {
     it('When price is string and do match regex then price is returned', () => {
         // Arrange:
         const price = "123.22";
-        
+
         // Act:
         const result = preparePrice(price);
 
@@ -62,12 +68,221 @@ describe('preparePrice', () => {
     it('When price is number then price is returned', () => {
         // Arrange:
         const price = 21.3;
-        
+
         // Act:
         const result = preparePrice(price);
 
         // Assert:
         expect(result).toBe(21.3);
+    });
+});
+
+describe('validateDows', () => {
+    it('When dows are empty then error is returned', () => {
+        // Arrange:
+        const dowsStr = "[]";
+
+        // Act:
+        const result = validateDows(dowsStr);
+
+        // Assert:
+        expect(result.includes('non-empty')).toBe(true);
+    });
+
+
+    it('When dows are not parsable then error is returned', () => {
+        // Arrange:
+        const dowsStr = "ashjidhlkasd";
+
+        // Act:
+        const result = validateDows(dowsStr);
+
+        // Assert:
+        expect(result.includes(`'dows'`)).toBe(true);
+    });
+
+    it('When dows contains not valid dow then error is returned', () => {
+        // Arrange:
+        const dowsStr = '["dowMonday", "INVALID_VALUE", "dowFriday"]';
+
+        // Act:
+        const result = validateDows(dowsStr);
+
+        // Assert:
+        expect(result.includes(`illegal`)).toBe(true);
+    });
+
+    it('When dows are valid then no error is returned', () => {
+        // Arrange:
+        const dowsStr = '["dowMonday", "dowTuesday", "dowFriday"]';
+
+        // Act:
+        const result = validateDows(dowsStr);
+
+        // Assert:
+        expect(result).toBe(null);
+    });
+});
+
+describe('processRoomJson', () => {
+    it('When name and location are empty then errors are returned', () => {
+        // Arrange:
+        const roomJson = {
+            capacity: "123",
+            pricePerDay: "222.22",
+            amenities: JSON.stringify(["amtTV", "amtProjector"]),
+            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
+        };
+
+        // Act:
+        const result = processRoomJson(roomJson);
+
+        // Assert:
+        expect(result).toHaveLength(2);
+        expect(result.some(x => x.includes(`'name'`))).toBe(true);
+        expect(result.some(x => x.includes(`'location'`))).toBe(true);
+    });
+
+    it('When capacity is not int parsable then error is returned', () => {
+        // Arrange:
+        const roomJson = {
+            name: "Some name",
+            location: "Some location",
+            capacity: "s123",
+            pricePerDay: "222.22",
+            amenities: JSON.stringify(["amtTV", "amtProjector"]),
+            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
+        };
+
+        // Act:
+        const result = processRoomJson(roomJson);
+
+        // Assert:
+        expect(result).toHaveLength(1);
+        expect(result[0].includes(`'capacity'`)).toBe(true);
+    });
+
+    it('When price is invalid then error is returned', () => {
+        // Arrange:
+        const roomJson = {
+            name: "Some name",
+            location: "Some location",
+            capacity: "123",
+            pricePerDay: "asdas",
+            amenities: JSON.stringify(["amtTV", "amtProjector"]),
+            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
+        };
+
+        // Act:
+        const result = processRoomJson(roomJson);
+
+        // Assert:
+        expect(result).toHaveLength(1);
+        expect(result[0].includes(`'pricePerDay'`)).toBe(true);
+    });
+
+    it('When amenities are invalid then error is returned', () => {
+        // Arrange:
+        const roomJson = {
+            name: "Some name",
+            location: "Some location",
+            capacity: "123",
+            pricePerDay: "22.22",
+            amenities: "INVALID",
+            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
+        };
+
+        // Act:
+        const result = processRoomJson(roomJson);
+
+        // Assert:
+        expect(result).toHaveLength(1);
+        expect(result[0].includes(`'amenities'`)).toBe(true);
+    });
+
+    
+    it('When dows are invalid then error is returned', () => {
+        // Arrange:
+        const roomJson = {
+            name: "Some name",
+            location: "Some location",
+            capacity: "123",
+            pricePerDay: "22.22",
+            amenities: JSON.stringify(["amtTV", "amtProjector"]),
+            dows: "INVALID"
+        };
+
+        // Act:
+        const result = processRoomJson(roomJson);
+
+        // Assert:
+        expect(result).toHaveLength(1);
+        expect(result[0].includes(`'dows'`)).toBe(true);
+    });
+
+    it('When json is valid then no errors are returned', () => {
+        // Arrange:
+        const roomJson = {
+            name: "Some name",
+            location: "Some location",
+            capacity: "123",
+            pricePerDay: "22.22",
+            amenities: JSON.stringify(["amtTV", "amtProjector"]),
+            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
+        };
+
+        // Act:
+        const result = processRoomJson(roomJson);
+
+        // Assert:
+        expect(result).toHaveLength(0);
+    });
+});
+
+describe('validateAmenities', () => {
+    it('When amenities are empty then error is returned', () => {
+        // Arrange:
+        const amenitiesStr = "[]";
+
+        // Act:
+        const result = validateAmenities(amenitiesStr);
+
+        // Assert:
+        expect(result.includes('non-empty')).toBe(true);
+    });
+
+
+    it('When amenities are not parsable then error is returned', () => {
+        // Arrange:
+        const amenitiesStr = "ashjidhlkasd";
+
+        // Act:
+        const result = validateAmenities(amenitiesStr);
+
+        // Assert:
+        expect(result.includes(`'amenities'`)).toBe(true);
+    });
+
+    it('When amenities contains not valid amt then error is returned', () => {
+        // Arrange:
+        const amenitiesStr = '["amtTV", "INVALID_VALUE", "amtProjector"]';
+
+        // Act:
+        const result = validateAmenities(amenitiesStr);
+
+        // Assert:
+        expect(result.includes(`illegal`)).toBe(true);
+    });
+
+    it('When dows are valid then no error is returned', () => {
+        // Arrange:
+        const amenitiesStr = '["amtProjector", "amtTV", "amtPhone"]';
+
+        // Act:
+        const result = validateAmenities(amenitiesStr);
+
+        // Assert:
+        expect(result).toBe(null);
     });
 });
 
@@ -125,7 +340,6 @@ describe('/rooms', () => {
         // Assert:
         expect(result.status).toBe(200);
         expect(result.body).toHaveLength(1);
-        console.log(result.body);
         expect(result.body[0]._id).toBe("5ea55125e95cc70df70870f7")
     });
 
@@ -205,6 +419,29 @@ describe('/rooms/:roomId', () => {
         // Assert:
         expect(result.status).toBe(200);
         expect(result.body).toBe(null);
+    });
+});
+
+describe('/rooms/create', () => {
+    it('When no token is provided then unathorized status is returned', async () => {
+        ``
+        // Act:
+        const result = await request.post('/rooms/create');
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('Unauthorized')).toBe(true);
+    });
+
+    it('When header content-type is not multipart/form-data then error is returned', async () => {
+        // Act:
+        const result = await request.post('/rooms/create').query({
+            secret_token: testUserToken
+        });
+
+        // Assert:
+        expect(result.status).toBe(400);
     });
 });
 
