@@ -80,7 +80,7 @@ const reservations = [
         roomId: mongoose.Types.ObjectId('5ea55125e95cc70df70870f7'), // room1
         pricePerDay: 300,
         totalPrice: 600,
-        status: "PENDING",
+        status: "ACCEPTED",
         createDate: moment('2020-04-15T10:00:00.000Z', ISO_8601).toDate(),
         updateDate: moment('2020-04-15T22:00:00.000Z', ISO_8601).toDate(),
     }),
@@ -91,7 +91,7 @@ const reservations = [
         roomId: mongoose.Types.ObjectId('5ea55125e95cc70df70870f7'), // room1
         pricePerDay: 300,
         totalPrice: 600,
-        status: "PENDING",
+        status: "ACCEPTED",
         createDate: moment('2020-04-13T16:00:00.000Z', ISO_8601).toDate(),
         updateDate: moment('2020-04-14T17:00:00.000Z', ISO_8601).toDate(),
     }),
@@ -102,7 +102,7 @@ const reservations = [
         roomId: mongoose.Types.ObjectId('5ea551627698ad8c1c5a4759'), // room1
         pricePerDay: 400,
         totalPrice: 400,
-        status: "PENDING",
+        status: "ACCEPTED",
         createDate: moment('2020-04-12T16:00:00.000Z', ISO_8601).toDate(),
         updateDate: moment('2020-04-12T16:00:00.000Z', ISO_8601).toDate(),
     }),

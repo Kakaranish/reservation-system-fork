@@ -99,11 +99,12 @@ const userWithEmailExists = async (db, email) => {
  */
 const otherReservationOnGivenRoomAndDateIntervalExists = async (db, roomId, dateInterval) => {
     const reservation = await db.collection('reservations').findOne({
-        "roomId": roomId,
-        "status": "ACCEPTED",
-        "startDate": { $lte: dateInterval.endDate },
-        "endDate": { $gte: dateInterval.startDate }
+        roomId: roomId,
+        status: "ACCEPTED",
+        fromDate: { $lte: dateInterval.toDate },
+        toDate: { $gte: dateInterval.fromDate }
     });
+    console.log(reservation);
     return reservation ? true : false;
 };
 
@@ -132,8 +133,8 @@ const getAvailableRoomsIds = async (db, searchData) => {
         fromDate: searchData.fromDate,
         toDate: searchData.toDate
     };
+    
     let availableRooms = [];
-
     await Promise.all(roomIds.map(async (roomId) => {
         const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists(db, roomId, dateInterval);
         if (isAvailable) availableRooms.push(roomId);
