@@ -69,16 +69,29 @@ router.get('/rooms/:id', async (req, res) => {
     }
 });
 
+router.post('/test', async (req, res) => {
+    passport.authenticate('jwt', { session: false }, async (_error, user) => {
+        return res.json(user);
+    })(req, res);
+});
+
 // USER & ADMIN
-router.post('/create-room', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
+router.post('/rooms/create', async (req, res) => {
+    passport.authenticate('jwt', { session: false }, async (_error, user) => {
         if (!user.role) return res.status(401).json({
-            message: "Unauthorized access"
+            errors: [
+                "Unauthorized access"
+            ]
         });
 
-        const isFormData = req.headers["content-type"].includes('multipart/form-data');
+        const contentType = req.headers["content-type"];
+        const isFormData = contentType
+            ? contentType.includes('multipart/form-data')
+            : false;
         if (!isFormData) return res.status(400).json({
-            message: "Error: Header must have Content-Type='multipart/form-data'"
+            errors: [
+                "Error: Header must have Content-Type='multipart/form-data'"
+            ]
         });
 
         let roomJson = {
@@ -92,8 +105,6 @@ router.post('/create-room', async (req, res) => {
         };
 
         const processingErrors = processRoomJson(roomJson, isFormData);
-        console.log(roomJson);
-
         if (processingErrors.length) {
             return res.status(400).json({
                 errors: processingErrors
@@ -110,25 +121,24 @@ router.post('/create-room', async (req, res) => {
         const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/images")
         const newFilename = uuidv4() + path.extname(file.name);
 
-        file.mv(`${uploadDirPath}/${newFilename}`, error => {
-            if (error) {
-                console.log(error)
-                return res.status(500).json({
-                    message: `Error: ${error}`
-                });
-            }
-        });
-
-        roomJson.photo = `/uploads/images/${newFilename}`;
+        roomJson.photoUrl = `/uploads/images/${newFilename}`;
 
         try {
-            const insertedId = await resSystemDbClient.withDb(async db => {
-                return await db.collection('rooms').insertOne(roomJson).then(result => {
-                    return result.insertedId;
-                });
-            })
+            const room = new Room(roomJson);
+            await room.save();
+
             res.status(200).json({
-                "roomId": insertedId
+                roomId: room._id,
+                photoUrl: `/uploads/images/${newFilename}`
+            });
+
+            file.mv(`${uploadDirPath}/${newFilename}`, error => {
+                if (error) {
+                    console.log(error)
+                    return res.status(500).json({
+                        message: `Error: ${error}`
+                    });
+                }
             });
         } catch (error) {
             console.log(`Error: ${error}`);
@@ -176,7 +186,6 @@ const validateAmenities = amenities => {
         return `'amenities': ${error}`;
     }
 
-    console.log(parsedAmenities.length);
     if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
         return "'amenities' must be non-empty array";
     }

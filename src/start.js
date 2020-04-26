@@ -2,8 +2,9 @@ import app from './app';
 import mongoose from 'mongoose';
 require('dotenv').config()
 
-mongoose.connect(process.env.MONGO_LOCAL_URI, {
-    dbName: 'reservation-system',
+const dbNameVar = process.env.MONGO_CURRENT_DB_URI;
+mongoose.connect(process.env[dbNameVar], {
+    dbName: process.env.DB_NAME,
     useNewUrlParser: true,
     useUnifiedTopology: true
 });

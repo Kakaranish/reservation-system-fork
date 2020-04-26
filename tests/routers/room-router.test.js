@@ -1,5 +1,9 @@
 import app from '../../src/app';
+import path from "path";
 import mongoose from 'mongoose';
+import 'regenerator-runtime';
+import Room from '../../src/models/room-model';
+import fs from 'fs';
 const preparePrice = require('../../src/routers/RoomRouter').preparePrice;
 const validateDows = require('../../src/routers/RoomRouter').validateDows;
 const validateAmenities = require('../../src/routers/RoomRouter').validateAmenities;
@@ -200,7 +204,7 @@ describe('processRoomJson', () => {
         expect(result[0].includes(`'amenities'`)).toBe(true);
     });
 
-    
+
     it('When dows are invalid then error is returned', () => {
         // Arrange:
         const roomJson = {
@@ -442,6 +446,80 @@ describe('/rooms/create', () => {
 
         // Assert:
         expect(result.status).toBe(400);
+    });
+
+    it('When there is some error in body properties then errors are returned', async () => {
+        // Act:
+        const result = await request.post('/rooms/create')
+            .query({
+                secret_token: testUserToken
+            })
+            .type('form')
+            .field('location', 'Some location')
+            .field('capacity', '123')
+            .field('pricePerDay', '22.22')
+            .field('dows', JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"]));
+
+        // Assert:
+        expect(result.body.errors).toHaveLength(2);
+        expect(result.body.errors.some(x => x.includes(`'name'`)));
+        expect(result.body.errors.some(x => x.includes(`'amenities'`)));
+    });
+
+    it('When file is not uploaded then error is returned', async () => {
+        // Act:
+        const result = await request.post('/rooms/create')
+            .query({
+                secret_token: testUserToken
+            })
+            .field('name', 'Some name')
+            .field('location', 'Some location')
+            .field('capacity', '123')
+            .field('pricePerDay', '22.22')
+            .field('amenities', JSON.stringify(["amtTV", "amtProjector"]))
+            .field('dows', JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"]));
+
+        // Assert:
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('file')).toBe(true);
+    });
+
+    it('To rename', async () => {
+        // Arrange:
+        const cwd = path.resolve(__dirname, "..", "assets");
+
+        // Act:
+        const result = await request.post('/rooms/create')
+            .query({
+                secret_token: testUserToken
+            })
+            .field('name', 'Some name')
+            .field('location', 'Some location')
+            .field('capacity', '123')
+            .field('pricePerDay', '22.22')
+            .field('amenities', JSON.stringify(["amtTV", "amtProjector"]))
+            .field('dows', JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"]))
+            .attach('file', `${cwd}/some-image.png`);
+
+        // Assert:
+        try {
+            expect.anything(result.body.roomId);
+            expect(result.body.photoUrl);
+        }
+        catch (error) {
+            throw error;
+        }
+        finally {
+            if (result.body.roomId) {
+                await Room.deleteOne({ _id: result.body.roomId });
+            }
+
+            if (result.body.photoUrl) {
+                const photoPath = path.resolve(__dirname, "..", "..", "client", "public")
+                    + result.body.photoUrl;
+                await fs.unlink(photoPath);
+            }
+        }
     });
 });
 
