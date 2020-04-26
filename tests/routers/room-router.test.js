@@ -1,16 +1,14 @@
 import app from '../../src/app';
-import path from "path";
+import supertest from 'supertest';
 import mongoose from 'mongoose';
-import 'regenerator-runtime';
+import path from "path";
 import Room from '../../src/models/room-model';
 import fs from 'fs';
-const preparePrice = require('../../src/routers/RoomRouter').preparePrice;
+import '../../src/common';
 const validateDows = require('../../src/routers/RoomRouter').validateDows;
 const validateAmenities = require('../../src/routers/RoomRouter').validateAmenities;
 const processRoomJson = require('../../src/routers/RoomRouter').processRoomJson;
 
-require('dotenv').config();
-const supertest = require('supertest');
 const request = supertest(app);
 
 const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
@@ -21,63 +19,6 @@ beforeAll(() => {
         dbName: process.env.DB_NAME_TEST,
         useNewUrlParser: true,
         useUnifiedTopology: true
-    });
-});
-
-describe('preparePrice', () => {
-    it('When price is string without digits then null is returned', () => {
-        // Arrange:
-        const price = "not-number";
-
-        // Act:
-        const result = preparePrice(price);
-
-        // Assert:
-        expect(result).toBe(null);
-    });
-
-    it('When price is negative number then null is returned', () => {
-        // Arrange:
-        const price = -12;
-
-        // Act:
-        const result = preparePrice(price);
-
-        // Assert:
-        expect(result).toBe(null);
-    });
-
-    it('When price is string and does not match regex then null is returned', () => {
-        // Arrange:
-        const price = "s123.22s";
-
-        // Act:
-        const result = preparePrice(price);
-
-        // Assert:
-        expect(result).toBe(null);
-    });
-
-    it('When price is string and do match regex then price is returned', () => {
-        // Arrange:
-        const price = "123.22";
-
-        // Act:
-        const result = preparePrice(price);
-
-        // Assert:
-        expect(result).toBe(123.22);
-    });
-
-    it('When price is number then price is returned', () => {
-        // Arrange:
-        const price = 21.3;
-
-        // Act:
-        const result = preparePrice(price);
-
-        // Assert:
-        expect(result).toBe(21.3);
     });
 });
 

@@ -1,9 +1,12 @@
 import express from "express";
+import mongoose from 'mongoose';
 import dbClient from '../DbClient';
-import { ObjectID } from "mongodb";
 import passport from "passport";
 import moment from 'moment';
-require('../auth');
+import '../auth';
+const preparePrice = require('../common').preparePrice;
+
+import { ObjectID } from "mongodb";
 const dbActions = require('../DbQueries')
 
 const router = express();
@@ -312,11 +315,5 @@ const validateReservation = reservation => {
     return errors;
 };
 
-const preparePrice = value => {
-    if (!value) return null;
-    else if (typeof (value) === 'number') return value.toFixed(2);
-    else if (/\d+(\.\d{1,2})?$/.test(value)) return parseFloat(value);
-    else return null;
-}
-
 export default router;
+exports.validateReservation = validateReservation;

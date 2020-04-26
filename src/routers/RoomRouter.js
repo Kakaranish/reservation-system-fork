@@ -3,22 +3,22 @@ import mongoose from 'mongoose';
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import passport from "passport";
-import moment from "moment";
 import Room from "../models/room-model";
+import '../auth';
+import dbQueries from '../DbQueries2';
 
-require('../auth');
+const preparePrice = require('../common').preparePrice;
+const parseIsoDatetime = require('../common').parseIsoDatetime;
 const router = express.Router();
-const dbQueries = require('../DbQueries2');
-
 /*
     ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
 router.get('/rooms', async (req, res) => {
     const errors = [];
-    const fromDate = moment.utc(req.query.fromDate, moment.ISO_8601, true);
-    if (!fromDate.isValid()) errors.push(`'fromDate' is not ISO 8601 datetime format.`);
-    const toDate = moment.utc(req.query.toDate, moment.ISO_8601, true);
-    if (!toDate.isValid()) errors.push(`'toDate' is not ISO 8601 datetime format.`);
+    const fromDate = parseIsoDatetime(req.query.fromDate);
+    if (!fromDate) errors.push(`'fromDate' is not ISO 8601 datetime format.`);
+    const toDate = parseIsoDatetime(req.query.toDate);
+    if (!toDate) errors.push(`'toDate' is not ISO 8601 datetime format.`);
     const fromPrice = preparePrice(req.query.fromPrice);
     if (!fromPrice) errors.push(`'fromPrice' is invalid - must be non-negative float number.`);
     const toPrice = preparePrice(req.query.toPrice);
@@ -67,12 +67,6 @@ router.get('/rooms/:id', async (req, res) => {
             ]
         });
     }
-});
-
-router.post('/test', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (_error, user) => {
-        return res.json(user);
-    })(req, res);
 });
 
 // USER & ADMIN
@@ -221,21 +215,7 @@ const validateDows = dows => {
     return null;
 }
 
-/**
- * @param {Number | String} value 
- */
-const preparePrice = value => {
-    if (!value) return null;
-    else if (typeof (value) === 'number') {
-        if (value >= 0) return parseFloat(value.toFixed(2));
-        else return null;
-    }
-    else if (/^\d+(\.\d{1,2})?$/.test(value)) return parseFloat(value);
-    else return null;
-}
-
 export default router;
-exports.preparePrice = preparePrice;
 exports.validateDows = validateDows;
 exports.validateAmenities = validateAmenities;
 exports.processRoomJson = processRoomJson;
