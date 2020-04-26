@@ -1,16 +1,14 @@
 import express from "express";
-import { ObjectID } from "mongodb";
+import mongoose from 'mongoose';
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import dbClient from "../DbClient";
 import passport from "passport";
 import moment from "moment";
+import Room from "../models/room-model";
 
 require('../auth');
-const dbActions = require('../DbQueries');
 const router = express.Router();
-
-const resSystemDbClient = dbClient();
+const dbQueries = require('../DbQueries2');
 
 /*
     ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -38,14 +36,8 @@ router.get('/rooms', async (req, res) => {
     };
 
     try {
-        const dbResult = await resSystemDbClient.withDb(async db => {
-            const availableRoomsIds = await dbActions.getAvailableRoomsIds(db, searchData);
-            const roomPreviews = await dbActions.getRoomPreviews(db, availableRoomsIds);
-            return roomPreviews;
-        });
-        res.status(200).json({
-            "rooms": dbResult
-        });
+        const roomPreviews = await dbQueries.getAvailableRoomPreviews(searchData);
+        res.status(200).json(roomPreviews);
     } catch (error) {
         console.log(`Error: ${error}`);
         res.status(500).json({
@@ -217,7 +209,7 @@ const validateDows = dows => {
 }
 
 const preparePrice = value => {
-    if (isNullOrUndefined(value)) return null;
+    if (!value) return null;
     else if (typeof (value) === 'number') {
         if (value >= 0) return parseFloat(value.toFixed(2));
         else return null;

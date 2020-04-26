@@ -39,8 +39,8 @@ const getAcceptedReservationsForDateIntervalForRoom = async searchData => {
     return Reservation.find({
         roomId: roomId,
         status: "ACCEPTED",
-        startDate: { $lte: dateInterval.endDate },
-        endDate: { $gte: dateInterval.startDate }
+        fromDate: { $lte: dateInterval.toDate },
+        toDate: { $gte: dateInterval.fromDate }
     })
 }
 
@@ -87,21 +87,6 @@ const rejectAllPendingAndSuccessReservationsForRoom = (roomId, reservationId) =>
 
 /**
  * @param {mongoose.Types.ObjectId} roomId 
- * @param {Object} dateInterval
- * @param {Date} dateInterval.startDate
- * @param {Date} dateInterval.endDate
- */
-const otherReservationOnGivenRoomAndDateIntervalExists = async (roomId, dateInterval) => {
-    return Reservation.exists({
-        "roomId": roomId,
-        "status": "ACCEPTED",
-        "startDate": { $lte: dateInterval.endDate },
-        "endDate": { $gte: dateInterval.startDate }
-    })
-}
-
-/**
- * @param {mongoose.Types.ObjectId} roomId 
  */
 const getRoomPreview = async (roomId) => {
     return Room.findById(roomId)
@@ -140,19 +125,35 @@ const getAvailableRoomIds = async (dateInterval) => {
  * @param {String} searchData.fromDate
  * @param {String} searchData.toDate
  */
-const getAvailableRoomPreviews = async (dateInterval) => {
-    const roomIds = (await getRoomIds())
-        .map(record => record.id);
+const getAvailableRoomPreviews = async searchData => {
+    const roomIds = (await getRoomIds()).map(record => record.id);
+    const dateInterval = {
+        fromDate: searchData.fromDate,
+        toDate: searchData.toDate
+    };
 
-    let availableRooms = [];
+    let availableRoomIds = [];
     await Promise.all(roomIds.map(async (roomId) => {
         const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists(
-            roomId, dateInterval)
-        if (isAvailable) availableRooms.push(
-            await getRoomPreview(roomId)
-        );
+            roomId, dateInterval);
+        if (isAvailable) availableRoomIds.push(roomId);
     }));
-    return availableRooms;
+    return await getRoomPreviews(availableRoomIds);
+}
+
+/**
+ * @param {mongoose.Types.ObjectId} roomId 
+ * @param {Object} dateInterval
+ * @param {Date} dateInterval.fromDate
+ * @param {Date} dateInterval.toDate
+ */
+const otherReservationOnGivenRoomAndDateIntervalExists = async (roomId, dateInterval) => {
+    return Reservation.exists({
+        roomId: roomId,
+        status: "ACCEPTED",
+        fromDate: { $lte: dateInterval.toDate },
+        toDate: { $gte: dateInterval.fromDate }
+    })
 }
 
 /**
