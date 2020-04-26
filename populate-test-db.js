@@ -37,7 +37,7 @@ const rooms = [
         name: "Conference Room #2",
         location: "Warsaw",
         capacity: 10,
-        pricePerDay: 400,
+        pricePerDay: 400.99,
         description: "Some description 2",
         amenities: [
             "amtTV", "amtMicrophone", "amtProjector", "amtPhone"
