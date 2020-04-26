@@ -22,17 +22,17 @@ router.get('/rooms', async (req, res) => {
     const toDate = moment.utc(req.query.toDate, moment.ISO_8601, true);
     if (!toDate.isValid()) errors.push(`'toDate' is not ISO 8601 datetime format.`);
     const fromPrice = preparePrice(req.query.fromPrice);
-    if (!fromPrice) errors.push(`'fromPrice' is not valid float number.`);
+    if (!fromPrice) errors.push(`'fromPrice' is invalid - must be non-negative float number.`);
     const toPrice = preparePrice(req.query.toPrice);
-    if (!toPrice) errors.push(`'toPrice' is not valid float number.`);
+    if (!toPrice) errors.push(`'toPrice' is invalid - must be non-negative float number.`);
 
-    if (errors.length > 0) return res.json({
-        "errors": errors
+    if (errors.length) return res.status(400).json({
+        errors: errors
     });
 
     const searchData = {
-        fromDate: fromDate,
-        toDate: toDate,
+        fromDate: fromDate.toDate(),
+        toDate: toDate.toDate(),
         fromPrice: fromPrice,
         toPrice: toPrice
     };
@@ -55,21 +55,24 @@ router.get('/rooms', async (req, res) => {
 });
 
 router.get('/rooms/:id', async (req, res) => {
-    if (!ObjectID.isValid(req.params.id)) return res.status(400).json({
-        message: `Error: '${req.params.id} is not valid ObjectID'`
-    });
-    const roomId = new ObjectID(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({
+            errors: [
+                `'${req.params.id} is not valid ObjectId'`
+            ]
+        });
+    }
 
     try {
-        const room = await resSystemDbClient.withDb(async db => {
-            return await db.collection('rooms').findOne({ "_id": new ObjectID(roomId) })
-        });
-        if (!room) return res.status(400).json({ message: `There is no room with ${req.params.id} id` });
+        const roomId = mongoose.Types.ObjectId(req.params.id);
+        const room = await Room.findById(roomId);
         return res.status(200).json(room);
     } catch (error) {
         console.log(`Error: ${error}`);
         res.status(500).json({
-            message: "Internal error"
+            errors: [
+                "Internal error"
+            ]
         });
     }
 });
@@ -214,10 +217,14 @@ const validateDows = dows => {
 }
 
 const preparePrice = value => {
-    if (!value) return null;
-    else if (typeof (value) === 'number') return value.toFixed(2);
-    else if (/\d+(\.\d{1,2})?$/.test(value)) return parseFloat(value);
+    if (isNullOrUndefined(value)) return null;
+    else if (typeof (value) === 'number') {
+        if (value >= 0) return parseFloat(value.toFixed(2));
+        else return null;
+    }
+    else if (/^\d+(\.\d{1,2})?$/.test(value)) return parseFloat(value);
     else return null;
 }
 
 export default router;
+exports.preparePrice = preparePrice;

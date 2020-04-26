@@ -1,6 +1,4 @@
 import mongoose from 'mongoose';
-import { ObjectID } from 'mongodb';
-import moment from 'moment';
 const Schema = mongoose.Schema;
 
 const reservationSchema = new Schema({
@@ -13,12 +11,13 @@ const reservationSchema = new Schema({
         required: true
     },
     userId: {
-        type: ObjectID,
+        type: mongoose.Schema.Types.ObjectId,
         required: true
     },
     roomId: {
-        type: ObjectID,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'room'
     },
     pricePerDay: {
         type: Number,
@@ -46,6 +45,21 @@ const reservationSchema = new Schema({
     }
 });
 
+
 const ReservationModel = mongoose.model('reservation', reservationSchema);
+
+reservationSchema.virtual('user', {
+    ref: 'user',
+    localField: 'userId',
+    foreignField: '_id',
+    justOne: true
+});
+
+reservationSchema.virtual('room', {
+    ref: 'room',
+    localField: 'roomId',
+    foreignField: '_id',
+    justOne: true
+});
 
 export default ReservationModel;
