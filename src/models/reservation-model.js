@@ -16,8 +16,7 @@ const reservationSchema = new Schema({
     },
     roomId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'room'
+        required: true
     },
     pricePerDay: {
         type: Number,
@@ -44,7 +43,6 @@ const reservationSchema = new Schema({
         required: true
     }
 });
-
 
 const ReservationModel = mongoose.model('reservation', reservationSchema);
 

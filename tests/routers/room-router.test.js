@@ -231,6 +231,20 @@ describe('validateAmenities', () => {
     });
 });
 
+
+/*
+    Room1: 5ea55125e95cc70df70870f7
+    Reservations: 
+    2020-04-03 - 2020-04-03
+    2020-04-05 - 2020-04-30
+
+    Room2: 5ea551627698ad8c1c5a4759
+    Reservations: 
+    2020-04-02 - 2020-04-04
+    2020-04-06 - 2020-04-30
+*/
+
+// 13 -> 1 ; 14 -> 2 ; 15 -> 3 ; 16 -> 4 ; 17 -> 5
 describe('/rooms', () => {
     it('When one of dates is not iso then errors are returned in json', async () => {
         // Arrange:
@@ -250,7 +264,6 @@ describe('/rooms', () => {
         expect(result.body.errors).toHaveLength(1);
         expect(result.body.errors[0].includes('fromDate')).toBe(true);
     });
-
 
     test.each([
         "not-number",
@@ -276,8 +289,8 @@ describe('/rooms', () => {
         // Act
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-16T00:00:00Z",
-                toDate: "2020-04-16T00:00:00Z",
+                fromDate: "2020-04-04T00:00:00Z",
+                toDate: "2020-04-04T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
             });
@@ -292,8 +305,8 @@ describe('/rooms', () => {
         // Act
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-13T00:00:00Z",
-                toDate: "2020-04-14T00:00:00Z",
+                fromDate: "2020-04-01T00:00:00Z",
+                toDate: "2020-04-02T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
             });
@@ -301,47 +314,26 @@ describe('/rooms', () => {
         // Assert:
         expect(result.status).toBe(200);
         expect(result.body).toHaveLength(1);
-        expect(result.body[0]._id).toBe("5ea551627698ad8c1c5a4759")
+        expect(result.body[0]._id).toBe("5ea55125e95cc70df70870f7")
     });
 
     it('Date interval covers contains whole one reservation', async () => {
         // Act
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-13T00:00:00Z",
-                toDate: "2020-04-15T00:00:00Z",
+                fromDate: "2020-04-02T00:00:00Z",
+                toDate: "2020-04-04T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
             });
 
         // Assert:
         expect(result.status).toBe(200);
-        expect(result.body).toHaveLength(1);
-        expect(result.body[0]._id).toBe("5ea551627698ad8c1c5a4759")
+        expect(result.body).toHaveLength(0);
     });
 });
 
 describe('/rooms/:roomId', () => {
-    it("When room exists then it's returned", async () => {
-        // Arrange:
-        const roomId = '5ea551627698ad8c1c5a4759';
-
-        // Act:
-        const result = await request.get(`/rooms/${roomId}`);
-
-        // Assert:
-        expect(result.status).toBe(200);
-        expect(result.body.message).toBe(undefined);
-        expect(result.body.name).toBe('Conference Room #2');
-        expect(result.body.location).toBe('Warsaw');
-        expect(result.body.capacity).toBe(10);
-        expect(result.body.pricePerDay).toBe(400.99);
-        expect(result.body.description).toBe('Some description 2');
-        expect(result.body.photoUrl).toBe('/some/path2');
-        expect(result.body.amenities).toHaveLength(4);
-        expect(result.body.dows).toHaveLength(3);
-    });
-
     it("When roomId is invalid ObjectId then error list is returned", async () => {
         // Arrange:
         const roomId = '123';
@@ -364,6 +356,26 @@ describe('/rooms/:roomId', () => {
         // Assert:
         expect(result.status).toBe(200);
         expect(result.body).toBe(null);
+    });
+
+    it("When room exists then it's returned", async () => {
+        // Arrange:
+        const roomId = '5ea551627698ad8c1c5a4759';
+
+        // Act:
+        const result = await request.get(`/rooms/${roomId}`);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body.message).toBe(undefined);
+        expect(result.body.name).toBe('Conference Room #2');
+        expect(result.body.location).toBe('Warsaw');
+        expect(result.body.capacity).toBe(10);
+        expect(result.body.pricePerDay).toBe(400.99);
+        expect(result.body.description).toBe('Some description 2');
+        expect(result.body.photoUrl).toBe('/some/path2');
+        expect(result.body.amenities).toHaveLength(4);
+        expect(result.body.dows).toHaveLength(3);
     });
 });
 
@@ -425,7 +437,7 @@ describe('/rooms/create', () => {
         expect(result.body.errors[0].includes('file')).toBe(true);
     });
 
-    it('When user token provided and form filled correctly then room is created', async () => {
+    it('When user token provided and form is filled correctly then room is created', async () => {
         // Arrange:
         const cwd = path.resolve(__dirname, "..", "assets");
 
@@ -463,7 +475,7 @@ describe('/rooms/create', () => {
         }
     });
 
-    it('When admin token provided and form filled correctly then room is created', async () => {
+    it('When admin token provided and form is filled correctly then room is created', async () => {
         // Arrange:
         const cwd = path.resolve(__dirname, "..", "assets");
 

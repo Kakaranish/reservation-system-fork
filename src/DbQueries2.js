@@ -2,26 +2,9 @@ import mongoose from 'mongoose';
 import moment from 'moment';
 import Room from './models/room-model';
 import Reservation from './models/reservation-model';
-import User from './models/user-model';
-
 
 const getRoomIds = async () => {
     return Room.find({}).select('id');
-}
-
-/**
- * @param {Object} searchData 
- * @param {mongoose.Types.ObjectId} searchData.roomId
- * @param {Date} searchData.fromDate
- * @param {Date} searchData.toDate
- */
-const getAcceptedReservationsForDateIntervalForRoom = async searchData => {
-    return Reservation.find({
-        roomId: roomId,
-        status: "ACCEPTED",
-        fromDate: { $lte: dateInterval.toDate },
-        toDate: { $gte: dateInterval.fromDate }
-    })
 }
 
 /**
@@ -101,38 +84,37 @@ const getAvailableRoomIds = async (dateInterval) => {
 
 // TODO: !!!!!!!!!!!!!!
 /**
- * @param {Object} searchData
- * @param {String} searchData.fromDate
- * @param {String} searchData.toDate
+ * @param {Object} dateInterval
+ * @param {String} dateInterval.fromDate
+ * @param {String} dateInterval.toDate
  */
-const getAvailableRoomPreviews = async searchData => {
-    const roomIds = (await getRoomIds()).map(record => record.id);
-    const dateInterval = {
-        fromDate: searchData.fromDate,
-        toDate: searchData.toDate
-    };
+const getAvailableRoomPreviews = async dateInterval => {
+    const roomIds = (await getRoomIds()).map(record => record._id);
 
     let availableRoomIds = [];
     await Promise.all(roomIds.map(async (roomId) => {
-        const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists(
-            roomId, dateInterval);
+        const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists({
+            fromDate: dateInterval.fromDate,
+            toDate: dateInterval.toDate,
+            roomId: roomId
+        });
         if (isAvailable) availableRoomIds.push(roomId);
     }));
     return await getRoomPreviews(availableRoomIds);
 }
 
 /**
- * @param {mongoose.Types.ObjectId} roomId 
- * @param {Object} dateInterval
- * @param {Date} dateInterval.fromDate
- * @param {Date} dateInterval.toDate
+ * @param {Object} searchData
+ * @param {mongoose.Types.ObjectId} searchData.roomId 
+ * @param {Date} searchData.fromDate
+ * @param {Date} searchData.toDate
  */
-const otherReservationOnGivenRoomAndDateIntervalExists = async (roomId, dateInterval) => {
+const otherReservationOnGivenRoomAndDateIntervalExists = async searchData => {
     return Reservation.exists({
-        roomId: roomId,
+        roomId: searchData.roomId,
         status: "ACCEPTED",
-        fromDate: { $lte: dateInterval.toDate },
-        toDate: { $gte: dateInterval.fromDate }
+        fromDate: { $lte: searchData.toDate },
+        toDate: { $gte: searchData.fromDate }
     })
 }
 
@@ -175,6 +157,40 @@ const getReservationsWithStatus = async status => {
 }
 
 /**
+ * @param {Object} searchData 
+ * @param {mongoose.Types.ObjectId} searchData.roomId
+ * @param {Date} searchData.fromDate
+ * @param {Date} searchData.toDate
+ * @param {String} searchData.status
+ */
+const getReservationsForDateIntervalForRoomWithStatus = async searchData => {
+    return Reservation.find({
+        roomId: searchData.roomId,
+        status: searchData.status,
+        fromDate: { $lte: searchData.toDate },
+        toDate: { $gte: searchData.fromDate }
+    })
+}
+
+/**
+ * @param {Object} searchData 
+ * @param {mongoose.Types.ObjectId} searchData.roomId
+ * @param {Date} searchData.fromDate
+ * @param {Date} searchData.toDate
+ * @param {String} searchData.status
+ */
+const getPopulatedReservationsForDateIntervalForRoomWithStatus = async searchData => {
+    return Reservation.find({
+        roomId: searchData.roomId,
+        status: searchData.status,
+        fromDate: { $lte: searchData.toDate },
+        toDate: { $gte: searchData.fromDate }
+    })
+        .populate('user', 'email firstName lastName')
+        .populate('room', 'name location phototoUrl');
+}
+
+/**
  * @param {mongoose.Types.ObjectId} userId 
  * @param {String} status 
  */
@@ -189,7 +205,6 @@ const getReservationsWithStatusForUser = async (userId, status) => {
 
 module.exports = {
     getRoomIds,
-    getAcceptedReservationsForDateIntervalForRoom,
     changeReservationStatus,
     rejectAllPendingAndSuccessReservationsForRoom,
     otherReservationOnGivenRoomAndDateIntervalExists,
@@ -199,5 +214,7 @@ module.exports = {
     getReservationsForRoom,
     getReservationsWithStatus,
     getReservationsWithStatusForUser,
-    getAvailableRoomPreviews
+    getAvailableRoomPreviews,
+    getReservationsForDateIntervalForRoomWithStatus,
+    getPopulatedReservationsForDateIntervalForRoomWithStatus
 };

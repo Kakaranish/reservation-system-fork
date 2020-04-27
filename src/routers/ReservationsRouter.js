@@ -8,107 +8,38 @@ const preparePrice = require('../common').preparePrice;
 const parseIsoDatetime = require('../common').parseIsoDatetime;
 const parseObjectId = require('../common').parseObjectId;
 
+import dbQueries from '../DbQueries2';
 import { ObjectID } from "mongodb";
 const dbActions = require('../DbQueries')
+import Room from '../models/room-model';
+import User from '../models/user-model';
+import Reservation from '../models/reservation-model';
 
 const router = express();
 const resSystemDbClient = dbClient();
 
-// USER & ADMIN
-router.post('/create-reservation', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role) return res.status(401).json({
-            message: "Unauthorized access"
-        });
-
-        let reservation = prepareReservation(req);
-        let errors = validateReservation(reservation);
-        if (errors.length > 0) {
-            console.log(errors);
-            return res.status(400).json({
-                "errors": errors
-            });
-        };
-
-        try {
-            const insertResult = await resSystemDbClient.withDb(async db => {
-                if (!await dbActions.roomWithIdExists(db, reservation.roomId)) {
-                    return {
-                        type: "ERR",
-                        message: `Error: Room with id '${reservation.roomId}' does not exist`
-                    }
-                }
-                if (!await dbActions.userWithIdExists(db, reservation.userId)) {
-                    return {
-                        type: "ERR",
-                        message: `Error: User with id '${reservation.userId}' does not exist`
-                    }
-                }
-                const dateInterval = {
-                    fromDate: reservation.fromDate,
-                    toDate: reservation.toDate
-                };
-                if (await dbActions.otherReservationOnGivenRoomAndDateIntervalExists(db, reservation.roomId, dateInterval)) {
-                    return {
-                        type: "ERR",
-                        message: `Error: Other reservation/reservations on this room and date interval already exist(s)`
-                    }
-                }
-
-                reservation.status = "PENDING";
-                reservation.createDate = moment.utc().toDate();
-                reservation.updateDate = moment.utc().toDate();
-
-                const reservationId = await db.collection('reservations')
-                    .insertOne(reservation)
-                    .then(result => result.insertedId);
-
-                return {
-                    "type": "OK",
-                    "reservationId": reservationId
-                };
-            });
-
-            if (insertResult.type === "ERR") {
-                return res.status(400).json({
-                    "message": insertResult.message
-                });
-            }
-            return res.status(200).json({
-                "reservationId": insertResult.reservationId
-            });
-        } catch (error) {
-            console.log(`Error: ${error}`);
-            res.status(500).json({
-                message: "Error: Internal server error"
-            });
-        }
-    })(req, res);
-});
-
-router.get('/reservations/:roomid', async (req, res) => {
+router.get('/rooms/:roomId/reservations', async (req, res) => {
     const errors = [];
-    const roomId = req.params.roomid;
-    if (!ObjectID.isValid(roomId)) errors.push(`Error: '${roomId} is not valid ObjectID'`);
-    const fromDate = moment.utc(req.query.fromDate, "YYYY-MM-DD", true);
-    if (!fromDate.isValid()) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
-    const toDate = moment.utc(req.query.toDate, "YYYY-MM-DD", true);
-    if (!toDate.isValid()) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
-    if (errors.length > 0) return res.status(400).json({
-        "errors": errors
-    });
+    const roomId = parseObjectId(req.params.roomId);
+    if (!roomId) errors.push(`${roomId} is not valid ObjectId'`);
+    const fromDate = parseIsoDatetime(req.query.fromDate);
+    if (!fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
+    const toDate = parseIsoDatetime(req.query.toDate);
+    if (!toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
+    if (errors.length) {
+        return res.status(400).json({
+            errors: errors
+        });
+    }
 
     const searchData = {
         roomId: roomId,
         fromDate: fromDate.toDate(),
         toDate: toDate.toDate()
     };
-
     try {
-        const dbResult = await resSystemDbClient.withDb(async db => {
-            return await dbActions.getReservationsForRoom(db, searchData);
-        });
-        res.status(200).json(dbResult);
+        const reservations = await dbQueries.getReservationsForRoom(searchData);
+        res.status(200).json(reservations);
 
     } catch (error) {
         console.log(`Error: ${error}`);
@@ -117,6 +48,79 @@ router.get('/reservations/:roomid', async (req, res) => {
         });
     }
 })
+
+// USER & ADMIN
+/*
+    {
+        fromDate: String | ISO8601 Datetime - e.g. 2020-04-01T20:00:00.000Z
+        toDate: String | ISO8601 Datetime - e.g. 2020-04-01T20:00:00.000Z
+        userId: String | ObjectId
+        roomId: String | ObjectId
+        pricePerDay: String | eg. 22.00 ; 22 ; 22.0
+        totalPrice: String | eg. 22.00 ; 22 ; 22.0
+    }
+*/
+router.post('/reservation/create', async (req, res) => {
+    passport.authenticate('jwt', { session: false }, async (error, user) => {
+        if (!user.role) return res.status(401).json({
+            errors: ["Unauthorized access"]
+        });
+
+        let reservationJson = prepareReservationJson(req);
+        let errors = validateReservationJson(reservationJson);
+        if (errors.length) {
+            return res.status(400).json({ errors: errors });
+        };
+
+        try {
+            if (! await Room.exists({ _id: reservationJson.roomId })) return res.status(400).json({
+                errors: [ 
+                    `room with id '${reservationJson.roomId}' does not exist`
+                ]
+            });
+
+            if (! await User.exists({ _id: reservationJson.userId })) return res.status(400).json({
+                errors: [
+                    `user with id '${reservationJson.userId}' does not exist`
+                ]
+            });
+
+            const searchData = {
+                roomId: reservationJson.roomId,
+                fromDate: reservationJson.fromDate,
+                toDate: reservationJson.toDate
+            };
+            if (await dbQueries.otherReservationOnGivenRoomAndDateIntervalExists(searchData)) {
+                return res.status(400).json({
+                    errors: [
+                        `other reservation/reservations on this room and date interval already exist(s)`
+                    ]
+                });
+            }
+
+            reservationJson.status = "PENDING";
+            reservationJson.createDate = moment.utc().toDate();
+            reservationJson.updateDate = moment.utc().toDate();
+
+            const reservation = new Reservation(reservationJson);
+            await reservation.save();
+
+            return res.status(200).json(reservation._id);
+
+        } catch (error) {
+            const errors = ['Error: Internal server error'];
+            if (error.errors) {
+                for (let errorField in error.errors) {
+                    errors.push(errorField)
+                }
+            }
+
+            res.status(500).json({
+                errors: errors
+            });
+        }
+    })(req, res);
+});
 
 // ADMIN
 router.post('/accept-reservation', async (req, res) => {
@@ -233,27 +237,30 @@ router.delete('/delete-reservation', async (req, res) => {
     })(req, res);
 });
 
-router.get('/accepted-reservations/:roomid', async (req, res) => {
+router.get('/room/:roomId/reservations/accepted', async (req, res) => {
     const errors = [];
-    if (!ObjectID.isValid(req.params.roomid)) errors.push(`Error: '${req.params.roomid} is not valid ObjectID'`);
-    const fromDate = moment.utc(req.query.fromDate, "YYYY-MM-DD", true);
-    if (!fromDate.isValid()) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
-    const toDate = moment.utc(req.query.toDate, "YYYY-MM-DD", true);
-    if (!toDate.isValid()) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
-    if (errors.length > 0) return res.status(400).json({
-        "errors": errors
-    });
+    const roomId = parseObjectId(req.params.roomId);
+    if (!roomId) errors.push(`Error: '${req.params.roomid} is not valid ObjectID'`);
+    const fromDate = parseIsoDatetime(req.query.fromDate);
+    if (!fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
+    const toDate = parseIsoDatetime(req.query.toDate);
+    if (!toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
+    if (errors.length > 0) {
+        return res.status(400).json({
+            errors: errors
+        });
+    }
 
-    const roomId = new ObjectID(req.params.roomid);
-    const dateInterval = {
+    const searchData = {
+        roomId: roomId,
         fromDate: fromDate.toDate(),
-        toDate: toDate.toDate()
+        toDate: toDate.toDate(),
+        status: "ACCEPTED"
     }
     try {
-        const reservations = await resSystemDbClient.withDb(async db => {
-            return await dbActions.getAcceptedReservationsForDateIntervalForRoom(db, roomId, dateInterval);
-        });
-        res.status(200).json(reservations);
+        const reservations = await dbQueries
+            .getReservationsForDateIntervalForRoomWithStatus(searchData)
+        return res.status(200).json(reservations);
     } catch (error) {
         console.log(`Error: ${error}`);
         res.status(500).json({
@@ -263,12 +270,15 @@ router.get('/accepted-reservations/:roomid', async (req, res) => {
 });
 
 const changeReservationStatus = async (req, res, newStatus) => {
-    if (!ObjectID.isValid(req.body.reservationId)) {
+    const reservationId = parseObjectId(req.body.reservationId);
+    if (!reservationId) {
         res.status(400).json({
-            message: `Error: '${req.body.reservationId}' is invalid ObjectID`
+            errors: [
+                `Error: '${req.body.reservationId}' is invalid ObjectId`
+            ]
         });
     }
-    const reservationId = new ObjectID(req.body.reservationId);
+
     try {
         const dbResult = await resSystemDbClient.withDb(async db => {
             return dbActions.changeReservationStatus(db, reservationId, newStatus);
@@ -298,10 +308,10 @@ const changeReservationStatus = async (req, res, newStatus) => {
  * @param {String} req.pricePerDay
  * @param {String} req.totalPrice
  */
-const prepareReservation = req => {
+const prepareReservationJson = req => {
     return {
         fromDate: parseIsoDatetime(req.body.fromDate),
-        toDate: parseIsoDatetime(req.body.ToDate),
+        toDate: parseIsoDatetime(req.body.toDate),
         userId: parseObjectId(req.body.userId),
         roomId: parseObjectId(req.body.roomId),
         pricePerDay: preparePrice(req.body.pricePerDay),
@@ -310,7 +320,6 @@ const prepareReservation = req => {
 }
 
 /**
- * 
  * @param {Object} reservation
  * @param {moment.Moment} reservation.fromDate
  * @param {moment.Moment} reservation.toDate
@@ -319,7 +328,7 @@ const prepareReservation = req => {
  * @param {Number} reservation.pricePerDay
  * @param {Number} reservation.totalPrice
  */
-const validateReservation = reservation => {
+const validateReservationJson = reservation => {
     let errors = [];
     if (!reservation.fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' date format.`)
     if (!reservation.toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' date format.`)
@@ -331,5 +340,6 @@ const validateReservation = reservation => {
 };
 
 export default router;
-exports.prepareReservation = prepareReservation;
-exports.validateReservation = validateReservation;
+exports.prepareReservation = prepareReservationJson;
+exports.validateReservation = validateReservationJson;
+exports.changeReservationStatus = changeReservationStatus;
