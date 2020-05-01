@@ -7,7 +7,7 @@ mongoose.connect(process.env[dbNameVar], {
     dbName: process.env.DB_NAME,
     useNewUrlParser: true,
     useUnifiedTopology: true
-});
+}).then(() => console.log("Connected with db"));
 
 const port = process.env.PORT
 app.listen(port, () => {

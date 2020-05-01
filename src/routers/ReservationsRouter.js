@@ -74,7 +74,7 @@ router.post('/reservation/create', async (req, res) => {
 
         try {
             if (! await Room.exists({ _id: reservationJson.roomId })) return res.status(400).json({
-                errors: [ 
+                errors: [
                     `room with id '${reservationJson.roomId}' does not exist`
                 ]
             });
@@ -122,49 +122,91 @@ router.post('/reservation/create', async (req, res) => {
     })(req, res);
 });
 
-// ADMIN
-router.post('/accept-reservation', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role) return res.status(401).json({
-            message: "Unauthorized access"
-        });
-        if (user.role !== "ADMIN") return res.status(401).json({
-            message: "OK. Maybe you're logged in but you have to be admin to do this"
-        });
+const validateIsAdmin = user => {
+    if (!user.role) return "Unauthorized access";
+    if (user.role !== "ADMIN") return "Admin role required";
+    return null;
+};
 
-        if (!ObjectID.isValid(req.body.reservationId)) {
-            res.status(400).json({
-                message: `Error: '${req.body.reservationId}' is invalid ObjectID`
-            });
-        }
-        const reservationId = new ObjectID(req.body.reservationId);
+const withTransaction = async action => {
+    let session = null;
+    try {
+        session = await mongoose.connection.startSession();
+        session.startTransaction();
+
+        await action(session);
+
+        await session.commitTransaction();
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
+}
+
+const sendErrors = (res, _status, errors) => {
+    return res.status(_status).json({
+        errors: errors
+    });
+}
+
+// ADMIN
+router.post('/reservation/accept', async (req, res) => {
+    passport.authenticate('jwt', { session: false }, async (error, user) => {
+        const userValidation = validateIsAdmin(user);
+        if (userValidation) return res.status(401).json({ errors: [userValidation] });
+
+        const reservationId = parseObjectId(req.body.reservationId);
+        if (!reservationId) return res.status(400).json({
+            errors: [`'${req.body.reservationId}' is invalid ObjectID`]
+        });
 
         try {
-            const dbResult = await resSystemDbClient.withDb(async db => {
-                const reservation = await dbActions.changeReservationStatus(
-                    db, reservationId, "ACCEPTED");
-                if (!reservation) return reservation;
+            const reservation = await Reservation.findById(reservationId);
+            if (!reservation) return sendErrors(res, 400,
+                [`Reservation with id '${reservationId}' does not exist`]);
+            if (reservation.status === "ACCEPTED") return sendErrors(res, 400,
+                [`Reservation with id '${reservationId}' is already accepted`]);
 
-                const roomId = reservation.roomId;
-                await dbActions.rejectAllPendingAndSuccessReservationsForRoom(db, roomId, reservationId);
 
-                return reservation;
+            const allReservations = await Reservation.find({
+                roomId: reservation.roomId,
+                fromDate: { $lte: reservation.toDate },
+                toDate: { $gte: reservation.fromDate }
+            }).select('_id status');
+
+            const cannotBeAccepted = allReservations.some(r =>
+                r._id !== reservation._id && r.status === "ACCEPTED");
+            if (cannotBeAccepted) {
+                await dbQueries.changeReservationStatus(reservationId, "REJECTED");
+                return sendErrors(res, 400, [
+                    'Reservation cannot be accepted because other accepted reservation on this date interval exists.',
+                    `State of current reservation has been changed to REJECTED`
+                ]);
+            }
+
+            const reservationToRejectIds = allReservations.filter(r =>
+                r._id !== reservation._id && r.status === 'PENDING').map(r => r._id);
+            await withTransaction(async session => {
+                await Reservation.updateMany({
+                    _id: { $in: reservationToRejectIds }
+                }, {
+                    $set: { status: "REJECTED" }
+                }, { session: session });
+                
+                reservation.status = "ACCEPTED";
+                reservation.updateDate = moment.utc().toDate();
+                await reservation.save({ session: session }); // Check result?
             });
 
-            if (!dbResult) return res.status(400).json({
-                message: `There is no reservation with id ${reservationId}`
-            });
-
-            return res.status(200).json({
-                message: "OK"
-            });
+            return res.status(200).json({ _id: reservation._id });
         } catch (error) {
             console.log(`Error: ${error}`);
             res.status(500).json({
                 message: "Error: Internal server error"
             });
         }
-
     })(req, res);
 });
 

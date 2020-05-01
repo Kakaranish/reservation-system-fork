@@ -7,30 +7,91 @@ const getRoomIds = async () => {
     return Room.find({}).select('id');
 }
 
+// TODO: Change name to SetReservationStatus
+
 /**
  * @param {mongoose.Types.ObjectId} reservationId 
  * @param {String} newStatus 
  */
 const changeReservationStatus = async (reservationId, newStatus) => {
-    return Reservation.updateOne({ _id: reservationId },
-        {
-            $set: {
-                status: newStatus,
-                updateDate: moment.utc().toDate()
-            }
+    return Reservation.updateOne({ _id: reservationId }, {
+        $set: {
+            status: newStatus,
+            updateDate: moment.utc().toDate()
         }
-    );
+    });
+}
+
+// /**
+//  * @param {Object} searchData
+//  * @param {mongoose.Types.ObjectId} searchData.roomId 
+//  * @param {mongoose.Types.ObjectId} searchData.reservationId 
+//  */
+// const rejectAllPendingAndSuccessReservationsForRoom = async searchData => {
+//     return Reservation.updateMany({
+//         roomId: searchData.roomId,
+//         "_id": {
+//             "$ne": searchData.reservationId
+//         },
+//         $or: [
+//             {
+//                 status: "PENDING"
+//             },
+//             {
+//                 status: "ACCEPTED"
+//             }
+//         ]
+//     }, {
+//         $set: {
+//             status: "REJECTED",
+//             updateDate: moment.utc().toDate()
+//         }
+//     });
+// }
+
+
+
+// return Reservation.exists({
+//     roomId: searchData.roomId,
+//     status: "ACCEPTED",
+//     fromDate: { $lte: searchData.toDate },
+//     toDate: { $gte: searchData.fromDate }
+// })
+
+/**
+* @param {Object} searchData
+* @param {mongoose.Types.ObjectId} searchData.excludedReservationId 
+* @param {mongoose.Types.ObjectId} searchData.roomId
+* @param {Date} searchData.fromDate
+* @param {Date} searchData.toDate
+*/
+const rejectReservations = async searchData => {
+    return Reservation.updateMany({
+        roomId: searchData.roomId,
+        _id: {
+            $ne: searchData.excludedReservationId
+        },
+        status: "PENDING",
+        fromDate: { $lte: searchData.toDate },
+        toDate: { $gte: searchData.fromDate }
+    }, {
+        $set: {
+            status: "REJECTED",
+            updateDate: moment.utc().toDate()
+        }
+    });
 }
 
 /**
- * @param {mongoose.Types.ObjectId} roomId 
- * @param {mongoose.Types.ObjectId} reservationId 
+ * @param {Object} searchData
+ * @param {mongoose.Types.ObjectId} searchData.roomId 
+ * @param {mongoose.Types.ObjectId} searchData.reservationId 
  */
-const rejectAllPendingAndSuccessReservationsForRoom = (roomId, reservationId) => {
+const rejectAllPendingAndSuccessReservationsForRoom = async (searchData, opts = {}) => {
     return Reservation.updateMany({
-        roomId: roomId,
+        roomId: searchData.roomId,
         "_id": {
-            "$ne": reservationId
+            "$ne": searchData.reservationId
         },
         $or: [
             {
@@ -45,8 +106,9 @@ const rejectAllPendingAndSuccessReservationsForRoom = (roomId, reservationId) =>
             status: "REJECTED",
             updateDate: moment.utc().toDate()
         }
-    });
+    }, opts);
 }
+
 
 /**
  * @param {mongoose.Types.ObjectId} roomId 
@@ -93,7 +155,7 @@ const getAvailableRoomPreviews = async dateInterval => {
 
     let availableRoomIds = [];
     await Promise.all(roomIds.map(async (roomId) => {
-        const isAvailable = ! await otherReservationOnGivenRoomAndDateIntervalExists({
+        const isAvailable = ! await acceptedReservationExists({
             fromDate: dateInterval.fromDate,
             toDate: dateInterval.toDate,
             roomId: roomId
@@ -109,7 +171,7 @@ const getAvailableRoomPreviews = async dateInterval => {
  * @param {Date} searchData.fromDate
  * @param {Date} searchData.toDate
  */
-const otherReservationOnGivenRoomAndDateIntervalExists = async searchData => {
+const acceptedReservationExists = async searchData => {
     return Reservation.exists({
         roomId: searchData.roomId,
         status: "ACCEPTED",
@@ -117,6 +179,33 @@ const otherReservationOnGivenRoomAndDateIntervalExists = async searchData => {
         toDate: { $gte: searchData.fromDate }
     })
 }
+
+// Without validation
+
+/**
+ * @param {Object} searchData 
+ * @param {String} searchData.withStatus
+ * @param {mongoose.Types.ObjectId} searchData.forRoomWithId
+ * @param {Object} searchData.forDateInterval
+ * @param {Date} searchData.forDateInterval.start
+ * @param {Date} searchData.forDateInterval.end
+ */
+const reservationExists = async searchData => {
+    const withStatus = searchData.withStatus || "ACCEPTED";
+    const forRoomWithId = searchData.forRoomWithId;
+    const forDateInterval = {
+        start: searchData.forDateInterval.start || moment.utc().startOf('day').toDate(),
+        end: searchData.forDateInterval.end || moment.utc().startOf('day').toDate()
+    };
+
+    return Reservation.exists({
+        roomId: forRoomWithId,
+        status: withStatus,
+        fromDate: { $lte: forDateInterval.end },
+        toDate: { $gte: forDateInterval.start }
+    });
+}
+
 
 /**
  * @param {Object} searchData 
@@ -207,7 +296,7 @@ module.exports = {
     getRoomIds,
     changeReservationStatus,
     rejectAllPendingAndSuccessReservationsForRoom,
-    otherReservationOnGivenRoomAndDateIntervalExists,
+    otherReservationOnGivenRoomAndDateIntervalExists: acceptedReservationExists,
     getRoomPreview,
     getRoomPreviews,
     getAvailableRoomIds,
@@ -216,5 +305,7 @@ module.exports = {
     getReservationsWithStatusForUser,
     getAvailableRoomPreviews,
     getReservationsForDateIntervalForRoomWithStatus,
-    getPopulatedReservationsForDateIntervalForRoomWithStatus
+    getPopulatedReservationsForDateIntervalForRoomWithStatus,
+    rejectReservations,
+    reservationExists
 };

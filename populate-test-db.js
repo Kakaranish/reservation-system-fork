@@ -204,7 +204,7 @@ const dbName = process.env.DB_NAME_TEST;
             photoUrl: '/some/path/5ea5e3423724e5ff90e7df45'
         });
         await room.save();
-    
+
         await Reservation.insertMany([
             new Reservation({
                 _id: parseObjectId('5ea5e6b2f0322ac00ff284ac'),
@@ -255,25 +255,130 @@ const dbName = process.env.DB_NAME_TEST;
             photoUrl: '/some/path'
         });
         await room.save();
-    
+
+        await Reservation.insertMany([
+            new Reservation({
+                _id: parseObjectId('5eac28c830c2bd25d24c4cf4'),
+                fromDate: moment('2020-05-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-05-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            })
+        ]);
+            
         await createDummyReservation(user._id, room._id).save();
-        
-        await new Reservation({
-            _id: parseObjectId('5ea7216dd625f8cb279733d5'),
-            fromDate: moment('2020-05-01T00:00:00.000Z', ISO_8601).toDate(),
-            toDate: moment('2020-05-01T00:00:00.000Z', ISO_8601).toDate(),
-            userId: user._id,
-            roomId: room._id,
-            pricePerDay: 400,
-            totalPrice: 400,
-            status: "ACCEPTED",
-            createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
-            updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
-        }).save()
     }
 
     // -------------------------------------------------------------------------
-    // chnageReservationStatus
+    // POST /reservation/accept
+
+    {
+        const room = await new Room({
+            _id: parseObjectId('5eac1e7e7d84dd4f74b8cd97'),
+            name: "Conference Room 5eac1e7e7d84dd4f74b8cd97",
+            location: "Krakow",
+            capacity: 20,
+            pricePerDay: 300,
+            description: "Some description 1",
+            amenities: [
+                "amtTV", "amtMicrophone", "amtProjector"
+            ],
+            dows: [
+                "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
+            ],
+            photoUrl: '/some/path'
+        });
+        await room.save();
+
+        await Reservation.insertMany([
+            // Pending reservation cant be accepted because other reservation is accepted
+            new Reservation({
+                _id: parseObjectId('5eac2249372b7676ffb9c88e'),
+                fromDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "PENDING",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            new Reservation({
+                _id: parseObjectId('5eac2251352b07932183ee63'),
+                fromDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            // Accept reservation and then reject others pending
+            new Reservation({
+                _id: parseObjectId('5eac22acebac85f7dd117a14'),
+                fromDate: moment('2020-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "PENDING",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            new Reservation({
+                _id: parseObjectId('5eac22a4a4fbab8bc52230a3'),
+                fromDate: moment('2020-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "PENDING",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            new Reservation({
+                _id: parseObjectId('5eac358cac8b270b1c1863f0'),
+                fromDate: moment('2020-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "CANCELLED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            // Reservation already accepted
+            new Reservation({
+                _id: parseObjectId('5eac23434fcb4261665be561'),
+                fromDate: moment('2020-01-03T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-03T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            createDummyReservation(user._id, room._id)
+        ]);
+    }
+
+
+    // -------------------------------------------------------------------------
+    // changeReservationStatus
 
     await new Reservation({
         _id: parseObjectId('5ea5ee95db7d4bdb587a6952'),
