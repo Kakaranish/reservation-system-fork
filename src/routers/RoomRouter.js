@@ -1,42 +1,33 @@
 import express from "express";
-import mongoose from 'mongoose';
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import passport from "passport";
 import Room from "../models/room-model";
 import '../auth';
 import dbQueries from '../DbQueries2';
+import { query, validationResult, param, header, body } from 'express-validator';
 
 const preparePrice = require('../common').preparePrice;
 const parseIsoDatetime = require('../common').parseIsoDatetime;
+const parseObjectId = require('../common').parseObjectId;
 const router = express.Router();
+
 /*
     ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
-router.get('/rooms', async (req, res) => {
-    const errors = [];
-    const fromDate = parseIsoDatetime(req.query.fromDate);
-    if (!fromDate) errors.push(`'fromDate' is not ISO 8601 datetime format.`);
-    const toDate = parseIsoDatetime(req.query.toDate);
-    if (!toDate) errors.push(`'toDate' is not ISO 8601 datetime format.`);
-    const fromPrice = preparePrice(req.query.fromPrice);
-    if (!fromPrice) errors.push(`'fromPrice' is invalid - must be non-negative float number.`);
-    const toPrice = preparePrice(req.query.toPrice);
-    if (!toPrice) errors.push(`'toPrice' is invalid - must be non-negative float number.`);
+router.get('/rooms', createRoomValidationMiddlewares(), async (req, res) => {
 
-    if (errors.length) return res.status(400).json({
-        errors: errors
-    });
-
-    const searchData = {
-        fromDate: fromDate.toDate(),
-        toDate: toDate.toDate(),
-        fromPrice: fromPrice,
-        toPrice: toPrice
-    };
+    if (validationResult(req).errors.length > 0) {
+        return res.status(400).json(validationResult(req));
+    }
 
     try {
-        const roomPreviews = await dbQueries.getAvailableRoomPreviews(searchData);
+        const roomPreviews = await dbQueries.getAvailableRoomPreviews({
+            fromDate: req.query.fromDate,
+            toDate: req.query.toDate,
+            fromPrice: req.query.fromPrice,
+            toPrice: req.query.toPrice
+        });
         res.status(200).json(roomPreviews);
     } catch (error) {
         console.log(`Error: ${error}`);
@@ -46,65 +37,35 @@ router.get('/rooms', async (req, res) => {
     }
 });
 
-router.get('/rooms/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return res.status(400).json({
-            errors: [
-                `'${req.params.id} is not valid ObjectId'`
-            ]
-        });
+router.get('/rooms/:id', [
+    param('id').customSanitizer(id => parseObjectId(id))
+        .notEmpty()
+        .withMessage('invalid mongo ObjectId')
+], async (req, res) => {
+
+    if (validationResult(req).errors.length > 0) {
+        return res.status(400).json(validationResult(req));
     }
 
     try {
-        const roomId = mongoose.Types.ObjectId(req.params.id);
-        const room = await Room.findById(roomId);
+        const room = await Room.findById(req.params.id);
         return res.status(200).json(room);
     } catch (error) {
         console.log(`Error: ${error}`);
-        res.status(500).json({
-            errors: [
-                "Internal error"
-            ]
-        });
+        res.status(500).json({ errors: ["Internal error"] });
     }
 });
 
 // USER & ADMIN
-router.post('/rooms/create', async (req, res) => {
+router.post('/rooms/create', createRoomValidationMiddlewares(), async (req, res) => {
     passport.authenticate('jwt', { session: false }, async (_error, user) => {
         if (!user.role) return res.status(401).json({
-            errors: [
-                "Unauthorized access"
-            ]
+            errors: ['Unauthorized access']
         });
 
-        const contentType = req.headers["content-type"];
-        const isFormData = contentType
-            ? contentType.includes('multipart/form-data')
-            : false;
-        if (!isFormData) return res.status(400).json({
-            errors: [
-                "Error: Header must have Content-Type='multipart/form-data'"
-            ]
-        });
-
-        let roomJson = {
-            name: req.body.name,
-            location: req.body.location,
-            capacity: req.body.capacity,
-            pricePerDay: req.body.pricePerDay,
-            description: req.body.description,
-            amenities: req.body.amenities,
-            dows: req.body.dows
-        };
-
-        const processingErrors = processRoomJson(roomJson, isFormData);
-        if (processingErrors.length) {
-            return res.status(400).json({
-                errors: processingErrors
-            })
-        };
-
+        if (validationResult(req).errors.length > 0) {
+            return res.status(400).json(validationResult(req));
+        }
         if (!req.files) {
             return res.status(400).json({
                 errors: ["No file uploaded"]
@@ -115,7 +76,16 @@ router.post('/rooms/create', async (req, res) => {
         const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/images")
         const newFilename = uuidv4() + path.extname(file.name);
 
-        roomJson.photoUrl = `/uploads/images/${newFilename}`;
+        let roomJson = {
+            name: req.body.name,
+            location: req.body.location,
+            capacity: req.body.capacity,
+            pricePerDay: req.body.pricePerDay,
+            description: req.body.description,
+            amenities: req.body.amenities,
+            dows: req.body.dows,
+            photoUrl: `/uploads/images/${newFilename}`
+        };
 
         try {
             const room = new Room(roomJson);
@@ -127,95 +97,71 @@ router.post('/rooms/create', async (req, res) => {
             });
 
             file.mv(`${uploadDirPath}/${newFilename}`, error => {
-                if (error) {
-                    console.log(error)
-                    return res.status(500).json({
-                        message: `Error: ${error}`
-                    });
-                }
+                if (error) throw error;
             });
         } catch (error) {
             console.log(`Error: ${error}`);
-            res.status(500).json({
-                message: "Error: Internal error"
-            });
+            res.status(500).json({ message: "Error: Internal error" });
         }
     })(req, res);
 });
 
-/**
- * @param {Object} roomJson 
- */
-const processRoomJson = roomJson => {
-    let errors = [];
-    if (!roomJson.name) errors.push("'name' is not provided");
-    if (!roomJson.location) errors.push("'location' is not provided");
-
-    roomJson.capacity = parseInt(roomJson.capacity);
-    if (!roomJson.capacity) errors.push("'capacity' is not provided or it's not integer");
-
-    roomJson.pricePerDay = preparePrice(roomJson.pricePerDay);
-    if (!roomJson.pricePerDay) errors.push("'pricePerDay' is not provided or it's not float");
-
-    let amenitiesError = validateAmenities(roomJson.amenities);
-    if (amenitiesError) errors.push(amenitiesError);
-    roomJson.amenities = amenitiesError ? null : JSON.parse(roomJson.amenities);
-
-    let dowsError = validateDows(roomJson.dows);
-    if (dowsError) errors.push(dowsError);
-    roomJson.dows = dowsError ? null : JSON.parse(roomJson.dows);
-
-    return errors;
+function getRoomsValidationMiddlewares() {
+    return [
+        query('fromDate').customSanitizer(date => parseIsoDatetime(date))
+            .notEmpty()
+            .withMessage('not in ISO8601 format'),
+        query('toDate').customSanitizer(date => parseIsoDatetime(date))
+            .notEmpty()
+            .withMessage('not in ISO8601 format'),
+        query('fromPrice').customSanitizer(price => preparePrice(price))
+            .notEmpty()
+            .withMessage('price must match regex: \d+(\.\d{1,2})?'),
+        query('toPrice').customSanitizer(price => preparePrice(price))
+            .notEmpty()
+            .withMessage('price must match regex: \d+(\.\d{1,2})?')
+    ];
 }
 
-/**
- * @param {String} amenities 
- */
-const validateAmenities = amenities => {
-    const availableAmenities = ["amtTV", "amtMicrophone", "amtProjector", "amtPhone"];
-    let parsedAmenities;
-    try {
-        parsedAmenities = JSON.parse(amenities);
-    } catch (error) {
-        return `'amenities': ${error}`;
-    }
-
-    if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
-        return "'amenities' must be non-empty array";
-    }
-
-    const hasIllegalElements = parsedAmenities.some(amenity =>
-        !availableAmenities.includes(amenity));
-    if (hasIllegalElements) return "Amenities array contains at least one illegal amenity";
-
-    return null;
+function createRoomValidationMiddlewares() {
+    return [
+        header('content-type').custom(value => value.includes('multipart/form-data'))
+            .withMessage('Content-Type must be multipart/form-data'),
+        body('name').isLength({ min: 3 }).withMessage('must have length 3'),
+        body('location').isString().isLength({ min: 3 }),
+        body('capacity').isInt({ min: 0 }),
+        body('pricePerDay').customSanitizer(price => preparePrice(price))
+            .notEmpty().withMessage('price must match regex: \d+(\.\d{1,2})?'),
+        body('description').optional().isString(),
+        body('amenities').notEmpty().withMessage('cannot be empty').bail()
+            .isString().withMessage('must be stringified non-empty array').bail()
+            .custom(amenities => {
+                const parsedAmenities = JSON.parse(amenities);
+                if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
+                    throw new Error('must be non-empty array');
+                }
+                const hasIllegalElements = parsedAmenities.some(
+                    amenity => !availableAmenities.includes(amenity));
+                if (hasIllegalElements) throw Error('contains at least one illegal amenity');
+                return true;
+            }),
+        body('dows').notEmpty().withMessage('cannot be empty').bail()
+            .isString().withMessage('must be stringified non-empty array').bail()
+            .custom(dows => {
+                const parsedDows = JSON.parse(dows);
+                if (!Array.isArray(parsedDows) || parsedDows.length === 0) {
+                    throw Error('must be non-empty array');
+                }
+                const hasIllegalElements = parsedDows.some(dow => !availableDows.includes(dow));
+                if (hasIllegalElements) throw Error("contains at least one illegal dow");
+                return true;
+            })
+    ];
 }
 
-/**
- * @param {String} dows 
- */
-const validateDows = dows => {
-    const availableDows = ["dowMonday", "dowTuesday", "dowWednesday",
-        "dowThursday", "dowFriday", "dowSaturday", "dowSunday"];
+const availableAmenities = ["amtTV", "amtMicrophone", "amtProjector", "amtPhone"];
 
-    let parsedDows;
-    try {
-        parsedDows = JSON.parse(dows);
-    } catch (error) {
-        return `'dows': ${error}`;
-    }
-
-    if (!Array.isArray(parsedDows) || parsedDows.length === 0) {
-        return "'dows' must be non-empty array";
-    }
-
-    const hasIllegalElements = parsedDows.some(dow => !availableDows.includes(dow));
-    if (hasIllegalElements) return "'dows' contains at least one illegal dow";
-
-    return null;
-}
+const availableDows = ["dowMonday", "dowTuesday", "dowWednesday",
+    "dowThursday", "dowFriday", "dowSaturday", "dowSunday"];
 
 export default router;
-exports.validateDows = validateDows;
-exports.validateAmenities = validateAmenities;
-exports.processRoomJson = processRoomJson;

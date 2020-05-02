@@ -5,12 +5,8 @@ import path from "path";
 import Room from '../../src/models/room-model';
 import fs from 'fs';
 import '../../src/common';
-const validateDows = require('../../src/routers/RoomRouter').validateDows;
-const validateAmenities = require('../../src/routers/RoomRouter').validateAmenities;
-const processRoomJson = require('../../src/routers/RoomRouter').processRoomJson;
 
 const request = supertest(app);
-
 const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
 const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU1MDE1NjY4MTUxNjJmNzNiYWQ4MCIsImVtYWlsIjoiYWRtaW5AbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifSwiaWF0IjoxNTg3OTExNDA3fQ.pMoZZUYhgkiVKPhsT-uVO8n9FWEdiG4JrIJjSDcnX3g';
 
@@ -21,216 +17,6 @@ beforeAll(() => {
         useUnifiedTopology: true
     });
 });
-
-describe('validateDows', () => {
-    it('When dows are empty then error is returned', () => {
-        // Arrange:
-        const dowsStr = "[]";
-
-        // Act:
-        const result = validateDows(dowsStr);
-
-        // Assert:
-        expect(result.includes('non-empty')).toBe(true);
-    });
-
-
-    it('When dows are not parsable then error is returned', () => {
-        // Arrange:
-        const dowsStr = "ashjidhlkasd";
-
-        // Act:
-        const result = validateDows(dowsStr);
-
-        // Assert:
-        expect(result.includes(`'dows'`)).toBe(true);
-    });
-
-    it('When dows contains not valid dow then error is returned', () => {
-        // Arrange:
-        const dowsStr = '["dowMonday", "INVALID_VALUE", "dowFriday"]';
-
-        // Act:
-        const result = validateDows(dowsStr);
-
-        // Assert:
-        expect(result.includes(`illegal`)).toBe(true);
-    });
-
-    it('When dows are valid then no error is returned', () => {
-        // Arrange:
-        const dowsStr = '["dowMonday", "dowTuesday", "dowFriday"]';
-
-        // Act:
-        const result = validateDows(dowsStr);
-
-        // Assert:
-        expect(result).toBe(null);
-    });
-});
-
-describe('processRoomJson', () => {
-    it('When name and location are empty then errors are returned', () => {
-        // Arrange:
-        const roomJson = {
-            capacity: "123",
-            pricePerDay: "222.22",
-            amenities: JSON.stringify(["amtTV", "amtProjector"]),
-            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
-        };
-
-        // Act:
-        const result = processRoomJson(roomJson);
-
-        // Assert:
-        expect(result).toHaveLength(2);
-        expect(result.some(x => x.includes(`'name'`))).toBe(true);
-        expect(result.some(x => x.includes(`'location'`))).toBe(true);
-    });
-
-    it('When capacity is not int parsable then error is returned', () => {
-        // Arrange:
-        const roomJson = {
-            name: "Some name",
-            location: "Some location",
-            capacity: "s123",
-            pricePerDay: "222.22",
-            amenities: JSON.stringify(["amtTV", "amtProjector"]),
-            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
-        };
-
-        // Act:
-        const result = processRoomJson(roomJson);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'capacity'`)).toBe(true);
-    });
-
-    it('When price is invalid then error is returned', () => {
-        // Arrange:
-        const roomJson = {
-            name: "Some name",
-            location: "Some location",
-            capacity: "123",
-            pricePerDay: "asdas",
-            amenities: JSON.stringify(["amtTV", "amtProjector"]),
-            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
-        };
-
-        // Act:
-        const result = processRoomJson(roomJson);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'pricePerDay'`)).toBe(true);
-    });
-
-    it('When amenities are invalid then error is returned', () => {
-        // Arrange:
-        const roomJson = {
-            name: "Some name",
-            location: "Some location",
-            capacity: "123",
-            pricePerDay: "22.22",
-            amenities: "INVALID",
-            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
-        };
-
-        // Act:
-        const result = processRoomJson(roomJson);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'amenities'`)).toBe(true);
-    });
-
-
-    it('When dows are invalid then error is returned', () => {
-        // Arrange:
-        const roomJson = {
-            name: "Some name",
-            location: "Some location",
-            capacity: "123",
-            pricePerDay: "22.22",
-            amenities: JSON.stringify(["amtTV", "amtProjector"]),
-            dows: "INVALID"
-        };
-
-        // Act:
-        const result = processRoomJson(roomJson);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'dows'`)).toBe(true);
-    });
-
-    it('When json is valid then no errors are returned', () => {
-        // Arrange:
-        const roomJson = {
-            name: "Some name",
-            location: "Some location",
-            capacity: "123",
-            pricePerDay: "22.22",
-            amenities: JSON.stringify(["amtTV", "amtProjector"]),
-            dows: JSON.stringify(["dowMonday", "dowTuesday", "dowSunday"])
-        };
-
-        // Act:
-        const result = processRoomJson(roomJson);
-
-        // Assert:
-        expect(result).toHaveLength(0);
-    });
-});
-
-describe('validateAmenities', () => {
-    it('When amenities are empty then error is returned', () => {
-        // Arrange:
-        const amenitiesStr = "[]";
-
-        // Act:
-        const result = validateAmenities(amenitiesStr);
-
-        // Assert:
-        expect(result.includes('non-empty')).toBe(true);
-    });
-
-
-    it('When amenities are not parsable then error is returned', () => {
-        // Arrange:
-        const amenitiesStr = "ashjidhlkasd";
-
-        // Act:
-        const result = validateAmenities(amenitiesStr);
-
-        // Assert:
-        expect(result.includes(`'amenities'`)).toBe(true);
-    });
-
-    it('When amenities contains not valid amt then error is returned', () => {
-        // Arrange:
-        const amenitiesStr = '["amtTV", "INVALID_VALUE", "amtProjector"]';
-
-        // Act:
-        const result = validateAmenities(amenitiesStr);
-
-        // Assert:
-        expect(result.includes(`illegal`)).toBe(true);
-    });
-
-    it('When dows are valid then no error is returned', () => {
-        // Arrange:
-        const amenitiesStr = '["amtProjector", "amtTV", "amtPhone"]';
-
-        // Act:
-        const result = validateAmenities(amenitiesStr);
-
-        // Assert:
-        expect(result).toBe(null);
-    });
-});
-
 
 /*
     Room1: 5ea55125e95cc70df70870f7
@@ -244,7 +30,6 @@ describe('validateAmenities', () => {
     2020-04-06 - 2020-04-30
 */
 
-// 13 -> 1 ; 14 -> 2 ; 15 -> 3 ; 16 -> 4 ; 17 -> 5
 describe('/rooms', () => {
     it('When one of dates is not iso then errors are returned in json', async () => {
         // Arrange:
@@ -262,7 +47,8 @@ describe('/rooms', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('fromDate')).toBe(true);
+        expect(result.body.errors[0].param).toBe("fromDate");
+        expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
     });
 
     test.each([
@@ -282,7 +68,8 @@ describe('/rooms', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('fromPrice')).toBe(true);
+        expect(result.body.errors[0].param).toBe("fromPrice");
+        expect(result.body.errors[0].msg.includes('price')).toBe(true);
     });
 
     it('Date interval covers one day', async () => {
@@ -291,8 +78,8 @@ describe('/rooms', () => {
             .query({
                 fromDate: "2020-04-04T00:00:00Z",
                 toDate: "2020-04-04T00:00:00Z",
-                fromPrice: 100,
-                toPrice: 200
+                fromPrice: "100",
+                toPrice: "200"
             });
 
         // Assert:
@@ -407,7 +194,6 @@ describe('/rooms/create', () => {
             .query({
                 secret_token: testUserToken
             })
-            .type('form')
             .field('location', 'Some location')
             .field('capacity', '123')
             .field('pricePerDay', '22.22')
@@ -415,8 +201,10 @@ describe('/rooms/create', () => {
 
         // Assert:
         expect(result.body.errors).toHaveLength(2);
-        expect(result.body.errors.some(x => x.includes(`'name'`)));
-        expect(result.body.errors.some(x => x.includes(`'amenities'`)));
+        expect(result.body.errors[0].param).toBe('name');
+        expect(result.body.errors[0].msg.includes('length 3')).toBe(true);
+        expect(result.body.errors[1].param).toBe('amenities');
+        expect(result.body.errors[1].msg.includes('cannot be empty')).toBe(true);
     });
 
     it('When file is not uploaded then error is returned', async () => {
@@ -456,8 +244,9 @@ describe('/rooms/create', () => {
 
         // Assert:
         try {
-            expect.anything(result.body.roomId);
-            expect(result.body.photoUrl);
+            expect(result.status).toBe(200);
+            expect(mongoose.Types.ObjectId.isValid(result.body.roomId)).toBe(true);
+            expect.anything(result.body.photoUrl);
         }
         catch (error) {
             throw error;
@@ -494,8 +283,9 @@ describe('/rooms/create', () => {
 
         // Assert:
         try {
-            expect.anything(result.body.roomId);
-            expect(result.body.photoUrl);
+            expect(result.status).toBe(200);
+            expect(mongoose.Types.ObjectId.isValid(result.body.roomId)).toBe(true);
+            expect.anything(result.body.photoUrl);
         }
         catch (error) {
             throw error;
