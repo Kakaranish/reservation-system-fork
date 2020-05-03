@@ -670,6 +670,71 @@ const dbName = process.env.DB_NAME_TEST;
     }
 
     // -------------------------------------------------------------------------
+    // GET /user/reservations
+
+    {
+        const room = new Room({
+            _id: parseObjectId('5eaee6bb71194629d5f50140'),
+            name: "Conference Room 5eaee6bb71194629d5f50140",
+            location: "Krakow",
+            capacity: 20,
+            pricePerDay: 300,
+            description: "Some description 1",
+            amenities: [
+                "amtTV", "amtMicrophone", "amtProjector"
+            ],
+            dows: [
+                "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
+            ],
+            photoUrl: '/some/path'
+        });
+        await room.save();
+
+        await Reservation.insertMany([
+            new Reservation({
+                _id: parseObjectId('5eaee6b6f43ee9c80fddca0f'),
+                fromDate: moment('2019-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2019-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2019-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2019-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            new Reservation({
+                _id: parseObjectId('5eaee6b01808121f3ca90884'),
+                fromDate: moment('2019-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2019-01-03T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            new Reservation({
+                _id: parseObjectId('5eaee6ad3b1c7302153d59a0'),
+                fromDate: moment('2019-01-02T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2019-01-03T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "REJECTED",
+                createDate: moment('2019-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2019-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            createDummyReservation(user._id, room._id)
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
     // changeReservationStatus
 
     await new Reservation({
