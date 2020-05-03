@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 /**
  * @param {Number | String} value 
  */
-const preparePrice = value => {
+export const preparePrice = value => {
     if (!value) return null;
     else if (typeof (value) === 'number') {
         if (value >= 0) return parseFloat(value.toFixed(2));
@@ -18,7 +18,7 @@ const preparePrice = value => {
  * @param {String} datetime 
  * @returns {moment.Moment}
  */
-const parseIsoDatetime = datetime => {
+export const parseIsoDatetime = datetime => {
     const isoDatetime = moment.utc(datetime, moment.ISO_8601, true)
     return isoDatetime.isValid()
         ? isoDatetime
@@ -30,12 +30,8 @@ const parseIsoDatetime = datetime => {
  * @param {String} objectId 
  * @returns {mongoose.}
  */
-const parseObjectId = objectId => {
+export const parseObjectId = objectId => {
     return mongoose.Types.ObjectId.isValid(objectId)
         ? mongoose.Types.ObjectId(objectId)
         : null;
 }
-
-exports.preparePrice = preparePrice;
-exports.parseIsoDatetime = parseIsoDatetime;
-exports.parseObjectId = parseObjectId;

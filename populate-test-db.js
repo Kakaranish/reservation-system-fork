@@ -111,7 +111,7 @@ const dbName = process.env.DB_NAME_TEST;
                 "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
             ],
             photoUrl: '/some/path'
-        })
+        });
 
         await room1.save();
 
@@ -270,7 +270,7 @@ const dbName = process.env.DB_NAME_TEST;
                 updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
             })
         ]);
-            
+
         await createDummyReservation(user._id, room._id).save();
     }
 
@@ -376,6 +376,180 @@ const dbName = process.env.DB_NAME_TEST;
         ]);
     }
 
+    // -------------------------------------------------------------------------
+    // DELETE /reservation
+    {
+        const room = new Room({
+            _id: parseObjectId('5eadb09516226578eaebd819'),
+            name: "Conference Room 5eadb09516226578eaebd819",
+            location: "Krakow",
+            capacity: 20,
+            pricePerDay: 300,
+            description: "Some description 1",
+            amenities: [
+                "amtTV", "amtMicrophone", "amtProjector"
+            ],
+            dows: [
+                "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
+            ],
+            photoUrl: '/some/path'
+        })
+        await room.save();
+
+        await Reservation.insertMany([
+            new Reservation({
+                _id: parseObjectId('5eadb20560fdcfdd1dd4fc10'),
+                fromDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            createDummyReservation(user._id, room._id)
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /room/:roomId/reservations/accepted
+    {
+        const room = new Room({
+            _id: parseObjectId('5eae87863a9e88493afd0e58'),
+            name: "Conference Room 5eae87863a9e88493afd0e58",
+            location: "Krakow",
+            capacity: 20,
+            pricePerDay: 300,
+            description: "Some description 1",
+            amenities: [
+                "amtTV", "amtMicrophone", "amtProjector"
+            ],
+            dows: [
+                "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
+            ],
+            photoUrl: '/some/path'
+        })
+        await room.save();
+
+        await Reservation.insertMany([
+            new Reservation({
+                _id: parseObjectId('5eae87f7e1d6c41dba3a76b0'),
+                fromDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-03T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            new Reservation({
+                _id: parseObjectId('5eae87fef13c8a4a4302dcc6'),
+                fromDate: moment('2020-01-05T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-07T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            new Reservation({
+                _id: parseObjectId('5eae880504a5017179988635'),
+                fromDate: moment('2020-01-08T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-08T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+            createDummyReservation(user._id, room._id)
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /reservation/reject
+    {
+        const room = new Room({
+            _id: parseObjectId('5eae95c0479a93ffbbc6550e'),
+            name: "Conference Room 5eae95c0479a93ffbbc6550e",
+            location: "Krakow",
+            capacity: 20,
+            pricePerDay: 300,
+            description: "Some description 1",
+            amenities: [
+                "amtTV", "amtMicrophone", "amtProjector"
+            ],
+            dows: [
+                "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
+            ],
+            photoUrl: '/some/path'
+        })
+        await room.save();
+
+        await Reservation.insertMany([
+            new Reservation({
+                _id: parseObjectId('5eae965024496e1a07f59774'),
+                fromDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            createDummyReservation(user._id, room._id)
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /reservation/cancel
+    {
+        const room = new Room({
+            _id: parseObjectId('5eae9e302b082a4e75a8ff8e'),
+            name: "Conference Room 5eae95c0479a93ffbbc6550e",
+            location: "Krakow",
+            capacity: 20,
+            pricePerDay: 300,
+            description: "Some description 1",
+            amenities: [
+                "amtTV", "amtMicrophone", "amtProjector"
+            ],
+            dows: [
+                "dowMonday", "dowTuesday", "dowThursday", "dowFriday", "dowSunday"
+            ],
+            photoUrl: '/some/path'
+        })
+        await room.save();
+
+        await Reservation.insertMany([
+            new Reservation({
+                _id: parseObjectId('5eae9e372a81fdb8b32c8380'),
+                fromDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "ACCEPTED",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
+
+            createDummyReservation(user._id, room._id)
+        ]);
+    }
 
     // -------------------------------------------------------------------------
     // changeReservationStatus

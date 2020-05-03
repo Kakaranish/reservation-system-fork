@@ -1,51 +1,41 @@
 import express from "express";
-import mongoose from 'mongoose';
-import dbClient from '../DbClient';
 import passport from "passport";
 import moment from 'moment';
-import '../auth';
-const preparePrice = require('../common').preparePrice;
-const parseIsoDatetime = require('../common').parseIsoDatetime;
-const parseObjectId = require('../common').parseObjectId;
-
-import dbQueries from '../DbQueries2';
-import { ObjectID } from "mongodb";
-const dbActions = require('../DbQueries')
+import { query, validationResult, param, body } from 'express-validator';
+import * as dbQueries from '../DbQueries2';
 import Room from '../models/room-model';
 import User from '../models/user-model';
 import Reservation from '../models/reservation-model';
+import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
+import ExistReservationQueryBuilder from '../queries/ExistReservationQueryBuilder';
+import { preparePrice, parseIsoDatetime, parseObjectId } from '../common';
+import { userValidator, adminValidator, authValidator } from '../auth-validators';
 
 const router = express();
-const resSystemDbClient = dbClient();
 
-router.get('/rooms/:roomId/reservations', async (req, res) => {
-    const errors = [];
-    const roomId = parseObjectId(req.params.roomId);
-    if (!roomId) errors.push(`${roomId} is not valid ObjectId'`);
-    const fromDate = parseIsoDatetime(req.query.fromDate);
-    if (!fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
-    const toDate = parseIsoDatetime(req.query.toDate);
-    if (!toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
-    if (errors.length) {
-        return res.status(400).json({
-            errors: errors
-        });
-    }
-
-    const searchData = {
-        roomId: roomId,
-        fromDate: fromDate.toDate(),
-        toDate: toDate.toDate()
-    };
+router.get('/rooms/:roomId/reservations', [
+    param('roomId').customSanitizer(roomId => parseObjectId(roomId))
+        .notEmpty().withMessage('invalid mongo ObjectId'),
+    query('fromDate').customSanitizer(date => parseIsoDatetime(date))
+        .notEmpty()
+        .withMessage('not in ISO8601 format'),
+    query('toDate').customSanitizer(date => parseIsoDatetime(date))
+        .notEmpty()
+        .withMessage('not in ISO8601 format'),
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
     try {
-        const reservations = await dbQueries.getReservationsForRoom(searchData);
+        const queryBuilder = new FindReservationQueryBuilder();
+        const findReservations = queryBuilder
+            .forRoomId(req.params.roomId.toHexString())
+            .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
+            .build();
+        const reservations = await findReservations;
         res.status(200).json(reservations);
-
     } catch (error) {
         console.log(`Error: ${error}`);
-        res.status(500).json({
-            message: "Error: Internal error"
-        });
+        res.status(500).json({ errors: ['Internal error'] });
     }
 })
 
@@ -60,328 +50,221 @@ router.get('/rooms/:roomId/reservations', async (req, res) => {
         totalPrice: String | eg. 22.00 ; 22 ; 22.0
     }
 */
-router.post('/reservation/create', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role) return res.status(401).json({
-            errors: ["Unauthorized access"]
-        });
-
-        let reservationJson = prepareReservationJson(req);
-        let errors = validateReservationJson(reservationJson);
-        if (errors.length) {
-            return res.status(400).json({ errors: errors });
-        };
-
+router.post('/reservation/create', createReservationValidationMiddlewares(),
+    async (req, res, next) => {
+        if (validationResult(req).errors.length > 0)
+            return res.status(400).json(validationResult(req));
         try {
-            if (! await Room.exists({ _id: reservationJson.roomId })) return res.status(400).json({
-                errors: [
-                    `room with id '${reservationJson.roomId}' does not exist`
-                ]
+            const queryBuilder = new ExistReservationQueryBuilder();
+            const otherReservationExists = await queryBuilder.forRoomId(req.body.roomId.toHexString())
+                .overlappingDateIterval(req.body.fromDate.toDate(), req.body.toDate.toDate())
+                .build();
+            if (otherReservationExists) return res.status(400).json({
+                errors: [`other reservation/reservations on this room and date interval already exist(s)`]
             });
 
-            if (! await User.exists({ _id: reservationJson.userId })) return res.status(400).json({
-                errors: [
-                    `user with id '${reservationJson.userId}' does not exist`
-                ]
-            });
-
-            const searchData = {
-                roomId: reservationJson.roomId,
-                fromDate: reservationJson.fromDate,
-                toDate: reservationJson.toDate
-            };
-            if (await dbQueries.otherReservationOnGivenRoomAndDateIntervalExists(searchData)) {
-                return res.status(400).json({
-                    errors: [
-                        `other reservation/reservations on this room and date interval already exist(s)`
-                    ]
-                });
-            }
-
-            reservationJson.status = "PENDING";
-            reservationJson.createDate = moment.utc().toDate();
-            reservationJson.updateDate = moment.utc().toDate();
-
-            const reservation = new Reservation(reservationJson);
+            const reservation = new Reservation({
+                roomId: req.body.roomId,
+                userId: req.body.userId,
+                fromDate: req.body.fromDate,
+                toDate: req.body.toDate,
+                pricePerDay: req.body.pricePerDay,
+                totalPrice: req.body.totalPrice,
+                status: "PENDING",
+                createDate: moment.utc().toDate(),
+                updateDate: moment.utc().toDate()
+            })
             await reservation.save();
-
             return res.status(200).json(reservation._id);
-
         } catch (error) {
+            console.log(error)
             const errors = ['Error: Internal server error'];
             if (error.errors) {
                 for (let errorField in error.errors) {
                     errors.push(errorField)
                 }
             }
-
-            res.status(500).json({
-                errors: errors
-            });
+            res.status(500).json({ errors: errors });
         }
-    })(req, res);
-});
-
-const validateIsAdmin = user => {
-    if (!user.role) return "Unauthorized access";
-    if (user.role !== "ADMIN") return "Admin role required";
-    return null;
-};
-
-const withTransaction = async action => {
-    let session = null;
-    try {
-        session = await mongoose.connection.startSession();
-        session.startTransaction();
-
-        await action(session);
-
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
-    } finally {
-        session.endSession();
-    }
-}
-
-const sendErrors = (res, _status, errors) => {
-    return res.status(_status).json({
-        errors: errors
     });
-}
 
 // ADMIN
-router.post('/reservation/accept', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        const userValidation = validateIsAdmin(user);
-        if (userValidation) return res.status(401).json({ errors: [userValidation] });
+router.post('/reservation/accept', [
+    adminValidator,
+    body('reservationId').customSanitizer(id => parseObjectId(id))
+        .notEmpty().withMessage('invalid mongo ObjectId').bail()
+        .custom(async (id, { req }) => {
+            const reservation = await Reservation.findById(id);
+            if (!reservation)
+                return Promise.reject('reservation with given id does not exist')
+            if (reservation.status === 'ACCEPTED')
+                return Promise.reject('reservation is already accepted')
+            req.body.reservation = reservation;
+        }),
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+    try {
+        const reservation = req.body.reservation;
+        const queryBuilder = new FindReservationQueryBuilder();
+        const allReservations = await queryBuilder.forRoomId(reservation.roomId.toHexString())
+            .overlappingDateIterval(reservation.fromDate, reservation.toDate)
+            .select('_id status')
+            .build();
 
-        const reservationId = parseObjectId(req.body.reservationId);
-        if (!reservationId) return res.status(400).json({
-            errors: [`'${req.body.reservationId}' is invalid ObjectID`]
-        });
-
-        try {
-            const reservation = await Reservation.findById(reservationId);
-            if (!reservation) return sendErrors(res, 400,
-                [`Reservation with id '${reservationId}' does not exist`]);
-            if (reservation.status === "ACCEPTED") return sendErrors(res, 400,
-                [`Reservation with id '${reservationId}' is already accepted`]);
-
-
-            const allReservations = await Reservation.find({
-                roomId: reservation.roomId,
-                fromDate: { $lte: reservation.toDate },
-                toDate: { $gte: reservation.fromDate }
-            }).select('_id status');
-
-            const cannotBeAccepted = allReservations.some(r =>
-                r._id !== reservation._id && r.status === "ACCEPTED");
-            if (cannotBeAccepted) {
-                await dbQueries.changeReservationStatus(reservationId, "REJECTED");
-                return sendErrors(res, 400, [
+        const canBeAccepted = !allReservations.some(r => r._id !== reservation._id
+            && r.status === "ACCEPTED");
+        if (!canBeAccepted) {
+            await dbQueries.changeReservationStatus(reservation._id, "REJECTED");
+            return res.status(400).json({
+                errors: [
                     'Reservation cannot be accepted because other accepted reservation on this date interval exists.',
                     `State of current reservation has been changed to REJECTED`
-                ]);
-            }
-
-            const reservationToRejectIds = allReservations.filter(r =>
-                r._id !== reservation._id && r.status === 'PENDING').map(r => r._id);
-            await withTransaction(async session => {
-                await Reservation.updateMany({
-                    _id: { $in: reservationToRejectIds }
-                }, {
-                    $set: { status: "REJECTED" }
-                }, { session: session });
-                
-                reservation.status = "ACCEPTED";
-                reservation.updateDate = moment.utc().toDate();
-                await reservation.save({ session: session }); // Check result?
-            });
-
-            return res.status(200).json({ _id: reservation._id });
-        } catch (error) {
-            console.log(`Error: ${error}`);
-            res.status(500).json({
-                message: "Error: Internal server error"
+                ]
             });
         }
-    })(req, res);
+
+        const reservationToRejectIds = allReservations.filter(r =>
+            r._id !== reservation._id && r.status === 'PENDING').map(r => r._id);
+        await dbQueries.withTransaction(async session => {
+            await Reservation.updateMany({
+                _id: { $in: reservationToRejectIds }
+            }, {
+                $set: { status: "REJECTED" }
+            }, { session: session });
+
+            reservation.status = "ACCEPTED";
+            reservation.updateDate = moment.utc().toDate();
+            await reservation.save({ session: session });
+        });
+
+        return res.status(200).json({ _id: reservation._id });
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({ errors: ['Internal error'] });
+    }
 });
 
 // ADMIN
-router.post('/reject-reservation', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role) return res.status(401).json({
-            message: "Unauthorized access"
-        });
-        if (user.role !== "ADMIN") return res.status(401).json({
-            message: "OK. You're logged in but you have to be admin to do this"
-        });
-
-        await changeReservationStatus(req, res, "REJECTED");
-    })(req, res);
+router.post('/reservation/reject', [
+    adminValidator,
+    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
+        .notEmpty().withMessage('invalid mongo ObjectId'),
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+    try {
+        const result = await dbQueries.changeReservationStatus(
+            req.body.reservationId, "REJECTED")
+        if (!result) return res.status(400).json({
+            errors: [`there is no reservation with id ${req.body.reservationId}`]
+        })
+        res.status(200).json({ _id: result._id });
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({ errors: ['Internal error'] });
+    }
 });
 
 // USER
-router.post('/cancel-reservation', async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role) return res.status(401).json({
-            message: "Unauthorized access"
-        });
-        if (user.role !== "USER") return res.status(401).json({
-            message: "OK. You're logged in but you have to be user to do this"
-        });
-
-        await changeReservationStatus(req, res, "CANCELLED");
-    })(req, res);
+router.post('/reservation/cancel', [
+    userValidator,
+    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
+        .notEmpty().withMessage('invalid mongo ObjectId'),
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+    try {
+        const result = await dbQueries.changeReservationStatus(
+            req.body.reservationId, "CANCELLED")
+        if (!result) return res.status(400).json({
+            errors: [`there is no reservation with id ${req.body.reservationId}`]
+        })
+        res.status(200).json({ _id: result._id });
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({ errors: ['Internal error'] });
+    }
 });
 
 // ADMIN
-router.delete('/delete-reservation', async (req, res) => {
+router.delete('/reservation', [
+    adminValidator,
+    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
+        .notEmpty().withMessage('invalid mongo ObjectId'),
+], async (req, res) => {
     passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role) return res.status(401).json({
-            message: "Unauthorized access"
-        });
-        if (user.role !== "ADMIN") return res.status(401).json({
-            message: "OK. You're logged in but you have to be admin to do this"
-        });
-
-        if (!ObjectID.isValid(req.body.reservationId)) {
-            res.status(400).json({
-                message: `Error: '${req.body.reservationId}' is invalid ObjectID`
-            });
-        }
-        const reservationId = new ObjectID(req.body.reservationId);
-
+        if (validationResult(req).errors.length > 0)
+            return res.status(400).json(validationResult(req));
         try {
-            const nDeletedRows = await resSystemDbClient.withDb(async db => {
-                return await db.collection('reservations')
-                    .deleteOne({ "_id": reservationId })
-                    .then(result => result.deletedCount);
-            });
-
-            if (nDeletedRows === 0) {
-                return res.status(400).json({
-                    message: "Nothing was removed"
-                });
-            }
-            return res.status(200).json({
-                message: "OK"
-            });
+            const result = await Reservation.findByIdAndDelete(req.body.reservationId);
+            return res.status(200).json({ _id: result?._id ?? null });
         } catch (error) {
             console.log(`Error: ${error}`);
-            res.status(500).json({
-                message: "Error: Internal server error"
-            });
+            res.status(500).json({ errors: ['Internal error'] });
         }
     })(req, res);
 });
 
-router.get('/room/:roomId/reservations/accepted', async (req, res) => {
-    const errors = [];
-    const roomId = parseObjectId(req.params.roomId);
-    if (!roomId) errors.push(`Error: '${req.params.roomid} is not valid ObjectID'`);
-    const fromDate = parseIsoDatetime(req.query.fromDate);
-    if (!fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' format.`);
-    const toDate = parseIsoDatetime(req.query.toDate);
-    if (!toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' format.`);
-    if (errors.length > 0) {
-        return res.status(400).json({
-            errors: errors
-        });
-    }
-
-    const searchData = {
-        roomId: roomId,
-        fromDate: fromDate.toDate(),
-        toDate: toDate.toDate(),
-        status: "ACCEPTED"
-    }
+router.get('/room/:roomId/reservations/accepted', [
+    param('roomId').customSanitizer(id => parseObjectId(id))
+        .notEmpty().withMessage('invalid mongo ObjectId').bail()
+        .custom(async id => {
+            return await Room.exists({ _id: id }).then(exists => {
+                if (!exists) return Promise.reject('room with given id does not exist')
+            });
+        }),
+    query('fromDate').customSanitizer(date => parseIsoDatetime(date))
+        .notEmpty()
+        .withMessage('not in ISO8601 format'),
+    query('toDate').customSanitizer(date => parseIsoDatetime(date))
+        .notEmpty().withMessage('not in ISO8601 format'),
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
     try {
-        const reservations = await dbQueries
-            .getReservationsForDateIntervalForRoomWithStatus(searchData)
+        const queryBuilder = new FindReservationQueryBuilder();
+        const reservations = await queryBuilder.forRoomId(req.params.roomId.toHexString())
+            .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
+            .withStatus('ACCEPTED')
+            .build();
         return res.status(200).json(reservations);
     } catch (error) {
         console.log(`Error: ${error}`);
-        res.status(500).json({
-            message: "Error: Internal error"
-        });
+        res.status(500).json({ errors: ['Internal error'] });
     }
 });
 
-const changeReservationStatus = async (req, res, newStatus) => {
-    const reservationId = parseObjectId(req.body.reservationId);
-    if (!reservationId) {
-        res.status(400).json({
-            errors: [
-                `Error: '${req.body.reservationId}' is invalid ObjectId`
-            ]
-        });
-    }
-
-    try {
-        const dbResult = await resSystemDbClient.withDb(async db => {
-            return dbActions.changeReservationStatus(db, reservationId, newStatus);
-        });
-
-        if (!dbResult) return res.status(400).json({
-            message: `There is no reservation with id ${reservationId}`
-        });
-
-        return res.status(200).json({
-            message: "OK"
-        });
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({
-            message: "Error: Internal server error"
-        });
-    }
-};
-
-/**
- * @param {Object} req 
- * @param {String} req.body.fromDate
- * @param {String} req.body.toDate
- * @param {String} req.body.userId
- * @param {String} req.body.roomId
- * @param {String} req.pricePerDay
- * @param {String} req.totalPrice
- */
-const prepareReservationJson = req => {
-    return {
-        fromDate: parseIsoDatetime(req.body.fromDate),
-        toDate: parseIsoDatetime(req.body.toDate),
-        userId: parseObjectId(req.body.userId),
-        roomId: parseObjectId(req.body.roomId),
-        pricePerDay: preparePrice(req.body.pricePerDay),
-        totalPrice: preparePrice(req.body.totalPrice)
-    };
+function createReservationValidationMiddlewares() {
+    return [
+        authValidator,
+        body('roomId').customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId').bail()
+            .custom(async id => {
+                return await Room.exists({ _id: id }).then(exists => {
+                    if (!exists) return Promise.reject('room with given id does not exist')
+                });
+            }),
+        body('userId').customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId').bail()
+            .custom(async id => {
+                return await User.exists({ _id: id }).then(exists => {
+                    if (!exists) return Promise.reject('user with given id does not exist')
+                });
+            }),
+        body('fromDate').customSanitizer(date => parseIsoDatetime(date))
+            .notEmpty()
+            .withMessage('not in ISO8601 format'),
+        body('toDate').customSanitizer(date => parseIsoDatetime(date))
+            .notEmpty()
+            .withMessage('not in ISO8601 format'),
+        body('pricePerDay').customSanitizer(price => preparePrice(price))
+            .notEmpty()
+            .withMessage('price must match regex: \d+(\.\d{1,2})?'),
+        body('totalPrice').customSanitizer(price => preparePrice(price))
+            .notEmpty()
+            .withMessage('price must match regex: \d+(\.\d{1,2})?'),
+    ]
 }
 
-/**
- * @param {Object} reservation
- * @param {moment.Moment} reservation.fromDate
- * @param {moment.Moment} reservation.toDate
- * @param {mongoose.Types.ObjectId} reservation.userId
- * @param {mongoose.Types.ObjectId} reservation.roomId
- * @param {Number} reservation.pricePerDay
- * @param {Number} reservation.totalPrice
- */
-const validateReservationJson = reservation => {
-    let errors = [];
-    if (!reservation.fromDate) errors.push(`'fromDate' is not 'YYYY-MM-DD' date format.`)
-    if (!reservation.toDate) errors.push(`'toDate' is not 'YYYY-MM-DD' date format.`)
-    if (!reservation.userId) errors.push(`'userId' is not correct ObjectID`);
-    if (!reservation.roomId) errors.push(`'roomId' is not correct ObjectID`);
-    if (!reservation.pricePerDay) errors.push(`'pricePerDay' is not valid price`);
-    if (!reservation.totalPrice) errors.push(`'totalPrice' is not valid float price`);
-    return errors;
-};
-
 export default router;
-exports.prepareReservation = prepareReservationJson;
-exports.validateReservation = validateReservationJson;
-exports.changeReservationStatus = changeReservationStatus;

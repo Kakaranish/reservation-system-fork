@@ -3,10 +3,9 @@ import supertest from 'supertest';
 import mongoose from 'mongoose';
 import 'regenerator-runtime';
 import Reservation from '../../src/models/reservation-model';
+import moment from 'moment';
 const parseIsoDatetime = require('../../src/common').parseIsoDatetime;
 const parseObjectId = require('../../src/common').parseObjectId;
-const prepareReservation = require('../../src/routers/ReservationsRouter').prepareReservation;
-const validateReservation = require('../../src/routers/ReservationsRouter').validateReservation;
 
 require('dotenv').config();
 const request = supertest(app);
@@ -20,92 +19,6 @@ beforeAll(() => {
         dbName: process.env.DB_NAME_TEST,
         useNewUrlParser: true,
         useUnifiedTopology: true
-    });
-});
-
-describe('prepareReservationJson', () => {
-    it('Preparing reservation always returns valid result', () => {
-        // Arrange: 
-        const request = {
-            body: {
-                fromDate: '2020-04-15T20:00:00Z',
-                toDate: '2020-04-15T20:00:00Z',
-                userId: '5ea5dae40d4ecf0afbd84dc9',
-                roomId: '5ea5daff8eba612e9374625d',
-                pricePerDay: '22.22',
-                totalPrice: '22.22'
-            }
-        };
-
-        // Act:
-        const result = prepareReservation(request);
-
-        // Assert
-        expect.anything(result.fromDate);
-        expect.anything(result.toDate);
-        expect.anything(result.userId);
-        expect.anything(result.roomId);
-        expect(result.pricePerDay).toBe(22.22);
-        expect(result.totalPrice).toBe(22.22);
-    })
-})
-
-describe('validateReservation', () => {
-    it('When one of dates is null/undefined then error is returned', () => {
-        // Arrange: 
-        const reservation = {
-            fromDate: null,
-            toDate: parseIsoDatetime('2020-04-15T20:00:00Z'),
-            userId: parseObjectId('5ea5dae40d4ecf0afbd84dc9'),
-            roomId: parseObjectId('5ea5daff8eba612e9374625d'),
-            pricePerDay: 22.22,
-            totalPrice: 22.22
-        };
-
-        // Act:
-        const result = validateReservation(reservation);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'fromDate'`)).toBe(true);
-    });
-
-    it('When one of objectIds is null/undefined then error is returned', () => {
-        // Arrange: 
-        const reservation = {
-            fromDate: parseIsoDatetime('2020-04-15T20:00:00Z'),
-            toDate: parseIsoDatetime('2020-04-15T20:00:00Z'),
-            userId: null,
-            roomId: parseObjectId('5ea5daff8eba612e9374625d'),
-            pricePerDay: 22.22,
-            totalPrice: 22.22
-        };
-
-        // Act:
-        const result = validateReservation(reservation);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'userId'`)).toBe(true);
-    });
-
-    it('When one of objectIds is null/undefined then error is returned', () => {
-        // Arrange: 
-        const reservation = {
-            fromDate: parseIsoDatetime('2020-04-15T20:00:00Z'),
-            toDate: parseIsoDatetime('2020-04-15T20:00:00Z'),
-            userId: parseObjectId('5ea5dae40d4ecf0afbd84dc9'),
-            roomId: parseObjectId('5ea5daff8eba612e9374625d'),
-            pricePerDay: null,
-            totalPrice: 22.22
-        };
-
-        // Act:
-        const result = validateReservation(reservation);
-
-        // Assert:
-        expect(result).toHaveLength(1);
-        expect(result[0].includes(`'pricePerDay'`)).toBe(true);
     });
 });
 
@@ -130,7 +43,8 @@ describe('/room/:roomId/reservations', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('ObjectId')).toBe(true);
+        expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
     });
 
     it('When one of dates is not valid iso datetime then error is returned', async () => {
@@ -144,7 +58,8 @@ describe('/room/:roomId/reservations', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('fromDate')).toBe(true);
+        expect(result.body.errors[0].param).toBe('fromDate');
+        expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
     });
 
     it('When correct query values and parameter are provided then valid reservation are returned', async () => {
@@ -203,9 +118,13 @@ describe('/reservation/create', () => {
 
         // Assert:
         expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(2);
-        expect(result.body.errors.some(x => x.includes(`'toDate'`))).toBe(true);
-        expect(result.body.errors.some(x => x.includes(`'roomId'`))).toBe(true);
+        expect(result.body.errors).toHaveLength(3);
+        expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
+        expect(result.body.errors[1].param).toBe('userId');
+        expect(result.body.errors[1].msg.includes('user with given')).toBe(true);
+        expect(result.body.errors[2].param).toBe('toDate');
+        expect(result.body.errors[2].msg.includes('ISO8601')).toBe(true);
     });
 
     it('When room does not exist then errors are returned', async () => {
@@ -229,7 +148,8 @@ describe('/reservation/create', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('room')).toBe(true);
+        expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('room with given')).toBe(true);
     });
 
     it('When user does not exist then errors are returned', async () => {
@@ -254,7 +174,8 @@ describe('/reservation/create', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('user')).toBe(true);
+        expect(result.body.errors[0].param).toBe('userId');
+        expect(result.body.errors[0].msg.includes('user with given')).toBe(true);
     });
 
     it('When other reservation(s) on this room and date interval exist then errors are returned', async () => {
@@ -359,7 +280,8 @@ describe('/reservation/accept', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes("invalid")).toBe(true);
+        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId'));
     });
 
     it('When reservation does not exist then error is returned', async () => {
@@ -378,7 +300,8 @@ describe('/reservation/accept', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes("does not exist")).toBe(true);
+        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].msg.includes("with given id")).toBe(true);
     });
 
     it('When requested reservation is already accepted then error is returned', async () => {
@@ -397,7 +320,8 @@ describe('/reservation/accept', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes("already accepted")).toBe(true);
+        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].msg.includes("already accepted")).toBe(true);
     });
 
     it('When other reservation is already accepted then error is returned and this reservation status is changed to rejected', async () => {
@@ -466,6 +390,372 @@ describe('/reservation/accept', () => {
                 $set: { status: "PENDING" }
             });
         } catch (error) { }
+    });
+});
+
+describe('DELETE /reservation', () => {
+    it('When auth token is not provided then error is returned', async () => {
+        // Act:
+        const result = await request.delete(`/reservation`)
+            .send({
+                reservationId: "ANY"
+            });
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('Unauthorized access'));
+    });
+
+    it('When auth token belongs not to admin then error is returned', async () => {
+        // Act:
+        const result = await request.delete(`/reservation`)
+            .query({
+                secret_token: testUserToken
+            })
+            .send({
+                reservationId: "ANY"
+            });
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('Admin role required'));
+    });
+
+    it('When reservationId is invalid ObjectId then error is returned', async () => {            // Act:
+        // Act:
+        const result = await request.delete(`/reservation`)
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: "INVALID"
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId')).toBe(true);
+    });
+
+    it('When reservation with given id does not exist then null _id is returned', async () => {
+        // Arrange: 
+        const randomReservationId = '5eadb5bc0fcf46411b8b8570';
+
+        // Act:
+        const result = await request.delete(`/reservation`)
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: randomReservationId
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body.errors).toBeUndefined();
+        expect(result.body._id).toBeNull();
+    });
+
+    it(`When reservation exists and can be deleted then it's deleted and its id is returned`, async () => {
+        // Arrange:
+        const reservationToRemoveId = '5eadb20560fdcfdd1dd4fc10';
+        const reservationCopy = await Reservation.findById(
+            parseObjectId(reservationToRemoveId));
+        const reservationCopyObj = reservationCopy.toObject();
+        if (!reservationCopy) throw Error('Unable to backup reservation to remove');
+
+        // Act:
+        const result = await request.delete(`/reservation`)
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: reservationToRemoveId
+            });
+
+        // Assert:
+        try {
+            expect(result.status).toBe(200);
+            expect(result.body.errors).toBeUndefined();
+            expect(result.body._id).toBe(reservationToRemoveId);
+        } catch (error) {
+            throw Error('Repopulation failed');
+        } finally {
+            await new Reservation(reservationCopyObj).save();
+        }
+    });
+});
+
+describe('GET /room/:roomId/reservations/accepted', () => {
+    it('When some request values are invalid then errors are returned', async () => {
+        // Arrange:
+        const invalidRoomId = 'INVALID;'
+
+        // Act:
+        const result = await request.get(`/room/${invalidRoomId}/reservations/accepted`)
+            .query({
+                fromDate: 'INVALID',
+                toDate: '2020-01-01T00:00:00.000Z'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(2);
+        expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId'));
+        expect(result.body.errors[1].param).toBe('fromDate');
+        expect(result.body.errors[1].msg.includes('ISO8601'));
+    });
+
+    it('When room with given id does not exist then error is returned', async () => {
+        // Arrange:
+        const randomRoomId = '5eae8a183476c3f86337a179';
+
+        // Act:
+        const result = await request.get(`/room/${randomRoomId}/reservations/accepted`)
+            .query({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('room with given'));
+    });
+
+    it('When there are some accepted reservations on room and date interval then they are returned', async () => {
+        // Arrange:
+        const roomId = '5eae87863a9e88493afd0e58';
+
+        // Act:
+        const result = await request.get(`/room/${roomId}/reservations/accepted`)
+            .query({
+                fromDate: '2020-01-02T00:00:00.000Z',
+                toDate: '2020-01-06T00:00:00.000Z'
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.errors).toBeUndefined();
+        expect(result.body).toHaveLength(2);
+        expect(result.body.some(r => r._id == '5eae87f7e1d6c41dba3a76b0')).toBe(true);
+        expect(result.body.some(r => r._id == '5eae87fef13c8a4a4302dcc6')).toBe(true);;
+        expect(result.body.some(r => r._id == '5eae880504a5017179988635')).toBe(false);;
+    });
+});
+
+describe('POST /reservation/reject', () => {
+    it('When no token is provided then error is returned', async () => {
+        // Act:
+        const result = await request.post('/reservation/reject')
+            .send({
+                reservationId: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('Unauthorized access')).toBe(true);
+    });
+
+    it('When admin token is not provided then error is returned', async () => {
+        // Act:
+        const result = await request.post('/reservation/reject')
+            .query({
+                secret_token: testUserToken
+            })
+            .send({
+                reservationId: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('Admin role required')).toBe(true);
+    });
+
+    it('When reservationId is invalid then error is returned', async () => {
+        // Act:
+        const result = await request.post('/reservation/reject')
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId')).toBe(true);
+    });
+
+    it('When reservation with given id does not exist then error is returned', async () => {
+        // Arrange:
+        const randomReservationId = '5eae996fececcab610a66b62';
+
+        // Act:
+        const result = await request.post('/reservation/reject')
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: randomReservationId
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('there is no reservation with id')).toBe(true);
+    });
+
+    it('When reservation exists then it is rejected', async () => {
+        // Arrange:
+        const reservationId = '5eae965024496e1a07f59774';
+        let reservation = await Reservation.findById(reservationId);
+        if (!reservation)
+            throw Error('TEST CANT BE RUN - RESERVATION DOES NOT EXIST');
+        if (reservation.status === 'REJECTED')
+            throw Error('TEST CANT BE RUN - RESERVATION DOES IS ALREADY REJECTED');
+
+        // Act:
+        const result = await request.post('/reservation/reject')
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: reservationId
+            });
+
+        try {
+            // Assert:
+            expect(result.status).toBe(200);
+            expect(result.body.errors).toBeUndefined();
+            expect(mongoose.Types.ObjectId.isValid(result.body._id)).toBe(true);
+            expect(result.body._id).toBe(reservationId);
+
+            reservation = await Reservation.findById(reservationId);
+            expect(reservation._id).toStrictEqual(parseObjectId(reservationId));
+            expect(moment.utc().subtract(20, "seconds").toDate() < reservation.updateDate).toBe(true);
+            expect(moment.utc().add(20, "seconds").toDate() > reservation.updateDate).toBe(true);
+        } catch (error) {
+            throw error;
+        } finally {
+            await Reservation.findByIdAndUpdate(reservationId,
+                { $set: { status: "PENDING" } });
+        }
+    });
+});
+
+describe('POST /reservation/cancel', () => {
+    it('When no token is provided then error is returned', async () => {
+        // Act:
+        const result = await request.post('/reservation/cancel')
+            .send({
+                reservationId: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('Unauthorized access')).toBe(true);
+    });
+
+    it('When user token is not provided then error is returned', async () => {
+        // Act:
+        const result = await request.post('/reservation/cancel')
+            .query({
+                secret_token: testAdminToken
+            })
+            .send({
+                reservationId: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('User role required')).toBe(true);
+    });
+
+    it('When reservationId is invalid then error is returned', async () => {
+        // Act:
+        const result = await request.post('/reservation/cancel')
+            .query({
+                secret_token: testUserToken
+            })
+            .send({
+                reservationId: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId')).toBe(true);
+    });
+
+    it('When reservation with given id does not exist then error is returned', async () => {
+        // Arrange:
+        const randomReservationId = '5eae996fececcab610a66b62';
+
+        // Act:
+        const result = await request.post('/reservation/cancel')
+            .query({
+                secret_token: testUserToken
+            })
+            .send({
+                reservationId: randomReservationId
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('there is no reservation with id')).toBe(true);
+    });
+
+    it('When reservation exists then it is cancelled', async () => {
+        // Arrange:
+        const reservationId = '5eae9e372a81fdb8b32c8380';
+        let reservation = await Reservation.findById(reservationId);
+        if (!reservation)
+            throw Error('TEST CANT BE RUN - RESERVATION DOES NOT EXIST');
+        if (reservation.status === 'CANCELLED')
+            throw Error('TEST CANT BE RUN - RESERVATION DOES IS ALREADY CANCELLED');
+
+        // Act:
+        const result = await request.post('/reservation/cancel')
+            .query({
+                secret_token: testUserToken
+            })
+            .send({
+                reservationId: reservationId
+            });
+
+        try {
+            // Assert:
+            expect(result.status).toBe(200);
+            expect(result.body.errors).toBeUndefined();
+            expect(mongoose.Types.ObjectId.isValid(result.body._id)).toBe(true);
+            expect(result.body._id).toBe(reservationId);
+
+            reservation = await Reservation.findById(reservationId);
+            expect(reservation._id).toStrictEqual(parseObjectId(reservationId));
+            expect(reservation.status).toBe('CANCELLED');
+            expect(moment.utc().subtract(20, "seconds").toDate() < reservation.updateDate).toBe(true);
+            expect(moment.utc().add(20, "seconds").toDate() > reservation.updateDate).toBe(true);
+            
+        } catch (error) {
+            throw error;
+        } finally {
+            await Reservation.findByIdAndUpdate(reservationId,
+                { $set: { status: "PENDING" } });
+        }
     });
 });
 
