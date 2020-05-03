@@ -651,7 +651,7 @@ const dbName = process.env.DB_NAME_TEST;
                 status: "ACCEPTED",
                 createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
                 updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
-            }), 
+            }),
 
             // Dummy
             new Reservation({

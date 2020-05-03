@@ -28,7 +28,7 @@ router.get('/rooms/:roomId/reservations', [
     try {
         const queryBuilder = new FindReservationQueryBuilder();
         const findReservations = queryBuilder
-            .forRoomId(req.params.roomId.toHexString())
+            .withRoomId(req.params.roomId.toHexString())
             .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
             .build();
         const reservations = await findReservations;
@@ -56,7 +56,7 @@ router.post('/reservation/create', createReservationValidationMiddlewares(),
             return res.status(400).json(validationResult(req));
         try {
             const queryBuilder = new ExistReservationQueryBuilder();
-            const otherReservationExists = await queryBuilder.forRoomId(req.body.roomId.toHexString())
+            const otherReservationExists = await queryBuilder.withRoomId(req.body.roomId.toHexString())
                 .overlappingDateIterval(req.body.fromDate.toDate(), req.body.toDate.toDate())
                 .build();
             if (otherReservationExists) return res.status(400).json({
@@ -107,7 +107,7 @@ router.post('/reservation/accept', [
     try {
         const reservation = req.body.reservation;
         const queryBuilder = new FindReservationQueryBuilder();
-        const allReservations = await queryBuilder.forRoomId(reservation.roomId.toHexString())
+        const allReservations = await queryBuilder.withRoomId(reservation.roomId.toHexString())
             .overlappingDateIterval(reservation.fromDate, reservation.toDate)
             .select('_id status')
             .build();
@@ -224,7 +224,7 @@ router.get('/room/:roomId/reservations/accepted', [
         return res.status(400).json(validationResult(req));
     try {
         const queryBuilder = new FindReservationQueryBuilder();
-        const reservations = await queryBuilder.forRoomId(req.params.roomId.toHexString())
+        const reservations = await queryBuilder.withRoomId(req.params.roomId.toHexString())
             .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
             .withStatus('ACCEPTED')
             .build();

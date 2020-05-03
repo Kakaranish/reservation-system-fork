@@ -13,10 +13,17 @@ class ReservationQueryBuilder {
         throw Error('build() must be implemented');
     }
 
-    forRoomId(roomId) {
+    withRoomId(roomId) {
         if (typeof roomId !== 'string' && !mongoose.Types.ObjectId.isValid(roomId))
             throw Error(`'roomId' is invalid ObjectId`)
         this.filter.roomId = roomId;
+        return this;
+    }
+
+    withUserId(userId) {
+        if (typeof userId !== 'string' && !mongoose.Types.ObjectId.isValid(userId))
+            throw Error(`'userId' is invalid ObjectId`)
+        this.filter.userId = userId;
         return this;
     }
 
