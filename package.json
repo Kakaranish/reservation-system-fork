@@ -28,7 +28,6 @@
     "form-data": "^3.0.0",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.24.0",
-    "mongodb": "^3.5.5",
     "mongoose": "^5.9.10",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",

@@ -264,7 +264,7 @@ function createReservationValidationMiddlewares() {
         body('totalPrice').customSanitizer(price => preparePrice(price))
             .notEmpty()
             .withMessage('price must match regex: \d+(\.\d{1,2})?'),
-    ]
+    ];
 }
 
 export default router;
