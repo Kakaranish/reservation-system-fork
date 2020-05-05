@@ -6,10 +6,9 @@ import ReservationsRouter from "./routers/ReservationsRouter";
 import AccountRouter from "./routers/AccountRouter";
 import AdminRouter from './routers/AdminRouter';
 import UserRouter from './routers/UserRouter';
+import './passport-config';
 
 require('dotenv').config();
-require('./auth');
-require('./passport-config');
 
 const app = express();
 

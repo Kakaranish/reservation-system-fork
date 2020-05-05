@@ -1,12 +1,14 @@
 import passport from "passport";
 import bcryptjs from "bcryptjs";
 import User from './models/user-model';
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
 import 'regenerator-runtime';
 
 require('dotenv').config();
 const LocalStrategy = require('passport-local').Strategy;
 
-passport.use('singup', new LocalStrategy({
+passport.use('register', new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password',
     passReqToCallback: true
@@ -57,6 +59,7 @@ passport.use('login', new LocalStrategy({
             message: "There is no user with such email"
         });
 
+        // bcryptjs.genSalt()
         const passwordIsCorrect = await bcryptjs.compare(password, user.password);
         if (!passwordIsCorrect) return done(null, false, { message: "Error: Wrong password" });
         return done(null, user, { message: "Error: Logged in successfully" });
@@ -65,11 +68,8 @@ passport.use('login', new LocalStrategy({
     }
 }));
 
-const JWTStrategy = require('passport-jwt').Strategy;
-const ExtractJWT = require('passport-jwt').ExtractJwt;
-
 passport.use(new JWTStrategy({
-    secretOrKey: process.env.JWT_SECRET_KEY,
+    secretOrKey: process.env.ACCESS_TOKEN_SECRET,
     jwtFromRequest: ExtractJWT.fromUrlQueryParameter('secret_token')
 }, async (token, done) => {
     try {

@@ -3,7 +3,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import passport from "passport";
 import Room from "../models/room-model";
-import '../auth';
+import '../passport-config';
 import * as dbQueries from '../DbQueries2';
 import { query, validationResult, param, header, body } from 'express-validator';
 

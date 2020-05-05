@@ -1,5 +1,5 @@
 import passport from "passport";
-import '../src/auth';
+import '../src/passport-config';
 
 export async function authValidator(req, res, next) {
     passport.authenticate('jwt', { session: false }, async (error, user) => {
