@@ -9,7 +9,7 @@ import Reservation from '../models/reservation-model';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import ExistReservationQueryBuilder from '../queries/ExistReservationQueryBuilder';
 import { preparePrice, parseIsoDatetime, parseObjectId } from '../common';
-import { userValidator, adminValidator, authValidator } from '../auth-validators';
+import { userValidator, adminValidator, authValidator } from '../auth/auth-validators';
 
 const router = express();
 

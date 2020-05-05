@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-require('../auth');
+require('../auth/passport-config');
 
 const router = express();
 

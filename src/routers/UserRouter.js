@@ -3,7 +3,7 @@ import { changeReservationStatus } from "../DbQueries2";
 import User from '../models/user-model';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import { parseObjectId } from '../common';
-import { userValidator } from '../auth-validators';
+import { userValidator } from '../auth/auth-validators';
 import { body, query, validationResult } from 'express-validator';
 
 const router = express();

@@ -2,7 +2,7 @@ import express from "express";
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import { parseIsoDatetime } from '../common'
 import { query, validationResult } from 'express-validator';
-import { adminValidator } from '../auth-validators';
+import { adminValidator } from '../auth/auth-validators';
 
 const router = express();
 

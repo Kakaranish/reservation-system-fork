@@ -6,7 +6,7 @@ import ReservationsRouter from "./routers/ReservationsRouter";
 import AccountRouter from "./routers/AccountRouter";
 import AdminRouter from './routers/AdminRouter';
 import UserRouter from './routers/UserRouter';
-import './passport-config';
+import './auth/passport-config';
 
 require('dotenv').config();
 
