@@ -16,37 +16,25 @@ passport.use('register', new LocalStrategy({
     try {
         const adminToken = req.body.adminToken;
         const isAdminTokenValid = adminToken === process.env.ADMIN_TOKEN;
-        if (adminToken && !isAdminTokenValid) {
-            return done(null, false, {
-                message: "Unable to create admin account. Invalid admin token."
-            });
-        }
-        const userRole = adminToken
-            ? "ADMIN"
-            : "USER";
+        if (adminToken && !isAdminTokenValid)
+            return done('invalid admin token', false);
 
-        const encryptedPassword = await bcryptjs.hash(password, process.env.HASH);
+        if (await User.exists({ email: email }))
+            return done(`email '${email}' is already taken`, false);
 
         const user = new User({
             "email": email,
-            "password": encryptedPassword,
+            "password": await bcryptjs.hash(password, process.env.HASH),
             "firstName": req.body.firstName,
             "lastName": req.body.lastName,
-            "role": userRole
+            "role": adminToken ? "ADMIN" : "USER"
         });
-
-        const userWithEmailAlreadyExists = await User.exists({ email: email });
-        if (userWithEmailAlreadyExists) {
-            return done(null, false, {
-                message: `User with email '${email}' already exists`
-            });
-        }
         await user.save();
-        
-        return done(null, user, { message: "Sing up successful" });
+
+        return done(null, user);
     } catch (error) {
-    done(error);
-}
+        done(error, false);
+    }
 }));
 
 passport.use('login', new LocalStrategy({
@@ -55,26 +43,13 @@ passport.use('login', new LocalStrategy({
 }, async (email, password, done) => {
     try {
         const user = await User.findOne({ email: email });
-        if (!user) return done(null, false, {
-            message: "There is no user with such email"
-        });
+        if (!user) return done('no user with such email', false);
 
-        // bcryptjs.genSalt()
         const passwordIsCorrect = await bcryptjs.compare(password, user.password);
-        if (!passwordIsCorrect) return done(null, false, { message: "Error: Wrong password" });
-        return done(null, user, { message: "Error: Logged in successfully" });
-    } catch (error) {
-        return done(error);
-    }
-}));
+        if (!passwordIsCorrect) return done('wrong password', false);
 
-passport.use(new JWTStrategy({
-    secretOrKey: process.env.ACCESS_TOKEN_SECRET,
-    jwtFromRequest: ExtractJWT.fromUrlQueryParameter('secret_token')
-}, async (token, done) => {
-    try {
-        return done(null, token.user);
+        return done(null, user);
     } catch (error) {
-        done(error);
+        return done(error, false);
     }
 }));

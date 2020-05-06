@@ -1,11 +1,11 @@
 import express from "express";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import passport from "passport";
 import Room from "../models/room-model";
 import '../auth/passport-config';
 import * as dbQueries from '../DbQueries2';
 import { query, validationResult, param, header, body } from 'express-validator';
+import { tokenValidatorMW } from '../auth/auth-validators';
 
 const preparePrice = require('../common').preparePrice;
 const parseIsoDatetime = require('../common').parseIsoDatetime;
@@ -48,47 +48,42 @@ router.get('/rooms/:id', [
 });
 
 // USER & ADMIN
-router.post('/rooms/create', createRoomValidationMiddlewares(), async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (_error, user) => {
-        if (!user.role) return res.status(401).json({
-            errors: ['Unauthorized access']
+router.post('/rooms/create', tokenValidatorMW, createRoomValidationMiddlewares(), async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+    if (!req.files) return res.status(400).json({
+        errors: ["No file uploaded"]
+    });
+
+    try {
+        const file = req.files.file;
+        const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/images")
+        const newFilename = uuidv4() + path.extname(file.name);
+
+        const room = new Room({
+            name: req.body.name,
+            location: req.body.location,
+            capacity: req.body.capacity,
+            pricePerDay: req.body.pricePerDay,
+            description: req.body.description,
+            amenities: req.body.amenities,
+            dows: req.body.dows,
+            photoUrl: `/uploads/images/${newFilename}`
         });
-        if (validationResult(req).errors.length > 0)
-            return res.status(400).json(validationResult(req));
-        if (!req.files) return res.status(400).json({
-            errors: ["No file uploaded"]
+        await room.save();
+
+        res.status(200).json({
+            roomId: room._id,
+            photoUrl: `/uploads/images/${newFilename}`
         });
 
-        try {
-            const file = req.files.file;
-            const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/images")
-            const newFilename = uuidv4() + path.extname(file.name);
-
-            const room = new Room({
-                name: req.body.name,
-                location: req.body.location,
-                capacity: req.body.capacity,
-                pricePerDay: req.body.pricePerDay,
-                description: req.body.description,
-                amenities: req.body.amenities,
-                dows: req.body.dows,
-                photoUrl: `/uploads/images/${newFilename}`
-            });
-            await room.save();
-
-            res.status(200).json({
-                roomId: room._id,
-                photoUrl: `/uploads/images/${newFilename}`
-            });
-
-            file.mv(`${uploadDirPath}/${newFilename}`, error => {
-                if (error) throw error;
-            });
-        } catch (error) {
-            console.log(`Error: ${error}`);
-            res.status(500).json({ errors: ['Internal error'] });
-        }
-    })(req, res);
+        file.mv(`${uploadDirPath}/${newFilename}`, error => {
+            if (error) throw error;
+        });
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({ errors: ['Internal error'] });
+    }
 });
 
 function getRoomsValidationMiddlewares() {

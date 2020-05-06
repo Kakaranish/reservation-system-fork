@@ -9,7 +9,7 @@ import Reservation from '../models/reservation-model';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import ExistReservationQueryBuilder from '../queries/ExistReservationQueryBuilder';
 import { preparePrice, parseIsoDatetime, parseObjectId } from '../common';
-import { userValidator, adminValidator, authValidator } from '../auth/auth-validators';
+import { userValidatorMW, adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
 
@@ -90,7 +90,8 @@ router.post('/reservation/create', createReservationValidationMiddlewares(),
 
 // ADMIN
 router.post('/reservation/accept', [
-    adminValidator,
+    tokenValidatorMW,
+    adminValidatorMW,
     body('reservationId').customSanitizer(id => parseObjectId(id))
         .notEmpty().withMessage('invalid mongo ObjectId').bail()
         .custom(async (id, { req }) => {
@@ -147,7 +148,8 @@ router.post('/reservation/accept', [
 
 // ADMIN
 router.post('/reservation/reject', [
-    adminValidator,
+    tokenValidatorMW,
+    adminValidatorMW,
     body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {
@@ -168,7 +170,8 @@ router.post('/reservation/reject', [
 
 // USER
 router.post('/reservation/cancel', [
-    userValidator,
+    tokenValidatorMW,
+    userValidatorMW,
     body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {
@@ -189,21 +192,20 @@ router.post('/reservation/cancel', [
 
 // ADMIN
 router.delete('/reservation', [
-    adminValidator,
+    tokenValidatorMW,
+    adminValidatorMW,
     body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (validationResult(req).errors.length > 0)
-            return res.status(400).json(validationResult(req));
-        try {
-            const result = await Reservation.findByIdAndDelete(req.body.reservationId);
-            return res.status(200).json({ _id: result?._id ?? null });
-        } catch (error) {
-            console.log(`Error: ${error}`);
-            res.status(500).json({ errors: ['Internal error'] });
-        }
-    })(req, res);
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+    try {
+        const result = await Reservation.findByIdAndDelete(req.body.reservationId);
+        return res.status(200).json({ _id: result?._id ?? null });
+    } catch (error) {
+        console.log(`Error: ${error}`);
+        res.status(500).json({ errors: ['Internal error'] });
+    }
 });
 
 router.get('/room/:roomId/reservations/accepted', [
@@ -237,7 +239,7 @@ router.get('/room/:roomId/reservations/accepted', [
 
 function createReservationValidationMiddlewares() {
     return [
-        authValidator,
+        tokenValidatorMW,
         body('roomId').customSanitizer(id => parseObjectId(id))
             .notEmpty().withMessage('invalid mongo ObjectId').bail()
             .custom(async id => {

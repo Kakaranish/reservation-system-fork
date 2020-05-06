@@ -2,12 +2,13 @@ import express from "express";
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import { parseIsoDatetime } from '../common'
 import { query, validationResult } from 'express-validator';
-import { adminValidator } from '../auth/auth-validators';
+import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
 
 router.get('/reservations', [
-    adminValidator,
+    tokenValidatorMW,
+    adminValidatorMW,
     query('status').notEmpty().withMessage('cannot be empty').bail()
         .custom(status => {
             const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];

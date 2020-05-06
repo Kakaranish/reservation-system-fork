@@ -3,13 +3,14 @@ import { changeReservationStatus } from "../DbQueries2";
 import User from '../models/user-model';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import { parseObjectId } from '../common';
-import { userValidator } from '../auth/auth-validators';
+import { userValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 import { body, query, validationResult } from 'express-validator';
 
 const router = express();
 
 router.get('/reservations', [
-    userValidator,
+    tokenValidatorMW,
+    userValidatorMW,
     query('status').notEmpty().withMessage('cannot be empty').bail()
         .custom(status => {
             const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
@@ -37,7 +38,8 @@ router.get('/reservations', [
 });
 
 router.post('/cancel-reservation/:reservationId', [
-    userValidator,
+    tokenValidatorMW,
+    userValidatorMW,
     body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {

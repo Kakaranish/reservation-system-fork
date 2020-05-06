@@ -1,33 +1,42 @@
-import passport from "passport";
 import './passport-config';
+import {
+    refreshAccessToken,
+    decodeJwtAccessToken,
+    decodeJwtRefreshToken
+} from '../auth/auth-utils';
 
-export async function authValidator(req, res, next) {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role)
-            return res.status(401).json({ errors: ['Unauthorized access'] });
-        req.user = user;
-        next();
-    })(req, res, next);
+export const tokenValidatorMW = async (req, res, next) => {
+    const accessToken = decodeJwtAccessToken(req.cookies.accessToken)
+    if (accessToken) return next();
+
+    const refreshToken = await decodeJwtRefreshToken(req.cookies.refreshToken);
+    if (!refreshToken) return res.status(400).json({
+        errors: ['cannot refresh access token - no/invalid refresh token provided']
+    });
+
+    const newAccessToken = await refreshAccessToken(jwtRefreshToken);
+    if (!newAccessToken) return res.status(400).json({
+        errors: ['unable to refresh access token - such user does not exist']
+    });
+
+    res.cookie('accessToken', newAccessToken, { httpOnly: true });
+    req.user = {
+        _id: refreshToken.userId,
+        email: refreshToken.email,
+        role: refreshToken.role
+    };
+
+    next();
+};
+
+export const adminValidatorMW = async (req, res, next) => {
+    if (req.user.role !== 'ADMIN')
+        return res.status(401).json({ errors: ['Admin role required'] });
+    next();
 }
 
-export async function adminValidator(req, res, next) {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role)
-            return res.status(401).json({ errors: ['Unauthorized access'] });
-        if (user.role !== "ADMIN")
-            return res.status(401).json({ errors: ['Admin role required'] });
-        req.user = user;
-        next();
-    })(req, res, next);
-}
-
-export async function userValidator(req, res, next) {
-    passport.authenticate('jwt', { session: false }, async (error, user) => {
-        if (!user.role)
-            return res.status(401).json({ errors: ['Unauthorized access'] });
-        if (user.role !== "USER")
-            return res.status(401).json({ errors: ['User role required'] });
-        req.user = user;
-        next();
-    })(req, res, next);
+export const userValidatorMW = async (req, res, next) => {
+    if (req.user.role !== 'USER')
+        return res.status(401).json({ errors: ['Admin role required'] });
+    next();
 }

@@ -6,12 +6,14 @@ import ReservationsRouter from "./routers/ReservationsRouter";
 import AccountRouter from "./routers/AccountRouter";
 import AdminRouter from './routers/AdminRouter';
 import UserRouter from './routers/UserRouter';
+import cookieParser from 'cookie-parser';
 import './auth/passport-config';
 
 require('dotenv').config();
 
 const app = express();
 
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(fileUpload());
