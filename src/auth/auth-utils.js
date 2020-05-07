@@ -1,6 +1,7 @@
 import User from '../models/user-model';
 import jwt from 'jsonwebtoken';
 import RefreshToken from '../models/refresh-token-model';
+import { parseObjectId } from '../common';
 
 require('dotenv').config();
 
@@ -8,6 +9,7 @@ require('dotenv').config();
  * @param {User} user 
  */
 export const createAccessToken = user => {
+    if (!user) return null;
     const jwtPayload = {
         userId: user._id,
         email: user.email,
@@ -21,6 +23,10 @@ export const createAccessToken = user => {
  * @param {User} user 
  */
 export const createRefreshToken = async user => {
+    if (!user) return null;
+    const userId = parseObjectId(user._id);
+    if (!userId) return null;
+
     const jwtPayload = {
         userId: user._id,
         email: user.email,
@@ -40,10 +46,14 @@ export const createRefreshToken = async user => {
  * @param {String} jwtRefreshToken 
  */
 export const refreshAccessToken = async jwtRefreshToken => {
-    let refreshToken = jwt.decode(jwtRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    if (!await User.exists({ _id: refreshToken.userId })) return null;
-    return createAccessToken({
+    let refreshToken = decodeJwtRefreshToken(jwtRefreshToken);
+    const tokenExists = await RefreshToken.exists({
         userId: refreshToken.userId,
+        token: jwtRefreshToken
+    });
+    if (!tokenExists) return null;
+    return createAccessToken({
+        _id: refreshToken.userId,
         email: refreshToken.email,
         role: refreshToken.role
     });
@@ -63,15 +73,9 @@ export const decodeJwtAccessToken = jwtAccessToken => {
 /**
  * @param {String} jwtRefreshToken
  */
-export const decodeJwtRefreshToken = async jwtRefreshToken => {
+export const decodeJwtRefreshToken = jwtRefreshToken => {
     try {
-        const refreshToken = jwt.verify(jwtRefreshToken,
-            process.env.REFRESH_TOKEN_SECRET);
-        const refreshTokenAssignedToUser = await RefreshToken.exists({
-            userId: refreshToken.userId,
-            token: jwtRefreshToken
-        });
-        return refreshTokenAssignedToUser ? refreshToken : null;
+        return jwt.verify(jwtRefreshToken, process.env.REFRESH_TOKEN_SECRET);
     } catch (error) {
         return null;
     }
