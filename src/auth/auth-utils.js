@@ -47,6 +47,8 @@ export const createRefreshToken = async user => {
  */
 export const refreshAccessToken = async jwtRefreshToken => {
     let refreshToken = decodeJwtRefreshToken(jwtRefreshToken);
+    if (!refreshToken || !parseObjectId(refreshToken.userId)) return null;
+
     const tokenExists = await RefreshToken.exists({
         userId: refreshToken.userId,
         token: jwtRefreshToken
@@ -80,3 +82,17 @@ export const decodeJwtRefreshToken = jwtRefreshToken => {
         return null;
     }
 }
+
+// TODO: To remove
+/**
+ * @param {String} jwtAccessToken 
+ */
+export const isJwtAccessTokenExpired = jwtAccessToken => {
+    try {
+        jwt.verify(jwtAccessToken, process.env.ACCESS_TOKEN_SECRET);
+        return false;
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') return true;
+        throw error;
+    }
+} 

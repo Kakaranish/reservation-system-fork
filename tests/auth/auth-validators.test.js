@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
 import { parseObjectId } from '../../src/common';
 import { connectTestDb } from '../../src/mongo-utils';
 import * as AuthUtils from '../../src/auth/auth-utils';
 import { tokenValidatorMW, adminValidatorMW, userValidatorMW } from '../../src/auth/auth-validators';
 import User from '../../src/models/user-model';
 import RefreshToken from '../../src/models/refresh-token-model';
-
+import { createTestAccessToken, createTestRefreshToken } from '../test-utils';
 import * as Mocks from 'node-mocks-http';
 
 const userId = '5ea54fe32d431462827c2c5e';
@@ -206,28 +205,6 @@ describe('userValidatorMW', () => {
         expect(res._getData()).toBe("");
     });
 });
-
-/**
- * @param {User} user 
- */
-function createTestAccessToken(user, expiresInMs) {
-    const jwtPayload = {
-        userId: user._id,
-        email: user.email,
-        role: user.role
-    };
-    return jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: `${expiresInMs}` });
-}
-
-function createTestRefreshToken(user) {
-    const jwtPayload = {
-        userId: user._id,
-        email: user.email,
-        role: user.role
-    };
-    return jwt.sign(jwtPayload, process.env.REFRESH_TOKEN_SECRET);
-}
 
 afterAll(() => {
     mongoose.connection.close();
