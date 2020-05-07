@@ -6,19 +6,7 @@ import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
 
-router.get('/reservations', [
-    tokenValidatorMW,
-    adminValidatorMW,
-    query('status').notEmpty().withMessage('cannot be empty').bail()
-        .custom(status => {
-            const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
-            if (!availableStatuses.includes(status.toUpperCase()))
-                throw Error('illegal status');
-            return true;
-        }),
-    query('fromDate').customSanitizer(date => parseIsoDatetime(date)),
-    query('toDate').customSanitizer(date => parseIsoDatetime(date)),
-], async (req, res) => {
+router.get('/reservations', reservationsValidatorMW(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
     try {
@@ -38,5 +26,21 @@ router.get('/reservations', [
         res.status(500).json({ errors: ['Internal error'] });
     }
 });
+
+function reservationsValidatorMW() {
+    return [
+        tokenValidatorMW,
+        adminValidatorMW,
+        query('status').notEmpty().withMessage('cannot be empty').bail()
+            .custom(status => {
+                const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
+                if (!availableStatuses.includes(status.toUpperCase()))
+                    throw Error('illegal status');
+                return true;
+            }),
+        query('fromDate').customSanitizer(date => parseIsoDatetime(date)),
+        query('toDate').customSanitizer(date => parseIsoDatetime(date))
+    ];
+}
 
 export default router;

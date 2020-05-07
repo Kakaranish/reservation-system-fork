@@ -13,12 +13,12 @@ export const tokenValidatorMW = async (req, res, next) => {
     }
 
     const refreshToken = await decodeJwtRefreshToken(req.cookies.refreshToken);
-    if (!refreshToken) return res.status(400).json({
+    if (!refreshToken) return res.status(401).json({
         errors: ['cannot refresh access token - no/invalid refresh token provided']
     });
 
     const newAccessToken = await refreshAccessToken(req.cookies.refreshToken);
-    if (!newAccessToken) return res.status(400).json({
+    if (!newAccessToken) return res.status(401).json({
         errors: ['cannot refresh access token - such user does not exist']
     });
     

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import Room from "../models/room-model";
 import '../auth/passport-config';
 import * as dbQueries from '../DbQueries2';
+import { withAsyncRequestHandler } from '../common';
 import { query, validationResult, param, header, body } from 'express-validator';
 import { tokenValidatorMW } from '../auth/auth-validators';
 
@@ -18,7 +19,8 @@ const router = express.Router();
 router.get('/rooms', getRoomsValidationMiddlewares(), async (req, res) => {
     if (validationResult(req).errors.length)
         return res.status(400).json(validationResult(req));
-    try {
+
+    withAsyncRequestHandler(res, async () => {
         const roomPreviews = await dbQueries.getAvailableRoomPreviews({
             fromDate: req.query.fromDate,
             toDate: req.query.toDate,
@@ -26,10 +28,7 @@ router.get('/rooms', getRoomsValidationMiddlewares(), async (req, res) => {
             toPrice: req.query.toPrice
         });
         res.status(200).json(roomPreviews);
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ["Internal error"] });
-    }
+    });
 });
 
 router.get('/rooms/:id', [
@@ -38,13 +37,11 @@ router.get('/rooms/:id', [
 ], async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
-    try {
+
+    withAsyncRequestHandler(res, async () => {
         const room = await Room.findById(req.params.id);
         return res.status(200).json(room);
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ["Internal error"] });
-    }
+    });
 });
 
 // USER & ADMIN
@@ -55,7 +52,7 @@ router.post('/rooms/create', tokenValidatorMW, createRoomValidationMiddlewares()
         errors: ["No file uploaded"]
     });
 
-    try {
+    withAsyncRequestHandler(res, async () => {
         const file = req.files.file;
         const uploadDirPath = path.resolve(__dirname, "..", "..", "client/public/uploads/images")
         const newFilename = uuidv4() + path.extname(file.name);
@@ -80,10 +77,7 @@ router.post('/rooms/create', tokenValidatorMW, createRoomValidationMiddlewares()
         file.mv(`${uploadDirPath}/${newFilename}`, error => {
             if (error) throw error;
         });
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ['Internal error'] });
-    }
+    });
 });
 
 function getRoomsValidationMiddlewares() {

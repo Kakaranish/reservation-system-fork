@@ -69,7 +69,7 @@ describe('tokenValidatorMW', () => {
         // Assert:
         expect(next).toBeCalledTimes(0);
         res.on('end', () => {
-            expect(res._getStatusCode()).toBe(400);
+            expect(res._getStatusCode()).toBe(401);
             expect(res._getJSONData().errors).toHaveLength(1);
             expect(res._getJSONData().errors[0].includes('no/invalid refresh'));
         });
@@ -100,7 +100,7 @@ describe('tokenValidatorMW', () => {
         // Assert:
         expect(next).toBeCalledTimes(0);
         res.on('end', () => {
-            expect(res._getStatusCode()).toBe(400);
+            expect(res._getStatusCode()).toBe(401);
             expect(res._getJSONData().errors).toHaveLength(1);
             expect(res._getJSONData().errors[0].includes('such user does not exist'));
         });

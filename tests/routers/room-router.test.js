@@ -1,19 +1,30 @@
 import app from '../../src/app';
+import fs from 'fs';
+import path from "path";
 import supertest from 'supertest';
 import mongoose from 'mongoose';
-import path from "path";
+import * as TestUtils from '../test-utils';
 import Room from '../../src/models/room-model';
-import fs from 'fs';
-import '../../src/common';
 import { connectTestDb } from '../../src/mongo-utils';
+import '../../src/common';
 
 const request = supertest(app);
-const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
-const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU1MDE1NjY4MTUxNjJmNzNiYWQ4MCIsImVtYWlsIjoiYWRtaW5AbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifSwiaWF0IjoxNTg3OTExNDA3fQ.pMoZZUYhgkiVKPhsT-uVO8n9FWEdiG4JrIJjSDcnX3g';
 
 beforeAll(async () => {
     await connectTestDb();
 });
+
+let testUserAccessToken = TestUtils.createTestAccessToken({
+    _id: '5ea54fe32d431462827c2c5e',
+    email: 'user@mail.com',
+    role: 'USER'
+}, 3600);
+
+let testAdminAccessToken = TestUtils.createTestAccessToken({
+    _id: '5ea5501566815162f73bad80',
+    email: 'admin@mail.com',
+    role: 'ADMIN'
+}, 3600);
 
 /*
     Room1: 5ea55125e95cc70df70870f7
@@ -172,14 +183,13 @@ describe('/rooms/create', () => {
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Unauthorized')).toBe(true);
+        expect(result.body.errors[0].includes('no/invalid refresh')).toBe(true);
     });
 
     it('When header content-type is not multipart/form-data then error is returned', async () => {
         // Act:
-        const result = await request.post('/rooms/create').query({
-            secret_token: testUserToken
-        });
+        const result = await request.post('/rooms/create')
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
 
         // Assert:
         expect(result.status).toBe(400);
@@ -188,9 +198,7 @@ describe('/rooms/create', () => {
     it('When there is some error in body properties then errors are returned', async () => {
         // Act:
         const result = await request.post('/rooms/create')
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .field('location', 'Some location')
             .field('capacity', '123')
             .field('pricePerDay', '22.22')
@@ -207,9 +215,7 @@ describe('/rooms/create', () => {
     it('When file is not uploaded then error is returned', async () => {
         // Act:
         const result = await request.post('/rooms/create')
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .field('name', 'Some name')
             .field('location', 'Some location')
             .field('capacity', '123')
@@ -228,9 +234,7 @@ describe('/rooms/create', () => {
 
         // Act:
         const result = await request.post('/rooms/create')
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .field('name', 'Some name')
             .field('location', 'Some location')
             .field('capacity', '123')
@@ -267,9 +271,7 @@ describe('/rooms/create', () => {
 
         // Act:
         const result = await request.post('/rooms/create')
-            .query({
-                secret_token: testAdminToken
-            })
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .field('name', 'Some name')
             .field('location', 'Some location')
             .field('capacity', '123')
