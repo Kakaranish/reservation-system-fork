@@ -174,11 +174,11 @@ describe('/rooms/:roomId', () => {
     });
 });
 
-describe('/rooms/create', () => {
+describe('POST /rooms', () => {
     it('When no token is provided then unathorized status is returned', async () => {
         ``
         // Act:
-        const result = await request.post('/rooms/create');
+        const result = await request.post('/rooms');
 
         // Assert:
         expect(result.status).toBe(401);
@@ -188,7 +188,7 @@ describe('/rooms/create', () => {
 
     it('When header content-type is not multipart/form-data then error is returned', async () => {
         // Act:
-        const result = await request.post('/rooms/create')
+        const result = await request.post('/rooms')
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
 
         // Assert:
@@ -197,7 +197,7 @@ describe('/rooms/create', () => {
 
     it('When there is some error in body properties then errors are returned', async () => {
         // Act:
-        const result = await request.post('/rooms/create')
+        const result = await request.post('/rooms')
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .field('location', 'Some location')
             .field('capacity', '123')
@@ -214,7 +214,7 @@ describe('/rooms/create', () => {
 
     it('When file is not uploaded then error is returned', async () => {
         // Act:
-        const result = await request.post('/rooms/create')
+        const result = await request.post('/rooms')
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .field('name', 'Some name')
             .field('location', 'Some location')
@@ -233,7 +233,7 @@ describe('/rooms/create', () => {
         const cwd = path.resolve(__dirname, "..", "assets");
 
         // Act:
-        const result = await request.post('/rooms/create')
+        const result = await request.post('/rooms')
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .field('name', 'Some name')
             .field('location', 'Some location')
@@ -270,7 +270,7 @@ describe('/rooms/create', () => {
         const cwd = path.resolve(__dirname, "..", "assets");
 
         // Act:
-        const result = await request.post('/rooms/create')
+        const result = await request.post('/rooms')
             .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .field('name', 'Some name')
             .field('location', 'Some location')

@@ -235,7 +235,7 @@ require('dotenv').config();
 
 
     // -------------------------------------------------------------------------
-    // /reservation/create
+    // /reservations
 
     {
         const room = await new Room({
@@ -274,7 +274,7 @@ require('dotenv').config();
     }
 
     // -------------------------------------------------------------------------
-    // POST /reservation/accept
+    // POST /reservations/modify/accept
 
     {
         const room = await new Room({
@@ -475,7 +475,7 @@ require('dotenv').config();
     }
 
     // -------------------------------------------------------------------------
-    // POST /reservation/reject
+    // POST /reservations/modify/reject
     {
         const room = new Room({
             _id: parseObjectId('5eae95c0479a93ffbbc6550e'),
@@ -513,7 +513,7 @@ require('dotenv').config();
     }
 
     // -------------------------------------------------------------------------
-    // POST /reservation/cancel
+    // POST /reservations/modify/cancel
     {
         const room = new Room({
             _id: parseObjectId('5eae9e302b082a4e75a8ff8e'),

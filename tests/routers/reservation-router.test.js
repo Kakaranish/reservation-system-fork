@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 import 'regenerator-runtime';
 import Reservation from '../../src/models/reservation-model';
 import * as TestUtils from '../test-utils';
-import moment from 'moment';
 import { parseObjectId } from '../../src/common';
 import { connectTestDb } from '../../src/mongo-utils';
 

@@ -16,7 +16,7 @@ const router = express.Router();
 /*
     ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
-router.get('/rooms', getRoomsValidationMiddlewares(), async (req, res) => {
+router.get('/', getRoomsValidationMiddlewares(), async (req, res) => {
     if (validationResult(req).errors.length)
         return res.status(400).json(validationResult(req));
 
@@ -31,7 +31,7 @@ router.get('/rooms', getRoomsValidationMiddlewares(), async (req, res) => {
     });
 });
 
-router.get('/rooms/:id', [
+router.get('/:id', [
     param('id').customSanitizer(id => parseObjectId(id))
         .notEmpty().withMessage('invalid mongo ObjectId')
 ], async (req, res) => {
@@ -45,7 +45,7 @@ router.get('/rooms/:id', [
 });
 
 // USER & ADMIN
-router.post('/rooms/create', tokenValidatorMW, createRoomValidationMiddlewares(), async (req, res) => {
+router.post('/', tokenValidatorMW, createRoomValidationMiddlewares(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
     if (!req.files) return res.status(400).json({
