@@ -3,14 +3,24 @@ import supertest from 'supertest';
 import mongoose from 'mongoose';
 import 'regenerator-runtime';
 import Reservation from '../../src/models/reservation-model';
+import * as TestUtils from '../test-utils';
 import moment from 'moment';
 import { parseObjectId } from '../../src/common';
 import { connectTestDb } from '../../src/mongo-utils';
 
-require('dotenv').config();
 const request = supertest(app);
-const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
-const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU1MDE1NjY4MTUxNjJmNzNiYWQ4MCIsImVtYWlsIjoiYWRtaW5AbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifSwiaWF0IjoxNTg3OTExNDA3fQ.pMoZZUYhgkiVKPhsT-uVO8n9FWEdiG4JrIJjSDcnX3g';
+
+let testUserAccessToken = TestUtils.createTestAccessToken({
+    _id: '5ea54fe32d431462827c2c5e',
+    email: 'user@mail.com',
+    role: 'USER'
+}, 3600);
+
+let testAdminAccessToken = TestUtils.createTestAccessToken({
+    _id: '5ea5501566815162f73bad80',
+    email: 'admin@mail.com',
+    role: 'ADMIN'
+}, 3600);
 
 const userId = '5ea54fe32d431462827c2c5e';
 
@@ -95,15 +105,13 @@ describe('/reservation/create', () => {
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Unauthorized')).toBe(true);
+        expect(result.body.errors[0].includes('no/invalid refresh')).toBe(true);
     });
 
     it('When request does not pass validation then errors are returned', async () => {
         // Act:
         const result = await request.post(`/reservation/create`)
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
                 toDate: "INVALID",
@@ -129,9 +137,7 @@ describe('/reservation/create', () => {
 
         // Act:
         const result = await request.post(`/reservation/create`)
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
                 toDate: "2020-05-01T00:00:00.000Z",
@@ -155,9 +161,7 @@ describe('/reservation/create', () => {
 
         // Act:
         const result = await request.post(`/reservation/create`)
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
                 toDate: "2020-05-01T00:00:00.000Z",
@@ -180,9 +184,7 @@ describe('/reservation/create', () => {
 
         // Act:
         const result = await request.post(`/reservation/create`)
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
                 toDate: "2020-05-01T00:00:00.000Z",
@@ -204,9 +206,7 @@ describe('/reservation/create', () => {
 
         // Act:
         const result = await request.post(`/reservation/create`)
-            .query({
-                secret_token: testUserToken
-            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-02T00:00:00.000Z",
                 toDate: "2020-05-02T00:00:00.000Z",
@@ -247,31 +247,25 @@ describe('/reservation/accept', () => {
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes("Unauthorized")).toBe(true);
+        expect(result.body.errors[0].includes("no/invalid refresh")).toBe(true);
     });
 
     it('When auth token is provided but role other than admin then error is returned', async () => {
         // Act:
         const result = await request.post(`/reservation/accept`)
-            .query({
-                secret_token: testUserToken
-            });
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes("Admin")).toBe(true);
+        expect(result.body.errors[0].includes('admin')).toBe(true);
     });
 
     it('When reservationId is not valid ObjectId then error is returned', async () => {
         // Act:
         const result = await request.post(`/reservation/accept`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: "INVALID"
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: "INVALID" });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -286,12 +280,8 @@ describe('/reservation/accept', () => {
 
         // Act:
         const result = await request.post(`/reservation/accept`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: reservationId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: reservationId });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -306,12 +296,8 @@ describe('/reservation/accept', () => {
 
         // Act:
         const result = await request.post(`/reservation/accept`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: reservationId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: reservationId });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -326,12 +312,8 @@ describe('/reservation/accept', () => {
 
         // Act:
         const result = await request.post(`/reservation/accept`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: reservationId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: reservationId });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -360,12 +342,8 @@ describe('/reservation/accept', () => {
 
         // Act:
         const result = await request.post(`/reservation/accept`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: reservationToAcceptId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: reservationToAcceptId });
 
         // Assert:
         expect(result.status).toBe(200);
@@ -393,25 +371,19 @@ describe('DELETE /reservation', () => {
     it('When auth token is not provided then error is returned', async () => {
         // Act:
         const result = await request.delete(`/reservation`)
-            .send({
-                reservationId: "ANY"
-            });
+            .send({ reservationId: "ANY" });
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Unauthorized access'));
+        expect(result.body.errors[0].includes('no/invalid refresh'));
     });
 
     it('When auth token belongs not to admin then error is returned', async () => {
         // Act:
         const result = await request.delete(`/reservation`)
-            .query({
-                secret_token: testUserToken
-            })
-            .send({
-                reservationId: "ANY"
-            });
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .send({ reservationId: "ANY" });
 
         // Assert:
         expect(result.status).toBe(401);
@@ -419,15 +391,11 @@ describe('DELETE /reservation', () => {
         expect(result.body.errors[0].includes('Admin role required'));
     });
 
-    it('When reservationId is invalid ObjectId then error is returned', async () => {            // Act:
+    it('When reservationId is invalid ObjectId then error is returned', async () => {
         // Act:
         const result = await request.delete(`/reservation`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: "INVALID"
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: "INVALID" });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -442,12 +410,8 @@ describe('DELETE /reservation', () => {
 
         // Act:
         const result = await request.delete(`/reservation`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: randomReservationId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: randomReservationId });
 
         // Assert:
         expect(result.status).toBe(200);
@@ -465,12 +429,8 @@ describe('DELETE /reservation', () => {
 
         // Act:
         const result = await request.delete(`/reservation`)
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: reservationToRemoveId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: reservationToRemoveId });
 
         // Assert:
         try {
@@ -556,34 +516,26 @@ describe('POST /reservation/reject', () => {
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Unauthorized access')).toBe(true);
+        expect(result.body.errors[0].includes('no/invalid refresh')).toBe(true);
     });
 
     it('When admin token is not provided then error is returned', async () => {
         // Act:
         const result = await request.post('/reservation/reject')
-            .query({
-                secret_token: testUserToken
-            })
-            .send({
-                reservationId: 'INVALID'
-            });
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .send({ reservationId: 'INVALID' });
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Admin role required')).toBe(true);
+        expect(result.body.errors[0].includes('admin role required')).toBe(true);
     });
 
     it('When reservationId is invalid then error is returned', async () => {
         // Act:
         const result = await request.post('/reservation/reject')
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: 'INVALID'
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: 'INVALID' });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -598,12 +550,8 @@ describe('POST /reservation/reject', () => {
 
         // Act:
         const result = await request.post('/reservation/reject')
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: randomReservationId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: randomReservationId });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -622,12 +570,8 @@ describe('POST /reservation/reject', () => {
 
         // Act:
         const result = await request.post('/reservation/reject')
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: reservationId
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: reservationId });
 
         try {
             // Assert:
@@ -653,41 +597,31 @@ describe('POST /reservation/cancel', () => {
     it('When no token is provided then error is returned', async () => {
         // Act:
         const result = await request.post('/reservation/cancel')
-            .send({
-                reservationId: 'INVALID'
-            });
+            .send({ reservationId: 'INVALID' });
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Unauthorized access')).toBe(true);
+        expect(result.body.errors[0].includes('no/invalid refresh')).toBe(true);
     });
 
     it('When user token is not provided then error is returned', async () => {
         // Act:
         const result = await request.post('/reservation/cancel')
-            .query({
-                secret_token: testAdminToken
-            })
-            .send({
-                reservationId: 'INVALID'
-            });
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .send({ reservationId: 'INVALID' });
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('User role required')).toBe(true);
+        expect(result.body.errors[0].includes('user role required')).toBe(true);
     });
 
     it('When reservationId is invalid then error is returned', async () => {
         // Act:
         const result = await request.post('/reservation/cancel')
-            .query({
-                secret_token: testUserToken
-            })
-            .send({
-                reservationId: 'INVALID'
-            });
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .send({ reservationId: 'INVALID' });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -702,12 +636,8 @@ describe('POST /reservation/cancel', () => {
 
         // Act:
         const result = await request.post('/reservation/cancel')
-            .query({
-                secret_token: testUserToken
-            })
-            .send({
-                reservationId: randomReservationId
-            });
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .send({ reservationId: randomReservationId });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -726,12 +656,8 @@ describe('POST /reservation/cancel', () => {
 
         // Act:
         const result = await request.post('/reservation/cancel')
-            .query({
-                secret_token: testUserToken
-            })
-            .send({
-                reservationId: reservationId
-            });
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .send({ reservationId: reservationId });
 
         try {
             // Assert:
