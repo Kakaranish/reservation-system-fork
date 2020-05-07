@@ -8,40 +8,69 @@ import { withAsyncRequestHandler } from '../common';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import ExistReservationQueryBuilder from '../queries/ExistReservationQueryBuilder';
 import { preparePrice, parseIsoDatetime, parseObjectId } from '../common';
-import { userValidatorMW, adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
+import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
 
-router.get('/rooms/:roomId/reservations', reservationsValidationMWs(), async (req, res) => {
+// Probably admin only
+router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
 
     withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
-        const findReservations = queryBuilder
-            .withRoomId(req.params.roomId.toHexString())
+        let query = queryBuilder
             .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
-            .build();
-        const reservations = await findReservations;
+            .withPopulatedUserData('-_id email firstName lastName')
+            .withPopulatedRoomData('-_id name location photoUrl')
+            .select('id fromDate toDate pricePerDay totalPrice userId roomId');
+        if (req.query.roomId) query = query.withRoomId(req.query.roomId);
+        if (req.query.status) query = query.withStatus(req.query.status);
+        const reservations = await query.build();
         res.status(200).json(reservations);
     });
-})
+});
+
+router.get('/reservations/user/:id', tokenValidatorMW, reservationsForUserValidationMWs(),
+    async (req, res) => {
+        const errors = validationResult(req).errors;
+        if (errors.length > 0) {
+            if (errors.some(e => e.param === 'id' && e.msg.includes('access token')))
+                return res.sendStatus(401)
+            return res.status(400).json(validationResult(req));
+        }
+        if ((!req.query.fromDate && req.query.toDate) ||
+            (req.query.fromDate && !req.query.toDate)) {
+            return res.status(400).json({ errors: ['fromDate and toDate must be both provided or neither'] });
+        }
+
+        withAsyncRequestHandler(res, async () => {
+            const queryBuilder = new FindReservationQueryBuilder();
+            const query = queryBuilder
+                .withUserId(req.user._id)
+                .withPopulatedUserData('-_id email firstName lastName')
+                .withPopulatedRoomData('-_id name location photoUrl')
+                .select('id fromDate toDate pricePerDay totalPrice userId roomId');
+            if (req.query.fromDate) query = query.overlappingDateIterval(
+                req.query.fromDate.toDate(), req.query.toDate.toDate());
+            if (req.query.status) query = query.withStatus(req.query.status);
+
+            const reservations = await query.build();
+            res.status(200).json(reservations);
+        });
+    }
+);
 
 // USER & ADMIN
-/*
-    {
-        fromDate: String | ISO8601 Datetime - e.g. 2020-04-01T20:00:00.000Z
-        toDate: String | ISO8601 Datetime - e.g. 2020-04-01T20:00:00.000Z
-        userId: String | ObjectId
-        roomId: String | ObjectId
-        pricePerDay: String | eg. 22.00 ; 22 ; 22.0
-        totalPrice: String | eg. 22.00 ; 22 ; 22.0
-    }
-*/
-router.post('/reservation/create', createReservationValidationMiddlewares(),
+router.post('/reservations', createReservationValidationMiddlewares(),
     async (req, res, next) => {
         if (validationResult(req).errors.length > 0)
             return res.status(400).json(validationResult(req));
+        if ((!req.query.fromDate && req.query.toDate) ||
+            (req.query.fromDate && !req.query.toDate)) {
+            return res.status(400).json({ errors: ['fromDate and toDate must be both provided or neither'] });
+        }
+
         try {
             const queryBuilder = new ExistReservationQueryBuilder();
             const otherReservationExists = await queryBuilder.withRoomId(req.body.roomId.toHexString())
@@ -74,53 +103,81 @@ router.post('/reservation/create', createReservationValidationMiddlewares(),
             }
             res.status(500).json({ errors: errors });
         }
-    });
-
-
+    }
+);
 
 // ADMIN
-router.delete('/reservation', [tokenValidatorMW, adminValidatorMW,
-    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
+router.delete('/reservations/:id', [tokenValidatorMW, adminValidatorMW,
+    param('id').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
 
     withAsyncRequestHandler(res, async () => {
-        const result = await Reservation.findByIdAndDelete(req.body.reservationId);
+        const result = await Reservation.findByIdAndDelete(req.params.id);
         return res.status(200).json({ _id: result?._id ?? null });
     });
 });
 
-router.get('/room/:roomId/reservations/accepted', acceptedReservationsValidationMWs(),
-    async (req, res) => {
-        if (validationResult(req).errors.length > 0)
-            return res.status(400).json(validationResult(req));
-
-        withAsyncRequestHandler(res, async () => {
-            const queryBuilder = new FindReservationQueryBuilder();
-            const reservations = await queryBuilder.withRoomId(req.params.roomId.toHexString())
-                .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
-                .withStatus('ACCEPTED')
-                .build();
-            return res.status(200).json(reservations);
-        });
-    }
-);
-
 function reservationsValidationMWs() {
     return [
-        param('roomId').customSanitizer(roomId => parseObjectId(roomId))
-            .notEmpty().withMessage('invalid mongo ObjectId'),
         query('fromDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty()
-            .withMessage('not in ISO8601 format'),
+            .notEmpty().withMessage('not in ISO8601 format'),
         query('toDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty()
-            .withMessage('not in ISO8601 format'),
+            .notEmpty().withMessage('not in ISO8601 format').bail()
+            .custom((toDate, { req }) => {
+                if (toDate.toDate() < req.query.fromDate.toDate())
+                    throw Error('illegal date interval - fromDate must precede toDate');
+                return true
+            }),
+        query('status').optional()
+            .custom(status => {
+                const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
+                if (!availableStatuses.includes(status.toUpperCase()))
+                    throw Error('illegal status');
+                return true;
+            }),
+        query('roomId').optional()
+            .customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId').bail()
+            .custom(async id => {
+                return await Room.exists({ _id: id }).then(exists => {
+                    if (!exists) return Promise.reject('room with given id does not exist')
+                });
+            })
     ];
 }
 
+function reservationsForUserValidationMWs() {
+    return [
+        param('id').customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId').bail()
+            .custom(async (id, { req }) => {
+                return await User.exists({ _id: id }).then(exists => {
+                    if (!exists) return Promise.reject('user does not exist')
+                    if (id.toHexString() !== req.user._id) return Promise.reject('access token');
+                });
+            }),
+        query('fromDate').optional().customSanitizer(date => parseIsoDatetime(date))
+            .notEmpty().withMessage('not in ISO8601 format'),
+        query('toDate').optional().customSanitizer(date => parseIsoDatetime(date))
+            .notEmpty().withMessage('not in ISO8601 format').bail()
+            .custom((toDate, { req }) => {
+                if (!req.query.fromDate) return true;
+                if (toDate.toDate() < req.query.fromDate.toDate())
+                    throw Error('illegal date interval - fromDate must precede toDate');
+                return true
+            }),
+        query('status').optional()
+            .custom(status => {
+                const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
+                if (!availableStatuses.includes(status.toUpperCase()))
+                    throw Error('illegal status');
+                return true;
+            })
+    ];
+}
 
 function createReservationValidationMiddlewares() {
     return [
@@ -150,24 +207,7 @@ function createReservationValidationMiddlewares() {
             .withMessage('price must match regex: \d+(\.\d{1,2})?'),
         body('totalPrice').customSanitizer(price => preparePrice(price))
             .notEmpty()
-            .withMessage('price must match regex: \d+(\.\d{1,2})?'),
-    ];
-}
-
-function acceptedReservationsValidationMWs() {
-    return [
-        param('roomId').customSanitizer(id => parseObjectId(id))
-            .notEmpty().withMessage('invalid mongo ObjectId').bail()
-            .custom(async id => {
-                return await Room.exists({ _id: id }).then(exists => {
-                    if (!exists) return Promise.reject('room with given id does not exist')
-                });
-            }),
-        query('fromDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty()
-            .withMessage('not in ISO8601 format'),
-        query('toDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty().withMessage('not in ISO8601 format'),
+            .withMessage('price must match regex: \d+(\.\d{1,2})?')
     ];
 }
 

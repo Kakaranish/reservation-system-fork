@@ -33,32 +33,231 @@ const reservationsForRoom = [
     '5ea5e3beb9f264420ea8799d'
 ];
 
-describe('/room/:roomId/reservations', () => {
-    it('When roomId is not valid ObjectId then error is returned', async () => {
-        // Assert: 
-        const invalidObjectId = "INVALID";
-
+describe('GET /reservations', () => {
+    it('When fromDate or toDate is not provided then error is returned', async () => {
         // Act:
-        const result = await request.get(`/rooms/${invalidObjectId}/reservations`)
+        const result = await request.get('/reservations')
+            .query({ fromDate: '2020-01-01T00:00:00.000Z' });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].msg.includes('ISO8601'));
+    });
+
+    it('When fromDate or toDate is not invalid then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations')
             .query({
-                fromDate: '2020-05-01T00:00:00.000Z',
-                toDate: '2020-05-02T00:00:00.000Z'
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].msg.includes('ISO8601'));
+    });
+
+    it('When fromDate or toDate is not invalid then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations')
+            .query({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: 'INVALID'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].msg.includes('ISO8601'));
+    });
+
+    it('When toDate precedes fromDate then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations')
+            .query({
+                fromDate: '2020-01-02T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].msg.includes('illegal date interval'));
+    });
+
+    it('When roomId is provided but it is invalid then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations')
+            .query({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z',
+                roomId: 'INVALID'
             });
 
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
         expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('mongo ObjectId'));
+    });
+
+    it('When status is provided but it is invalid then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations')
+            .query({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z',
+                status: 'UNKNOWN_STATUS'
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('status');
+        expect(result.body.errors[0].msg.includes('illegal status'));
+    });
+
+    it('When room with given id does not exist then error is returned', async () => {
+        // Arrange:
+        const randomRoomId = '5eb4726265526d1ae4f5de6d';
+
+        // Act:
+        const result = await request.get(`/reservations`)
+            .query({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z',
+                roomId: randomRoomId
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('roomId');
+        expect(result.body.errors[0].msg.includes('room with given'));
+    });
+
+    it('When everything is ok and optional args are not provided then reservations are returned', async () => {
+        // Act:
+        const result = await request.get(`/reservations`)
+            .query({
+                fromDate: '2000-12-31T00:00:00.000Z',
+                toDate: '2000-12-31T00:00:00.000Z',
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.errors).toBeUndefined();
+        expect(result.body).toHaveLength(1)
+        expect(result.body.some(r => r._id == '5eb47148feac1f6e42ebf7f0')).toBe(true);
+    });
+
+    it('When everything is ok and roomId is provided then reservations are returned', async () => {
+        // Arrange:
+        const roomId = '5eae87863a9e88493afd0e58';
+
+        // Act:
+        const result = await request.get(`/reservations`)
+            .query({
+                fromDate: '2000-12-31T00:00:00.000Z',
+                toDate: '2000-12-31T00:00:00.000Z',
+                roomId: roomId
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.errors).toBeUndefined();
+        expect(result.body).toHaveLength(1)
+        expect(result.body.some(r => r._id == '5eb47148feac1f6e42ebf7f0')).toBe(true);
+    });
+
+    it('When everything is ok and roomId and status are provided then reservations are returned', async () => {
+        // Arrange:
+        const roomId = '5eae87863a9e88493afd0e58';
+
+        // Act:
+        const result = await request.get(`/reservations`)
+            .query({
+                fromDate: '2020-01-02T00:00:00.000Z',
+                toDate: '2020-01-06T00:00:00.000Z',
+                roomId: roomId,
+                status: 'ACCEPTED'
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.errors).toBeUndefined();
+        expect(result.body).toHaveLength(2);
+        expect(result.body.some(r => r._id == '5eae87f7e1d6c41dba3a76b0')).toBe(true);
+        expect(result.body.some(r => r._id == '5eae87fef13c8a4a4302dcc6')).toBe(true);
+        expect(result.body.some(r => r._id == '5eae880504a5017179988635')).toBe(false);
+    });
+});
+
+describe('GET /reservations/user/:id', () => {
+    it('When access token is invalid or not provided then error is returned', async () => {
+        // Arrange:
+        const userId = 'ANY';
+
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`);
+
+        // Assert:
+        expect(result.status).toBe(401);
+    });
+
+    it('When user id is invalid or not provided then error is returned', async () => {
+        // Arrange:
+        const userId = 'INVALID';
+
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
         expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
     });
 
-    it('When one of dates is not valid iso datetime then error is returned', async () => {
+    it('When user with given id does not exist then error is returned', async () => {
+        // Arrange:
+        const userId = '5eb47fcb0d5932db1fbe0d71';
+
         // Act:
-        const result = await request.get(`/rooms/${roomForGettingReservation}/reservations`)
-            .query({
-                fromDate: 'INVALID',
-                toDate: '2020-05-02T00:00:00.000Z'
-            });
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('user does not exist')).toBe(true);
+    });
+
+    it('When access token does not authorize user then 401 status is returned', async () => {
+        // Arrange:
+        const userId = '5ea5501566815162f73bad80';
+
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(401);
+    });
+
+    it('When fromDate or toDate is invalid/not provided then error is returned', async () => {
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .query({ fromDate: 'INVALID', toDate: '2020-01-01T00:00:00.000Z' });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -67,28 +266,67 @@ describe('/room/:roomId/reservations', () => {
         expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
     });
 
-    it('When correct query values and parameter are provided then valid reservation are returned', async () => {
+    it('When toDate is provided and fromDate is not then error is returned', async () => {
         // Act:
-        const result = await request.get(`/rooms/${roomForGettingReservation}/reservations`)
-            .query({
-                fromDate: '2020-05-01T00:00:00.000Z',
-                toDate: '2020-05-02T00:00:00.000Z'
-            });
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .query({ fromDate: '2020-01-01T00:00:00.000Z', toDate: 'INVALID' });
 
         // Assert:
-        expect(result.status).toBe(200);
-        expect(result.body).toHaveLength(2);
-        reservationsForRoom.forEach(reservationId => {
-            expect(result.body.some(x => x._id === reservationId)).toBe(true)
-        });
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
+    });
 
-        const reservation1 = result.body.filter(x => x._id === reservationsForRoom[0])[0];
-        expect(reservation1.fromDate).toBe('2020-05-01T00:00:00.000Z');
-        expect(reservation1.toDate).toBe('2020-05-01T00:00:00.000Z');
+    it('When fromDate is provided and toDate is not then error is returned', async () => {
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .query({ fromDate: '2020-01-01T00:00:00.000Z' });
 
-        const reservation2 = result.body.filter(x => x._id === reservationsForRoom[1])[0];
-        expect(reservation2.fromDate).toBe('2020-05-02T00:00:00.000Z');
-        expect(reservation2.toDate).toBe('2020-05-02T00:00:00.000Z');
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('must be both')).toBe(true);
+    });
+
+    it('When toDate precedes fromDate is not then error is returned', async () => {
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .query({ fromDate: '2020-01-02T00:00:00.000Z', toDate: '2020-01-01T00:00:00.000Z' });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].msg.includes('fromDate must precede')).toBe(true);
+    });
+
+    it('When status is provided and its value is unknown then error is returned', async () => {
+        // Act:
+        const result = await request.get(`/reservations/user/${userId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .query({ status: 'UNKNOWN_STATUS' });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('status');
+        expect(result.body.errors[0].msg.includes('illegal status')).toBe(true);
+    });
+
+    it('When everything is OK and date interval is provided then reservations are returned', async () => {
+
+    });
+
+    it('When everything is OK and status is provided then reservations are returned', async () => {
+
+    });
+
+    it('When everything is OK and date interval and status are provided then reservations are returned', async () => {
+
     });
 });
 
@@ -238,11 +476,13 @@ describe('POST /reservations', () => {
     });
 });
 
-describe('DELETE /reservation', () => {
+describe('DELETE /reservations/:id', () => {
     it('When auth token is not provided then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'ANY';
+
         // Act:
-        const result = await request.delete(`/reservation`)
-            .send({ reservationId: "ANY" });
+        const result = await request.delete(`/reservations/${reservationId}`);
 
         // Assert:
         expect(result.status).toBe(401);
@@ -251,27 +491,31 @@ describe('DELETE /reservation', () => {
     });
 
     it('When auth token belongs not to admin then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'ANY';
+
         // Act:
-        const result = await request.delete(`/reservation`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .send({ reservationId: "ANY" });
+        const result = await request.delete(`/reservations/${reservationId}`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Admin role required'));
+        expect(result.body.errors[0].includes('admin role required'));
     });
 
     it('When reservation id is invalid ObjectId then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+
         // Act:
-        const result = await request.delete(`/reservation`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: "INVALID" });
+        const result = await request.delete(`/reservations/${reservationId}`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].param).toBe('id');
         expect(result.body.errors[0].msg.includes('invalid mongo ObjectId')).toBe(true);
     });
 
@@ -280,9 +524,8 @@ describe('DELETE /reservation', () => {
         const randomReservationId = '5eadb5bc0fcf46411b8b8570';
 
         // Act:
-        const result = await request.delete(`/reservation`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: randomReservationId });
+        const result = await request.delete(`/reservations/${randomReservationId}`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(200);
@@ -299,9 +542,8 @@ describe('DELETE /reservation', () => {
         if (!reservationCopy) throw Error('Unable to backup reservation to remove');
 
         // Act:
-        const result = await request.delete(`/reservation`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: reservationToRemoveId });
+        const result = await request.delete(`/reservations/${reservationToRemoveId}`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
         try {
@@ -313,66 +555,6 @@ describe('DELETE /reservation', () => {
         } finally {
             await new Reservation(reservationCopyObj).save();
         }
-    });
-});
-
-describe('GET /room/:roomId/reservations/accepted', () => {
-    it('When some request values are invalid then errors are returned', async () => {
-        // Arrange:
-        const invalidRoomId = 'INVALID;'
-
-        // Act:
-        const result = await request.get(`/room/${invalidRoomId}/reservations/accepted`)
-            .query({
-                fromDate: 'INVALID',
-                toDate: '2020-01-01T00:00:00.000Z'
-            });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(2);
-        expect(result.body.errors[0].param).toBe('roomId');
-        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId'));
-        expect(result.body.errors[1].param).toBe('fromDate');
-        expect(result.body.errors[1].msg.includes('ISO8601'));
-    });
-
-    it('When room with given id does not exist then error is returned', async () => {
-        // Arrange:
-        const randomRoomId = '5eae8a183476c3f86337a179';
-
-        // Act:
-        const result = await request.get(`/room/${randomRoomId}/reservations/accepted`)
-            .query({
-                fromDate: '2020-01-01T00:00:00.000Z',
-                toDate: '2020-01-01T00:00:00.000Z'
-            });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('roomId');
-        expect(result.body.errors[0].msg.includes('room with given'));
-    });
-
-    it('When there are some accepted reservations on room and date interval then they are returned', async () => {
-        // Arrange:
-        const roomId = '5eae87863a9e88493afd0e58';
-
-        // Act:
-        const result = await request.get(`/room/${roomId}/reservations/accepted`)
-            .query({
-                fromDate: '2020-01-02T00:00:00.000Z',
-                toDate: '2020-01-06T00:00:00.000Z'
-            });
-
-        // Assert:
-        expect(result.status).toBe(200);
-        expect(result.errors).toBeUndefined();
-        expect(result.body).toHaveLength(2);
-        expect(result.body.some(r => r._id == '5eae87f7e1d6c41dba3a76b0')).toBe(true);
-        expect(result.body.some(r => r._id == '5eae87fef13c8a4a4302dcc6')).toBe(true);;
-        expect(result.body.some(r => r._id == '5eae880504a5017179988635')).toBe(false);;
     });
 });
 

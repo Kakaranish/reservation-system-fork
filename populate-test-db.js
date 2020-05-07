@@ -470,6 +470,19 @@ require('dotenv').config();
                 createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
                 updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
             }),
+
+            new Reservation({
+                _id: parseObjectId('5eb47148feac1f6e42ebf7f0'),
+                fromDate: moment('2000-12-31T00:00:00.000Z', ISO_8601).toDate(),
+                toDate: moment('2000-12-31T00:00:00.000Z', ISO_8601).toDate(),
+                userId: user._id,
+                roomId: room._id,
+                pricePerDay: 400,
+                totalPrice: 400,
+                status: "PENDING",
+                createDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate(),
+                updateDate: moment('2020-01-01T00:00:00.000Z', ISO_8601).toDate()
+            }),
             createDummyReservation(user._id, room._id)
         ]);
     }
