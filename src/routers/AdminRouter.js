@@ -3,6 +3,7 @@ import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder'
 import { parseIsoDatetime } from '../common'
 import { query, validationResult } from 'express-validator';
 import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
+import { withAsyncRequestHandler } from '../common';
 
 const router = express();
 
@@ -10,7 +11,7 @@ router.get('/reservations', reservationsValidatorMW(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
 
-    try {
+    withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
         let query = queryBuilder
             .withStatus(req.query.status)
@@ -22,10 +23,7 @@ router.get('/reservations', reservationsValidatorMW(), async (req, res) => {
                 req.query.fromDate.toDate(), req.query.toDate.toDate());
         const reservations = await query.build();
         res.status(200).json(reservations);
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ['Internal error'] });
-    }
+    });
 });
 
 function reservationsValidatorMW() {

@@ -1,5 +1,6 @@
 import moment from 'moment';
 import mongoose from 'mongoose';
+import 'regenerator-runtime';
 
 /**
  * @param {Number | String} value 
@@ -35,7 +36,6 @@ export const parseObjectId = objectId => {
         ? mongoose.Types.ObjectId(objectId)
         : null;
 }
-
 
 /**
  * @async
