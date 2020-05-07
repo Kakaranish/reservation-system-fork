@@ -97,10 +97,10 @@ describe('/room/:roomId/reservations', () => {
     roomId: 5ea6fda6e8ecbe2dad9f1c23
     reservationId: 5ea6fe28a5a7f3fc38808a32
 */
-describe('/reservation/create', () => {
+describe('POST /reservations', () => {
     it('When request does not contain auth token then error is returned', async () => {
         // Act:
-        const result = await request.post(`/reservation/create`);
+        const result = await request.post(`/reservations`);
 
         // Assert:
         expect(result.status).toBe(401);
@@ -110,7 +110,7 @@ describe('/reservation/create', () => {
 
     it('When request does not pass validation then errors are returned', async () => {
         // Act:
-        const result = await request.post(`/reservation/create`)
+        const result = await request.post(`/reservations`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
@@ -136,7 +136,7 @@ describe('/reservation/create', () => {
         const randomRoomId = '5ea6f975f593271424c74017';
 
         // Act:
-        const result = await request.post(`/reservation/create`)
+        const result = await request.post(`/reservations`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
@@ -160,7 +160,7 @@ describe('/reservation/create', () => {
         const randomUserId = '5ea6f975f593271424c74017';
 
         // Act:
-        const result = await request.post(`/reservation/create`)
+        const result = await request.post(`/reservations`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
@@ -183,7 +183,7 @@ describe('/reservation/create', () => {
         const roomId = '5ea6fda6e8ecbe2dad9f1c23';
 
         // Act:
-        const result = await request.post(`/reservation/create`)
+        const result = await request.post(`/reservations`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
@@ -205,7 +205,7 @@ describe('/reservation/create', () => {
         const roomId = '5ea6fda6e8ecbe2dad9f1c23';
 
         // Act:
-        const result = await request.post(`/reservation/create`)
+        const result = await request.post(`/reservations`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({
                 fromDate: "2020-05-02T00:00:00.000Z",
@@ -239,134 +239,6 @@ describe('/reservation/create', () => {
     });
 });
 
-describe('/reservation/accept', () => {
-    it('When auth token not provided then error is returned', async () => {
-        // Act:
-        const result = await request.post(`/reservation/accept`);
-
-        // Assert:
-        expect(result.status).toBe(401);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes("no/invalid refresh")).toBe(true);
-    });
-
-    it('When auth token is provided but role other than admin then error is returned', async () => {
-        // Act:
-        const result = await request.post(`/reservation/accept`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
-
-        // Assert:
-        expect(result.status).toBe(401);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('admin')).toBe(true);
-    });
-
-    it('When reservationId is not valid ObjectId then error is returned', async () => {
-        // Act:
-        const result = await request.post(`/reservation/accept`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: "INVALID" });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('reservationId');
-        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId'));
-    });
-
-    it('When reservation does not exist then error is returned', async () => {
-        // Arrange:
-        const reservationId = '5eac25f135b036c9168abfbe';
-
-        // Act:
-        const result = await request.post(`/reservation/accept`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: reservationId });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('reservationId');
-        expect(result.body.errors[0].msg.includes("with given id")).toBe(true);
-    });
-
-    it('When requested reservation is already accepted then error is returned', async () => {
-        // Arrange:
-        const reservationId = '5eac23434fcb4261665be561';
-
-        // Act:
-        const result = await request.post(`/reservation/accept`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: reservationId });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('reservationId');
-        expect(result.body.errors[0].msg.includes("already accepted")).toBe(true);
-    });
-
-    it('When other reservation is already accepted then error is returned and this reservation status is changed to rejected', async () => {
-        // Arrange:
-        const reservationId = '5eac2249372b7676ffb9c88e';
-
-        // Act:
-        const result = await request.post(`/reservation/accept`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: reservationId });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(2);
-        expect(result.body.errors.some(x => x.includes('cannot be accepted'))).toBe(true);
-        expect(result.body.errors.some(x => x.includes('changed to REJECTED'))).toBe(true);
-
-        const reservationStatus = (await Reservation.findById(reservationId)).status;
-        expect(reservationStatus).toBe("REJECTED");
-
-        // CLEANUP
-        try {
-            await Reservation.findByIdAndUpdate(reservationId, {
-                $set: {
-                    status: "PENDING"
-                }
-            });
-        } catch (error) { }
-    });
-
-    it('When reservation request is correct and reservation can be acccepted then ok status is returned', async () => {
-        // Arrange:
-        const reservationToAcceptId = '5eac22acebac85f7dd117a14';
-        const reservationToRejectId = '5eac22a4a4fbab8bc52230a3';
-        const alreadyCancelledReservationId = '5eac358cac8b270b1c1863f0';
-
-        // Act:
-        const result = await request.post(`/reservation/accept`)
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: reservationToAcceptId });
-
-        // Assert:
-        expect(result.status).toBe(200);
-        expect(result.body._id).toBe(reservationToAcceptId);
-        const acceptedReservation = await Reservation.findById(reservationToAcceptId);
-        expect(acceptedReservation.status).toBe("ACCEPTED");
-        const rejectedReservation = await Reservation.findById(reservationToRejectId);
-        expect(rejectedReservation.status).toBe("REJECTED");
-        const cancelledReservation = await Reservation.findById(alreadyCancelledReservationId);
-        expect(cancelledReservation.status).toBe("CANCELLED");
-
-        // CLEANUP
-        try {
-            await Reservation.findByIdAndUpdate(reservationToAcceptId, {
-                $set: { status: "PENDING" }
-            });
-            await Reservation.findByIdAndUpdate(reservationToRejectId, {
-                $set: { status: "PENDING" }
-            });
-        } catch (error) { }
-    });
-});
-
 describe('DELETE /reservation', () => {
     it('When auth token is not provided then error is returned', async () => {
         // Act:
@@ -391,7 +263,7 @@ describe('DELETE /reservation', () => {
         expect(result.body.errors[0].includes('Admin role required'));
     });
 
-    it('When reservationId is invalid ObjectId then error is returned', async () => {
+    it('When reservation id is invalid ObjectId then error is returned', async () => {
         // Act:
         const result = await request.delete(`/reservation`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`])
@@ -505,13 +377,145 @@ describe('GET /room/:roomId/reservations/accepted', () => {
     });
 });
 
-describe('POST /reservation/reject', () => {
-    it('When no token is provided then error is returned', async () => {
+describe('/reservations/:id/modify/accept', () => {
+    it('When auth token not provided then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'ANY';
+
         // Act:
-        const result = await request.post('/reservation/reject')
-            .send({
-                reservationId: 'INVALID'
+        const result = await request.post(`/reservations/${reservationId}/modify/accept`);
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes("no/invalid refresh")).toBe(true);
+    });
+
+    it('When auth token is provided but role other than admin then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'ANY';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('admin')).toBe(true);
+    });
+
+    it('When reservation id is not valid ObjectId then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'ANY';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('invalid mongo ObjectId'));
+    });
+
+    it('When reservation does not exist then error is returned', async () => {
+        // Arrange:
+        const reservationId = '5eac25f135b036c9168abfbe';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes("with given id")).toBe(true);
+    });
+
+    it('When requested reservation is already accepted then error is returned', async () => {
+        // Arrange:
+        const reservationId = '5eac23434fcb4261665be561';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes("already accepted")).toBe(true);
+    });
+
+    it('When other reservation is already accepted then error is returned and this reservation status is changed to rejected', async () => {
+        // Arrange:
+        const reservationId = '5eac2249372b7676ffb9c88e';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(2);
+        expect(result.body.errors.some(x => x.includes('cannot be accepted'))).toBe(true);
+        expect(result.body.errors.some(x => x.includes('changed to REJECTED'))).toBe(true);
+
+        const reservationStatus = (await Reservation.findById(reservationId)).status;
+        expect(reservationStatus).toBe("REJECTED");
+
+        // CLEANUP
+        try {
+            await Reservation.findByIdAndUpdate(reservationId, {
+                $set: {
+                    status: "PENDING"
+                }
             });
+        } catch (error) { }
+    });
+
+    it('When reservation request is correct and reservation can be acccepted then ok status is returned', async () => {
+        // Arrange:
+        const reservationToAcceptId = '5eac22acebac85f7dd117a14';
+        const reservationToRejectId = '5eac22a4a4fbab8bc52230a3';
+        const alreadyCancelledReservationId = '5eac358cac8b270b1c1863f0';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationToAcceptId}/modify/accept`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body._id).toBe(reservationToAcceptId);
+        const acceptedReservation = await Reservation.findById(reservationToAcceptId);
+        expect(acceptedReservation.status).toBe("ACCEPTED");
+        const rejectedReservation = await Reservation.findById(reservationToRejectId);
+        expect(rejectedReservation.status).toBe("REJECTED");
+        const cancelledReservation = await Reservation.findById(alreadyCancelledReservationId);
+        expect(cancelledReservation.status).toBe("CANCELLED");
+
+        // CLEANUP
+        try {
+            await Reservation.findByIdAndUpdate(reservationToAcceptId, {
+                $set: { status: "PENDING" }
+            });
+            await Reservation.findByIdAndUpdate(reservationToRejectId, {
+                $set: { status: "PENDING" }
+            });
+        } catch (error) { }
+    });
+});
+
+describe('POST /reservations/:id/modify/reject', () => {
+    it('When no token is provided then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+
+        // Act:
+        const result = await request.post(`/reservations/${reservationId}/modify/reject`);
 
         // Assert:
         expect(result.status).toBe(401);
@@ -520,10 +524,12 @@ describe('POST /reservation/reject', () => {
     });
 
     it('When admin token is not provided then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+
         // Act:
-        const result = await request.post('/reservation/reject')
-            .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .send({ reservationId: 'INVALID' });
+        const result = await request.post(`/reservations/${reservationId}/modify/reject`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(401);
@@ -531,16 +537,18 @@ describe('POST /reservation/reject', () => {
         expect(result.body.errors[0].includes('admin role required')).toBe(true);
     });
 
-    it('When reservationId is invalid then error is returned', async () => {
+    it('When reservation id is invalid then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+
         // Act:
-        const result = await request.post('/reservation/reject')
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: 'INVALID' });
+        const result = await request.post(`/reservations/${reservationId}/modify/reject`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].param).toBe('id');
         expect(result.body.errors[0].msg.includes('invalid mongo ObjectId')).toBe(true);
     });
 
@@ -549,9 +557,8 @@ describe('POST /reservation/reject', () => {
         const randomReservationId = '5eae996fececcab610a66b62';
 
         // Act:
-        const result = await request.post('/reservation/reject')
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: randomReservationId });
+        const result = await request.post(`/reservations/${randomReservationId}/modify/reject`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(400);
@@ -569,9 +576,8 @@ describe('POST /reservation/reject', () => {
             throw Error('TEST CANT BE RUN - RESERVATION DOES IS ALREADY REJECTED');
 
         // Act:
-        const result = await request.post('/reservation/reject')
-            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
-            .send({ reservationId: reservationId });
+        const result = await request.post(`/reservations/${reservationId}/modify/reject`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         try {
             // Assert:
@@ -593,10 +599,13 @@ describe('POST /reservation/reject', () => {
     });
 });
 
-describe('POST /reservation/cancel', () => {
+describe('POST /reservations/:id/modify/cancel', () => {
     it('When no token is provided then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+
         // Act:
-        const result = await request.post('/reservation/cancel')
+        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
             .send({ reservationId: 'INVALID' });
 
         // Assert:
@@ -606,8 +615,11 @@ describe('POST /reservation/cancel', () => {
     });
 
     it('When user token is not provided then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+
         // Act:
-        const result = await request.post('/reservation/cancel')
+        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .send({ reservationId: 'INVALID' });
 
@@ -617,27 +629,30 @@ describe('POST /reservation/cancel', () => {
         expect(result.body.errors[0].includes('user role required')).toBe(true);
     });
 
-    it('When reservationId is invalid then error is returned', async () => {
+    it('When reservation id is invalid then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVALID';
+        
         // Act:
-        const result = await request.post('/reservation/cancel')
+        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({ reservationId: 'INVALID' });
 
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('reservationId');
+        expect(result.body.errors[0].param).toBe('id');
         expect(result.body.errors[0].msg.includes('invalid mongo ObjectId')).toBe(true);
     });
 
     it('When reservation with given id does not exist then error is returned', async () => {
         // Arrange:
-        const randomReservationId = '5eae996fececcab610a66b62';
+        const reservationId = '5eae996fececcab610a66b62'; // Random
 
         // Act:
-        const result = await request.post('/reservation/cancel')
+        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .send({ reservationId: randomReservationId });
+            .send({ reservationId: reservationId });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -655,7 +670,7 @@ describe('POST /reservation/cancel', () => {
             throw Error('TEST CANT BE RUN - RESERVATION DOES IS ALREADY CANCELLED');
 
         // Act:
-        const result = await request.post('/reservation/cancel')
+        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({ reservationId: reservationId });
 

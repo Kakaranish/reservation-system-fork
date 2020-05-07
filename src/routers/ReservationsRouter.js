@@ -1,7 +1,6 @@
 import express from "express";
 import moment from 'moment';
 import { query, validationResult, param, body } from 'express-validator';
-import * as dbQueries from '../DbQueries2';
 import Room from '../models/room-model';
 import User from '../models/user-model';
 import Reservation from '../models/reservation-model';
@@ -77,84 +76,7 @@ router.post('/reservation/create', createReservationValidationMiddlewares(),
         }
     });
 
-// ADMIN
-router.post('/reservation/accept', accceptReservationValidationMWs(), async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
 
-    withAsyncRequestHandler(res, async () => {
-        const reservation = req.body.reservation;
-        const queryBuilder = new FindReservationQueryBuilder();
-        const allReservations = await queryBuilder.withRoomId(reservation.roomId.toHexString())
-            .overlappingDateIterval(reservation.fromDate, reservation.toDate)
-            .select('_id status')
-            .build();
-
-        const canBeAccepted = !allReservations.some(r => r._id !== reservation._id
-            && r.status === "ACCEPTED");
-        if (!canBeAccepted) {
-            await dbQueries.changeReservationStatus(reservation._id, "REJECTED");
-            return res.status(400).json({
-                errors: [
-                    'Reservation cannot be accepted because other accepted reservation on this date interval exists.',
-                    `State of current reservation has been changed to REJECTED`
-                ]
-            });
-        }
-
-        const reservationToRejectIds = allReservations.filter(r =>
-            r._id !== reservation._id && r.status === 'PENDING').map(r => r._id);
-        await dbQueries.withTransaction(async session => {
-            await Reservation.updateMany({
-                _id: { $in: reservationToRejectIds }
-            }, {
-                $set: { status: "REJECTED" }
-            }, { session: session });
-
-            reservation.status = "ACCEPTED";
-            reservation.updateDate = moment.utc().toDate();
-            await reservation.save({ session: session });
-        });
-
-        return res.status(200).json({ _id: reservation._id });
-    });
-});
-
-// ADMIN
-router.post('/reservation/reject', [tokenValidatorMW, adminValidatorMW,
-    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-], async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-
-    withAsyncRequestHandler(res, async () => {
-        const result = await dbQueries.changeReservationStatus(
-            req.body.reservationId, "REJECTED")
-        if (!result) return res.status(400).json({
-            errors: [`there is no reservation with id ${req.body.reservationId}`]
-        })
-        res.status(200).json({ _id: result._id });
-    });
-});
-
-// USER
-router.post('/reservation/cancel', [tokenValidatorMW, userValidatorMW,
-    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-], async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-
-    withAsyncRequestHandler(res, async () => {
-        const result = await dbQueries.changeReservationStatus(
-            req.body.reservationId, "CANCELLED")
-        if (!result) return res.status(400).json({
-            errors: [`there is no reservation with id ${req.body.reservationId}`]
-        })
-        res.status(200).json({ _id: result._id });
-    });
-});
 
 // ADMIN
 router.delete('/reservation', [tokenValidatorMW, adminValidatorMW,
@@ -199,22 +121,6 @@ function reservationsValidationMWs() {
     ];
 }
 
-function accceptReservationValidationMWs() {
-    return [
-        tokenValidatorMW,
-        adminValidatorMW,
-        body('reservationId').customSanitizer(id => parseObjectId(id))
-            .notEmpty().withMessage('invalid mongo ObjectId').bail()
-            .custom(async (id, { req }) => {
-                const reservation = await Reservation.findById(id);
-                if (!reservation)
-                    return Promise.reject('reservation with given id does not exist')
-                if (reservation.status === 'ACCEPTED')
-                    return Promise.reject('reservation is already accepted')
-                req.body.reservation = reservation;
-            }),
-    ];
-}
 
 function createReservationValidationMiddlewares() {
     return [
