@@ -9,6 +9,7 @@ const router = express();
 router.get('/reservations', reservationsValidatorMW(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
+
     try {
         const queryBuilder = new FindReservationQueryBuilder();
         let query = queryBuilder

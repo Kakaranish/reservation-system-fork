@@ -1,12 +1,23 @@
 import app from '../../src/app';
 import supertest from 'supertest';
 import mongoose from 'mongoose';
+import * as TestUtils from '../test-utils';
 import { parseObjectId } from '../../src/common';
 import { connectTestDb } from '../../src/mongo-utils';
 
 const request = supertest(app);
-const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
-const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU1MDE1NjY4MTUxNjJmNzNiYWQ4MCIsImVtYWlsIjoiYWRtaW5AbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifSwiaWF0IjoxNTg3OTExNDA3fQ.pMoZZUYhgkiVKPhsT-uVO8n9FWEdiG4JrIJjSDcnX3g';
+
+let testUserAccessToken = TestUtils.createTestAccessToken({
+    _id: '5ea54fe32d431462827c2c5e',
+    email: 'user@mail.com',
+    role: 'USER'
+}, 3600);
+
+let testAdminAccessToken = TestUtils.createTestAccessToken({
+    _id: '5ea5501566815162f73bad80',
+    email: 'admin@mail.com',
+    role: 'ADMIN'
+}, 3600);
 
 beforeAll(async () => {
     await connectTestDb();
@@ -22,28 +33,26 @@ describe('GET /reservations', () => {
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('Unauthorized access')).toBe(true);
+        expect(result.body.errors[0].includes('no/invalid refresh')).toBe(true);
     });
 
     it('When no user token is in request then error is returned', async () => {
         // Act:
-        const result = await request.get('/user/reservations').query({
-            secret_token: testAdminToken,
-            status: "ACCEPTED"
-        });
+        const result = await request.get('/user/reservations')
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
+            .query({ status: "ACCEPTED" });
 
         // Assert:
         expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('User role required')).toBe(true);
+        expect(result.body.errors[0].includes('user role required')).toBe(true);
     });
 
     it('When unknown status is in request then error is returned', async () => {
         // Act:
-        const result = await request.get('/user/reservations').query({
-            secret_token: testUserToken,
-            status: "UNKNOWN_STATUS"
-        });
+        const result = await request.get('/user/reservations')
+            .set('Cookie', [`accessToken=${testUserAccessToken}`])
+            .query({ status: "UNKNOWN_STATUS" });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -54,13 +63,17 @@ describe('GET /reservations', () => {
 
     it('When user has some accepted reservations then they are returned', async () => {
         // Arrange:
-        const userToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYWVkNmRiZTI5Y2YwN2E0Y2FmMjk5MyIsImVtYWlsIjoiNWVhZWQ2ZGJlMjljZjA3YTRjYWYyOTkzQG1haWwuY29tIiwicm9sZSI6IlVTRVIifSwiaWF0IjoxNTg4NTE3MDg0fQ.19pcUsDbPGhNcBgHkE2e0_4f4JkULHnAv-ohEN_ulGg';
+        const user = {
+            _id: '5eaed6dbe29cf07a4caf2993',
+            email: '5eaed6dbe29cf07a4caf2993@mail.com',
+            role: 'USER'
+        };
+        const token = TestUtils.createTestAccessToken(user, 3600);
 
         // Act:
-        const result = await request.get('/user/reservations').query({
-            secret_token: userToken,
-            status: "ACCEPTED"
-        });
+        const result = await request.get('/user/reservations')
+            .set('Cookie', [`accessToken=${token}`])
+            .query({ status: "ACCEPTED" });
 
         // Assert:
         expect(result.status).toBe(200);
@@ -73,13 +86,17 @@ describe('GET /reservations', () => {
 
     it('When user has some rejected reservations then they are returned', async () => {
         // Arrange:
-        const userToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYWVkNmRiZTI5Y2YwN2E0Y2FmMjk5MyIsImVtYWlsIjoiNWVhZWQ2ZGJlMjljZjA3YTRjYWYyOTkzQG1haWwuY29tIiwicm9sZSI6IlVTRVIifSwiaWF0IjoxNTg4NTE3MDg0fQ.19pcUsDbPGhNcBgHkE2e0_4f4JkULHnAv-ohEN_ulGg';
+        const user = {
+            _id: '5eaed6dbe29cf07a4caf2993',
+            email: '5eaed6dbe29cf07a4caf2993@mail.com',
+            role: 'USER'
+        };
+        const token = TestUtils.createTestAccessToken(user, 3600);
 
         // Act:
-        const result = await request.get('/user/reservations').query({
-            secret_token: userToken,
-            status: "REJECTED"
-        });
+        const result = await request.get('/user/reservations')
+            .set('Cookie', [`accessToken=${token}`])
+            .query({ status: "REJECTED" });
 
         // Assert:
         expect(result.status).toBe(200);
@@ -89,13 +106,17 @@ describe('GET /reservations', () => {
 
     it('When user has no cancelled reservations then empty array is returned', async () => {
         // Arrange:
-        const userToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYWVkNmRiZTI5Y2YwN2E0Y2FmMjk5MyIsImVtYWlsIjoiNWVhZWQ2ZGJlMjljZjA3YTRjYWYyOTkzQG1haWwuY29tIiwicm9sZSI6IlVTRVIifSwiaWF0IjoxNTg4NTE3MDg0fQ.19pcUsDbPGhNcBgHkE2e0_4f4JkULHnAv-ohEN_ulGg';
+        const user = {
+            _id: '5eaed6dbe29cf07a4caf2993',
+            email: '5eaed6dbe29cf07a4caf2993@mail.com',
+            role: 'USER'
+        };
+        const token = TestUtils.createTestAccessToken(user, 3600);
 
         // Act:
-        const result = await request.get('/user/reservations').query({
-            secret_token: userToken,
-            status: "CANCELLED"
-        });
+        const result = await request.get('/user/reservations')
+            .set('Cookie', [`accessToken=${token}`])
+            .query({ status: "CANCELLED" });
 
         // Assert:
         expect(result.status).toBe(200);
@@ -105,4 +126,4 @@ describe('GET /reservations', () => {
 
 afterAll(() => {
     mongoose.connection.close();
-});
+}); 

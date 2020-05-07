@@ -5,23 +5,15 @@ import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder'
 import { parseObjectId } from '../common';
 import { userValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 import { body, query, validationResult } from 'express-validator';
+import { withAsyncRequestHandler } from '../common';
 
 const router = express();
 
-router.get('/reservations', [
-    tokenValidatorMW,
-    userValidatorMW,
-    query('status').notEmpty().withMessage('cannot be empty').bail()
-        .custom(status => {
-            const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
-            if (!availableStatuses.includes(status.toUpperCase()))
-                throw Error('illegal status');
-            return true;
-        })
-], async (req, res) => {
+router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
-    try {
+
+    withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
         const reservations = await queryBuilder
             .withUserId(req.user._id)
@@ -31,28 +23,20 @@ router.get('/reservations', [
             .select('id fromDate toDate pricePerDay totalPrice userId roomId')
             .build();
         res.status(200).json(reservations);
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ['Internal error'] });
-    }
+    });
 });
 
-router.post('/cancel-reservation/:reservationId', [
-    tokenValidatorMW,
-    userValidatorMW,
-    body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-], async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-    try {
-        const result = await changeReservationStatus(req.body.reservationId, 'CANCELLED');
-        return res.status(200).json({_id: result?._id ?? null});
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ['Internal error'] });
-    }
-});
+router.post('/cancel-reservation/:reservationId',
+    cancelReservationValidationMWs(), async (req, res) => {
+        if (validationResult(req).errors.length > 0)
+            return res.status(400).json(validationResult(req));
+
+        withAsyncRequestHandler(res, async () => {
+            const result = await changeReservationStatus(req.body.reservationId, 'CANCELLED');
+            return res.status(200).json({ _id: result?._id ?? null });
+        });
+    });
+
 
 router.post('/check-if-email-available', [
     body('email').isString().withMessage('must be string').bail()
@@ -61,13 +45,34 @@ router.post('/check-if-email-available', [
 ], async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
-    try {
+
+    withAsyncRequestHandler(res, async () => {
         const available = !await User.exists({ email: req.body.email })
         return res.status(200).json(available);
-    } catch (error) {
-        console.log(`Error: ${error}`);
-        res.status(500).json({ errors: ['Internal error'] });
-    }
+    });
 });
+
+function reservationsValidationMWs() {
+    return [
+        tokenValidatorMW,
+        userValidatorMW,
+        query('status').notEmpty().withMessage('cannot be empty').bail()
+            .custom(status => {
+                const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
+                if (!availableStatuses.includes(status.toUpperCase()))
+                    throw Error('illegal status');
+                return true;
+            })
+    ];
+}
+
+function cancelReservationValidationMWs() {
+    return [
+        tokenValidatorMW,
+        userValidatorMW,
+        body('reservationId').customSanitizer(roomId => parseObjectId(roomId))
+            .notEmpty().withMessage('invalid mongo ObjectId'),
+    ];
+}
 
 export default router;
