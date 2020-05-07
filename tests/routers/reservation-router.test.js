@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
 import 'regenerator-runtime';
 import Reservation from '../../src/models/reservation-model';
 import moment from 'moment';
-const parseIsoDatetime = require('../../src/common').parseIsoDatetime;
-const parseObjectId = require('../../src/common').parseObjectId;
+import { parseObjectId } from '../../src/common';
+import { connectTestDb } from '../../src/mongo-utils';
 
 require('dotenv').config();
 const request = supertest(app);
@@ -14,12 +14,8 @@ const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI
 
 const userId = '5ea54fe32d431462827c2c5e';
 
-beforeAll(() => {
-    mongoose.connect(process.env.MONGO_LOCAL_URI, {
-        dbName: process.env.DB_NAME_TEST,
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    });
+beforeAll(async () => {
+    await connectTestDb();
 });
 
 const roomForGettingReservation = '5ea5e3423724e5ff90e7df45';
@@ -749,7 +745,7 @@ describe('POST /reservation/cancel', () => {
             expect(reservation.status).toBe('CANCELLED');
             expect(moment.utc().subtract(20, "seconds").toDate() < reservation.updateDate).toBe(true);
             expect(moment.utc().add(20, "seconds").toDate() > reservation.updateDate).toBe(true);
-            
+
         } catch (error) {
             throw error;
         } finally {

@@ -1,8 +1,6 @@
 import passport from "passport";
 import bcryptjs from "bcryptjs";
 import User from '../models/user-model';
-const JWTStrategy = require('passport-jwt').Strategy;
-const ExtractJWT = require('passport-jwt').ExtractJwt;
 import 'regenerator-runtime';
 
 require('dotenv').config();

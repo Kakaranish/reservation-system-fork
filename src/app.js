@@ -23,7 +23,7 @@ app.use('/account', AccountRouter);
 app.use('/admin', AdminRouter);
 app.use('/user', UserRouter);
 
-app.use((err, req, res) => {
+app.use(async (err, req, res) => {
     console.log(`Error: ${err}`)
     return res.status(500).json({
         message: "Error: Server internal error"

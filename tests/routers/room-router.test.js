@@ -5,17 +5,14 @@ import path from "path";
 import Room from '../../src/models/room-model';
 import fs from 'fs';
 import '../../src/common';
+import { connectTestDb } from '../../src/mongo-utils';
 
 const request = supertest(app);
 const testUserToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU0ZmUzMmQ0MzE0NjI4MjdjMmM1ZSIsImVtYWlsIjoidXNlckBtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NzkxMTM4NX0.tPN6wyONN11o7fiY0Wptf-_SGAgynaqT_dKW5UUO9kI';
 const testAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlYTU1MDE1NjY4MTUxNjJmNzNiYWQ4MCIsImVtYWlsIjoiYWRtaW5AbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifSwiaWF0IjoxNTg3OTExNDA3fQ.pMoZZUYhgkiVKPhsT-uVO8n9FWEdiG4JrIJjSDcnX3g';
 
-beforeAll(() => {
-    mongoose.connect(process.env.MONGO_LOCAL_URI, {
-        dbName: process.env.DB_NAME_TEST,
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    });
+beforeAll(async () => {
+    await connectTestDb();
 });
 
 /*

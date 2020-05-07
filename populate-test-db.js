@@ -3,22 +3,18 @@ import User from './src/models/user-model';
 import Room from './src/models/room-model';
 import Reservation from './src/models/reservation-model';
 import moment, { ISO_8601 } from 'moment';
-const parseObjectId = require('./src/common').parseObjectId;
+import { parseObjectId } from './src/common';
+import { connectTestDb } from './src/mongo-utils';
+import { createRefreshToken } from './src/auth/auth-utils';
 
 require('dotenv').config();
-const currentDbVarName = process.env.MONGO_CURRENT_DB_URI;
-const dbName = process.env.DB_NAME_TEST;
 
 (async () => {
 
     // -------------------------------------------------------------------------
     // -- CONFIG
 
-    await mongoose.connect(process.env[currentDbVarName], {
-        dbName: dbName,
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    });
+    await connectTestDb();
     await mongoose.connection.dropDatabase();
 
     // -------------------------------------------------------------------------
@@ -79,6 +75,8 @@ const dbName = process.env.DB_NAME_TEST;
         lastName: "user-lastname",
         role: "USER"
     });
+    await createRefreshToken(user);
+
 
     const admin = new User({
         _id: mongoose.Types.ObjectId("5ea5501566815162f73bad80"),
@@ -88,6 +86,7 @@ const dbName = process.env.DB_NAME_TEST;
         lastName: 'admin-lastname',
         role: "ADMIN"
     });
+    await createRefreshToken(admin);
 
     await User.insertMany([
         user, admin
@@ -752,5 +751,6 @@ const dbName = process.env.DB_NAME_TEST;
 
     await mongoose.connection.close();
 
+    const dbName = process.env.DB_NAME_TEST;
     console.log(`OK - '${dbName}' has been populated.`);
 })();
