@@ -1,11 +1,6 @@
 import mongoose from 'mongoose';
 import * as Mocks from 'node-mocks-http';
-import {
-    preparePrice,
-    parseIsoDatetime,
-    parseObjectId,
-    queryOptionalDateIntervalValidatorMW
-} from '../src/common';
+import { preparePrice, parseIsoDatetime, parseObjectId, withAsyncRequestHandler } from '../src/common';
 
 describe('preparePrice', () => {
     it('When price is string without digits then null is returned', () => {
@@ -138,125 +133,54 @@ describe('parseObjectId', () => {
     })
 });
 
-describe('queryOptionalDateIntervalValidatorMW', () => {
-    it('When fromDate and toDate are not provided then no errors are returned', () => {
+describe('withAsyncRequestHandler', () => {
+    it('When action throws exception then error is sent', async () => {
         // Arrange:
-        const req = Mocks.createRequest({ query: {} });
         const res = Mocks.createResponse();
-        const next = jest.fn();
+        const action = jest.fn(async () => { throw Error('error') });
 
         // Act:
-        queryOptionalDateIntervalValidatorMW(req, res, next);
+        await withAsyncRequestHandler(res, action);
 
         // Assert:
-        expect(next).toBeCalledTimes(1);
-        expect(req.body.errors).toBeUndefined();
+        expect(action).toBeCalledTimes(1);
+        expect(res._getStatusCode()).toBe(500);
     });
 
-    test.each([undefined, '', 'INVALID'])
-        ('When fromDate is %s and toDate is valid then errors are returned', fromDate => {
-            // Arrange:
-            const req = Mocks.createRequest({
-                query: {
-                    fromDate: fromDate,
-                    toDate: '2020-01-01T00:00:00.000Z'
-                }
-            });
-            const res = Mocks.createResponse();
-            const next = jest.fn();
-
-            // Act:
-            queryOptionalDateIntervalValidatorMW(req, res, next);
-
-            // Assert:
-            expect(next).toBeCalledTimes(1);
-            expect(req.body.errors).toHaveLength(1);
-            expect(req.body.errors[0].param).toBe('fromDate');
-            expect(req.body.errors[0].msg.includes('ISO8601')).toBe(true);
-        });
-
-    test.each([undefined, '', 'INVALID'])
-        ('When toDate is %s and from is valid then errors are returned', toDate => {
-            // Arrange:
-            const req = Mocks.createRequest({
-                query: {
-                    fromDate: '2020-01-01T00:00:00.000Z',
-                    toDate: toDate
-                }
-            });
-            const res = Mocks.createResponse();
-            const next = jest.fn();
-
-            // Act:
-            queryOptionalDateIntervalValidatorMW(req, res, next);
-
-            // Assert:
-            expect(next).toBeCalledTimes(1);
-            expect(req.body.errors).toHaveLength(1);
-            expect(req.body.errors[0].param).toBe('toDate');
-            expect(req.body.errors[0].msg.includes('ISO8601')).toBe(true);
-        });
-
-    it('When fromDate and toDate are both invalid then errors are returned', () => {
+    it('When everything is ok then no error status is sent', async () => {
         // Arrange:
-        const req = Mocks.createRequest({
-            query: {
-                fromDate: 'INVALID',
-                toDate: 'INVALID'
-            }
-        });
         const res = Mocks.createResponse();
-        const next = jest.fn();
+        const action = jest.fn(async () => { });
 
         // Act:
-        queryOptionalDateIntervalValidatorMW(req, res, next);
+        await withAsyncRequestHandler(res, action);
 
         // Assert:
-        expect(next).toBeCalledTimes(1);
-        expect(req.body.errors).toHaveLength(2);
-        expect(req.body.errors[0].param).toBe('fromDate');
-        expect(req.body.errors[0].msg.includes('ISO8601')).toBe(true);
-        expect(req.body.errors[1].param).toBe('toDate');
-        expect(req.body.errors[1].msg.includes('ISO8601')).toBe(true);
-    });
-
-    it('When fromDate and toDate are both valid then no errors are returned', () => {
-        // Arrange:
-        const req = Mocks.createRequest({
-            query: {
-                fromDate: '2020-01-01T00:00:00.000Z',
-                toDate: '2020-01-01T00:00:00.000Z'
-            }
-        });
-        const res = Mocks.createResponse();
-        const next = jest.fn();
-
-        // Act:
-        queryOptionalDateIntervalValidatorMW(req, res, next);
-
-        // Assert:
-        expect(next).toBeCalledTimes(1);
-        expect(req.body.errors).toBeUndefined();
-    });
-
-    it('When toDate precedes fromDate then error is returned', () => {
-        // Arrange:
-        const req = Mocks.createRequest({
-            query: {
-                fromDate: '2020-01-02T00:00:00.000Z',
-                toDate: '2020-01-01T00:00:00.000Z'
-            }
-        });
-        const res = Mocks.createResponse();
-        const next = jest.fn();
-
-        // Act:
-        queryOptionalDateIntervalValidatorMW(req, res, next);
-
-        // Assert:
-        expect(next).toBeCalledTimes(1);
-        expect(req.body.errors).toHaveLength(1);
-        expect(req.body.errors[0].param).toBe('fromDate&toDate');
-        expect(req.body.errors[0].msg.includes('must precede')).toBe(true);
+        expect(action).toBeCalledTimes(1);
+        expect(res._getStatusCode()).toBe(200);
     });
 });
+
+// describe('middlewareContext', () => {
+//     it('Test', () => {
+//         middlewareContext();
+//     });
+// }); 
+
+// function middlewareContext() {
+//     const middlewares = [
+//         (req, res, next) => {
+//             console.log('1');
+//             next();
+//         },
+//         (req, res, next) => {
+//             console.log('2');
+//             next();
+//         }
+//     ];
+//     let req, res;
+//     middlewares[0](req, res, middlewares[1]);
+//     // for (let i = 0; i < middlewares.length; i++) {
+//     //     let next = middlewares[i + 1];
+//     // }
+// }

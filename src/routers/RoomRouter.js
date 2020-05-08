@@ -3,12 +3,9 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Room from "../models/room-model";
 import '../auth/passport-config';
-import * as dbQueries from '../DbQueries2';
-import {
-    withAsyncRequestHandler,
-    errorSummarizerMW,
-    queryDateIntervalValidatorMW
-} from '../common';
+import * as dbQueries from '../queries/db-queries';
+import { withAsyncRequestHandler } from '../common';
+import { errorSummarizerMW, queryDateIntervalValidatorMW } from '../common-middlewares'
 import { preparePrice, parseObjectId } from '../common';
 import { query, validationResult, param, header, body } from 'express-validator';
 import { tokenValidatorMW } from '../auth/auth-validators';

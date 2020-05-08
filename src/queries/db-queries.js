@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import moment from 'moment';
-import Reservation from './models/reservation-model';
-import Room from './models/room-model';
+import Reservation from '../models/reservation-model';
+import Room from '../models/room-model';
 
 // TODO: Change name to SetReservationStatus
 /**

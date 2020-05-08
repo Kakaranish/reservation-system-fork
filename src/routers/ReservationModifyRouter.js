@@ -6,7 +6,7 @@ import { withAsyncRequestHandler } from '../common';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import { parseObjectId } from '../common';
 import { userValidatorMW, adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
-import * as dbQueries from '../DbQueries2';
+import * as dbQueries from '../queries/db-queries';
 
 const router = express.Router({ mergeParams: true });
 

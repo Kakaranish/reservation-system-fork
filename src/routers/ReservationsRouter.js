@@ -10,11 +10,13 @@ import {
     preparePrice,
     parseIsoDatetime,
     parseObjectId,
-    withAsyncRequestHandler,
+    withAsyncRequestHandler
+} from '../common';
+import {
     userExistenceValidatorMW,
     queryOptionalDateIntervalValidatorMW,
     errorSummarizerMW
-} from '../common';
+} from '../common-middlewares';
 import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
