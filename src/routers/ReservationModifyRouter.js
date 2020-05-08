@@ -26,7 +26,7 @@ router.put('/accept', accceptReservationValidationMWs(), async (req, res) => {
         const canBeAccepted = !allReservations.some(r => r._id !== reservation._id
             && r.status === "ACCEPTED");
         if (!canBeAccepted) {
-            await dbQueries.changeReservationStatus(reservation._id, "REJECTED");
+            await dbQueries.setReservationStatus(reservation._id, "REJECTED");
             return res.status(400).json({
                 errors: [
                     'Reservation cannot be accepted because other accepted reservation on this date interval exists.',
@@ -62,7 +62,7 @@ router.put('/reject', [tokenValidatorMW, adminValidatorMW,
         return res.status(400).json(validationResult(req));
 
     withAsyncRequestHandler(res, async () => {
-        const result = await dbQueries.changeReservationStatus(req.params.id, "REJECTED")
+        const result = await dbQueries.setReservationStatus(req.params.id, "REJECTED")
         if (!result) return res.status(400).json({
             errors: [`there is no reservation with id ${req.body.reservationId}`]
         })
@@ -79,7 +79,7 @@ router.put('/cancel', [tokenValidatorMW, userValidatorMW,
         return res.status(400).json(validationResult(req));
 
     withAsyncRequestHandler(res, async () => {
-        const result = await dbQueries.changeReservationStatus(req.params.id, "CANCELLED")
+        const result = await dbQueries.setReservationStatus(req.params.id, "CANCELLED")
         if (!result) return res.status(400).json({
             errors: [`there is no reservation with id ${req.body.reservationId}`]
         })

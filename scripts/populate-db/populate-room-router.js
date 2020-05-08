@@ -12,7 +12,7 @@ export const populateRoomRouter = async () => {
     {
         const room = new Room({
             _id: parseObjectId('5ea55125e95cc70df70870f7'),
-            name: 'Conference Room 5ea55125e95cc70df70870f71',
+            name: 'Conference Room 5ea55125e95cc70df70870f7',
             location: 'Krakow',
             capacity: 20,
             pricePerDay: 300,

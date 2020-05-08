@@ -13,19 +13,17 @@ import FindReservationQueryBuilder from "../queries/FindReservationQueryBuilder"
 
 const router = express.Router();
 
-/*
-    ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-*/
 router.get('/', getRoomsValidationMiddlewares(), async (req, res) => {
     if (req.body.errors?.length > 0)
         return res.status(400).json({ errors: req.body.errors });
 
+    const numDaysBetween = req.query.toDate.diff(req.query.fromDate, 'days') + 1;
     withAsyncRequestHandler(res, async () => {
         const roomPreviews = await dbQueries.getAvailableRoomPreviews({
-            fromDate: req.query.fromDate,
-            toDate: req.query.toDate,
-            fromPrice: req.query.fromPrice,
-            toPrice: req.query.toPrice
+            fromDate: req.query.fromDate.toDate(),
+            toDate: req.query.toDate.toDate(),
+            fromPrice: req.query.fromPrice / numDaysBetween,
+            toPrice: req.query.toPrice / numDaysBetween
         });
         res.status(200).json(roomPreviews);
     });

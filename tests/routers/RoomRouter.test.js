@@ -103,8 +103,8 @@ describe('GET /rooms', () => {
             .query({
                 fromDate: "2010-01-04T00:00:00Z",
                 toDate: "2010-01-04T00:00:00Z",
-                fromPrice: "100",
-                toPrice: "200"
+                fromPrice: "0",
+                toPrice: "1000"
             });
 
         // Assert:
@@ -119,8 +119,8 @@ describe('GET /rooms', () => {
             .query({
                 fromDate: "2010-01-01T00:00:00Z",
                 toDate: "2010-01-02T00:00:00Z",
-                fromPrice: 100,
-                toPrice: 200
+                fromPrice: 0,
+                toPrice: 1000
             });
 
         // Assert:
@@ -137,6 +137,37 @@ describe('GET /rooms', () => {
                 toDate: "2010-01-04T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body).toHaveLength(0);
+    });
+
+    it('Date interval covers two days one reservation for one day and prices meetrequirements', async () => {
+        // Act
+        const result = await request.get('/rooms')
+            .query({
+                fromDate: "2010-01-01T00:00:00Z",
+                toDate: "2010-01-02T00:00:00Z",
+                fromPrice: 598,
+                toPrice: 601
+            });
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body).toHaveLength(1);
+        expect(result.body[0]._id).toBe("5ea55125e95cc70df70870f7")
+    });
+
+    it('Date interval covers two days one reservation for one day and price does not meet requirements', async () => {
+        // Act
+        const result = await request.get('/rooms')
+            .query({
+                fromDate: "2010-01-01T00:00:00Z",
+                toDate: "2010-01-02T00:00:00Z",
+                fromPrice: 601,
+                toPrice: 602
             });
 
         // Assert:
