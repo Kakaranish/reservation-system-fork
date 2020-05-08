@@ -4,18 +4,25 @@ import { query, validationResult, param, body } from 'express-validator';
 import Room from '../models/room-model';
 import User from '../models/user-model';
 import Reservation from '../models/reservation-model';
-import { withAsyncRequestHandler } from '../common';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import ExistReservationQueryBuilder from '../queries/ExistReservationQueryBuilder';
-import { preparePrice, parseIsoDatetime, parseObjectId } from '../common';
+import {
+    preparePrice,
+    parseIsoDatetime,
+    parseObjectId,
+    withAsyncRequestHandler,
+    userExistenceValidatorMW,
+    queryOptionalDateIntervalValidatorMW,
+    errorSummarizerMW
+} from '../common';
 import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
 
 // Probably admin only
 router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
+    if (req.body.errors?.length > 0)
+        return res.status(400).json({ errors: req.body.errors });
 
     withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
@@ -31,35 +38,24 @@ router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     });
 });
 
-router.get('/reservations/user/:id', tokenValidatorMW, reservationsForUserValidationMWs(),
-    async (req, res) => {
-        const errors = validationResult(req).errors;
-        if (errors.length > 0) {
-            if (errors.some(e => e.param === 'id' && e.msg.includes('access token')))
-                return res.sendStatus(401)
-            return res.status(400).json(validationResult(req));
-        }
-        if ((!req.query.fromDate && req.query.toDate) ||
-            (req.query.fromDate && !req.query.toDate)) {
-            return res.status(400).json({ errors: ['fromDate and toDate must be both provided or neither'] });
-        }
+router.get('/reservations/user', reservationsForUserValidationMWs(), async (req, res) => {
+    if (req.body.errors) return res.status(400).json({ errors: req.body.errors });
 
-        withAsyncRequestHandler(res, async () => {
-            const queryBuilder = new FindReservationQueryBuilder();
-            const query = queryBuilder
-                .withUserId(req.user._id)
-                .withPopulatedUserData('-_id email firstName lastName')
-                .withPopulatedRoomData('-_id name location photoUrl')
-                .select('id fromDate toDate pricePerDay totalPrice userId roomId');
-            if (req.query.fromDate) query = query.overlappingDateIterval(
-                req.query.fromDate.toDate(), req.query.toDate.toDate());
-            if (req.query.status) query = query.withStatus(req.query.status);
+    withAsyncRequestHandler(res, async () => {
+        const queryBuilder = new FindReservationQueryBuilder();
+        const query = queryBuilder
+            .withUserId(req.user._id)
+            .withPopulatedUserData('-_id email firstName lastName')
+            .withPopulatedRoomData('-_id name location photoUrl')
+            .select('id fromDate toDate pricePerDay totalPrice userId roomId');
+        if (req.query.fromDate) query = query.overlappingDateIterval(
+            req.query.fromDate.toDate(), req.query.toDate.toDate());
+        if (req.query.status) query = query.withStatus(req.query.status);
 
-            const reservations = await query.build();
-            res.status(200).json(reservations);
-        });
-    }
-);
+        const reservations = await query.build();
+        res.status(200).json(reservations);
+    });
+});
 
 // USER & ADMIN
 router.post('/reservations', createReservationValidationMiddlewares(),
@@ -122,15 +118,9 @@ router.delete('/reservations/:id', [tokenValidatorMW, adminValidatorMW,
 
 function reservationsValidationMWs() {
     return [
-        query('fromDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty().withMessage('not in ISO8601 format'),
-        query('toDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty().withMessage('not in ISO8601 format').bail()
-            .custom((toDate, { req }) => {
-                if (toDate.toDate() < req.query.fromDate.toDate())
-                    throw Error('illegal date interval - fromDate must precede toDate');
-                return true
-            }),
+        tokenValidatorMW,
+        adminValidatorMW,
+        queryOptionalDateIntervalValidatorMW,
         query('status').optional()
             .custom(status => {
                 const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
@@ -145,37 +135,24 @@ function reservationsValidationMWs() {
                 return await Room.exists({ _id: id }).then(exists => {
                     if (!exists) return Promise.reject('room with given id does not exist')
                 });
-            })
+            }),
+        errorSummarizerMW
     ];
 }
 
 function reservationsForUserValidationMWs() {
     return [
-        param('id').customSanitizer(id => parseObjectId(id))
-            .notEmpty().withMessage('invalid mongo ObjectId').bail()
-            .custom(async (id, { req }) => {
-                return await User.exists({ _id: id }).then(exists => {
-                    if (!exists) return Promise.reject('user does not exist')
-                    if (id.toHexString() !== req.user._id) return Promise.reject('access token');
-                });
-            }),
-        query('fromDate').optional().customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty().withMessage('not in ISO8601 format'),
-        query('toDate').optional().customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty().withMessage('not in ISO8601 format').bail()
-            .custom((toDate, { req }) => {
-                if (!req.query.fromDate) return true;
-                if (toDate.toDate() < req.query.fromDate.toDate())
-                    throw Error('illegal date interval - fromDate must precede toDate');
-                return true
-            }),
+        tokenValidatorMW,
+        userExistenceValidatorMW,
+        queryOptionalDateIntervalValidatorMW,
         query('status').optional()
             .custom(status => {
                 const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
                 if (!availableStatuses.includes(status.toUpperCase()))
                     throw Error('illegal status');
                 return true;
-            })
+            }),
+        errorSummarizerMW
     ];
 }
 

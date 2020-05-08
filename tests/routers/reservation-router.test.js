@@ -13,13 +13,13 @@ let testUserAccessToken = TestUtils.createTestAccessToken({
     _id: '5ea54fe32d431462827c2c5e',
     email: 'user@mail.com',
     role: 'USER'
-}, 3600);
+}, 3600 * 1000);
 
 let testAdminAccessToken = TestUtils.createTestAccessToken({
     _id: '5ea5501566815162f73bad80',
     email: 'admin@mail.com',
     role: 'ADMIN'
-}, 3600);
+}, 3600 * 1000);
 
 const userId = '5ea54fe32d431462827c2c5e';
 
@@ -27,17 +27,34 @@ beforeAll(async () => {
     await connectTestDb();
 });
 
-const roomForGettingReservation = '5ea5e3423724e5ff90e7df45';
-const reservationsForRoom = [
-    '5ea5e6b2f0322ac00ff284ac',
-    '5ea5e3beb9f264420ea8799d'
-];
 
 describe('GET /reservations', () => {
+    it('When no access token is provided then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations');
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('no/invalid refresh'));
+    });
+
+    it('When access token other than for admin is provided then error is returned', async () => {
+        // Act:
+        const result = await request.get('/reservations')
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('admin role required'));
+    });
+
     it('When fromDate or toDate is not provided then error is returned', async () => {
         // Act:
         const result = await request.get('/reservations')
-            .query({ fromDate: '2020-01-01T00:00:00.000Z' });
+            .query({ fromDate: '2020-01-01T00:00:00.000Z' })
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
         expect(result.status).toBe(400);
@@ -46,28 +63,14 @@ describe('GET /reservations', () => {
         expect(result.body.errors[0].msg.includes('ISO8601'));
     });
 
-    it('When fromDate or toDate is not invalid then error is returned', async () => {
+    it('When fromDate or toDate is not valid then error is returned', async () => {
         // Act:
         const result = await request.get('/reservations')
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2020-01-01T00:00:00.000Z',
                 toDate: 'INVALID'
-            });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('toDate');
-        expect(result.body.errors[0].msg.includes('ISO8601'));
-    });
-
-    it('When fromDate or toDate is not invalid then error is returned', async () => {
-        // Act:
-        const result = await request.get('/reservations')
-            .query({
-                fromDate: '2020-01-01T00:00:00.000Z',
-                toDate: 'INVALID'
-            });
+            })
 
         // Assert:
         expect(result.status).toBe(400);
@@ -79,6 +82,7 @@ describe('GET /reservations', () => {
     it('When toDate precedes fromDate then error is returned', async () => {
         // Act:
         const result = await request.get('/reservations')
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2020-01-02T00:00:00.000Z',
                 toDate: '2020-01-01T00:00:00.000Z'
@@ -87,13 +91,14 @@ describe('GET /reservations', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('toDate');
-        expect(result.body.errors[0].msg.includes('illegal date interval'));
+        expect(result.body.errors[0].param).toBe('fromDate&toDate');
+        expect(result.body.errors[0].msg.includes('must precede'));
     });
 
     it('When roomId is provided but it is invalid then error is returned', async () => {
         // Act:
         const result = await request.get('/reservations')
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2020-01-01T00:00:00.000Z',
                 toDate: '2020-01-01T00:00:00.000Z',
@@ -110,6 +115,7 @@ describe('GET /reservations', () => {
     it('When status is provided but it is invalid then error is returned', async () => {
         // Act:
         const result = await request.get('/reservations')
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2020-01-01T00:00:00.000Z',
                 toDate: '2020-01-01T00:00:00.000Z',
@@ -129,6 +135,7 @@ describe('GET /reservations', () => {
 
         // Act:
         const result = await request.get(`/reservations`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2020-01-01T00:00:00.000Z',
                 toDate: '2020-01-01T00:00:00.000Z',
@@ -145,6 +152,7 @@ describe('GET /reservations', () => {
     it('When everything is ok and optional args are not provided then reservations are returned', async () => {
         // Act:
         const result = await request.get(`/reservations`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2000-12-31T00:00:00.000Z',
                 toDate: '2000-12-31T00:00:00.000Z',
@@ -163,6 +171,7 @@ describe('GET /reservations', () => {
 
         // Act:
         const result = await request.get(`/reservations`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2000-12-31T00:00:00.000Z',
                 toDate: '2000-12-31T00:00:00.000Z',
@@ -182,6 +191,7 @@ describe('GET /reservations', () => {
 
         // Act:
         const result = await request.get(`/reservations`)
+            .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .query({
                 fromDate: '2020-01-02T00:00:00.000Z',
                 toDate: '2020-01-06T00:00:00.000Z',
@@ -199,65 +209,40 @@ describe('GET /reservations', () => {
     });
 });
 
-describe('GET /reservations/user/:id', () => {
+describe('GET /reservations/user', () => {
     it('When access token is invalid or not provided then error is returned', async () => {
-        // Arrange:
-        const userId = 'ANY';
-
         // Act:
-        const result = await request.get(`/reservations/user/${userId}`);
+        const result = await request.get(`/reservations/user`);
 
         // Assert:
         expect(result.status).toBe(401);
     });
 
-    it('When user id is invalid or not provided then error is returned', async () => {
+    it('When user included in token does not exist then error is returned', async () => {
         // Arrange:
-        const userId = 'INVALID';
+        const anyUser = {
+            _id: '5eb55361e136a40e06caafd4', // any
+            email: 'anyuser@mail.com',
+            role: 'USER'
+        };
+        const anyUserToken = TestUtils.createTestAccessToken(anyUser, 60 * 1000);
 
         // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+        const result = await request.get(`/reservations/user`)
+            .set('Cookie', [`accessToken=${anyUserToken}`]);
 
         // Assert:
-        expect(result.status).toBe(400);
+        expect(result.status).toBe(401);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('id');
-        expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
-    });
-
-    it('When user with given id does not exist then error is returned', async () => {
-        // Arrange:
-        const userId = '5eb47fcb0d5932db1fbe0d71';
-
-        // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].param).toBe('token');
         expect(result.body.errors[0].msg.includes('user does not exist')).toBe(true);
     });
 
-    it('When access token does not authorize user then 401 status is returned', async () => {
-        // Arrange:
-        const userId = '5ea5501566815162f73bad80';
-
+    test.each([undefined, ''])('When fromDate or toDate is invalid/not - %s - provided then error is returned', async fromDate => {
         // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
-
-        // Assert:
-        expect(result.status).toBe(401);
-    });
-
-    it('When fromDate or toDate is invalid/not provided then error is returned', async () => {
-        // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
+        const result = await request.get(`/reservations/user`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .query({ fromDate: 'INVALID', toDate: '2020-01-01T00:00:00.000Z' });
+            .query({ fromDate: fromDate, toDate: '2020-01-01T00:00:00.000Z' });
 
         // Assert:
         expect(result.status).toBe(400);
@@ -266,47 +251,22 @@ describe('GET /reservations/user/:id', () => {
         expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
     });
 
-    it('When toDate is provided and fromDate is not then error is returned', async () => {
-        // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .query({ fromDate: '2020-01-01T00:00:00.000Z', toDate: 'INVALID' });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('toDate');
-        expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
-    });
-
-    it('When fromDate is provided and toDate is not then error is returned', async () => {
-        // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .query({ fromDate: '2020-01-01T00:00:00.000Z' });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('must be both')).toBe(true);
-    });
-
     it('When toDate precedes fromDate is not then error is returned', async () => {
         // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
+        const result = await request.get(`/reservations/user`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .query({ fromDate: '2020-01-02T00:00:00.000Z', toDate: '2020-01-01T00:00:00.000Z' });
 
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('toDate');
+        expect(result.body.errors[0].param).toBe('fromDate&toDate');
         expect(result.body.errors[0].msg.includes('fromDate must precede')).toBe(true);
     });
 
     it('When status is provided and its value is unknown then error is returned', async () => {
         // Act:
-        const result = await request.get(`/reservations/user/${userId}`)
+        const result = await request.get(`/reservations/user`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .query({ status: 'UNKNOWN_STATUS' });
 

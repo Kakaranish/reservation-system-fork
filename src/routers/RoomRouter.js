@@ -9,13 +9,11 @@ import {
     errorSummarizerMW,
     queryDateIntervalValidatorMW
 } from '../common';
+import { preparePrice, parseObjectId } from '../common';
 import { query, validationResult, param, header, body } from 'express-validator';
 import { tokenValidatorMW } from '../auth/auth-validators';
 import FindReservationQueryBuilder from "../queries/FindReservationQueryBuilder";
 
-const preparePrice = require('../common').preparePrice;
-const parseIsoDatetime = require('../common').parseIsoDatetime;
-const parseObjectId = require('../common').parseObjectId;
 const router = express.Router();
 
 /*

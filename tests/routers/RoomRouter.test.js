@@ -38,7 +38,7 @@ let testAdminAccessToken = TestUtils.createTestAccessToken({
     2010-01-06 - 2010-01-30
 */
 
-describe('/rooms', () => {
+describe('GET /rooms', () => {
     it('When one of dates is not iso then errors are returned in json', async () => {
         // Arrange:
         const invalidIsoDate = "01.01.2010";
@@ -145,7 +145,7 @@ describe('/rooms', () => {
     });
 });
 
-describe('/rooms/:roomId', () => {
+describe('GET /rooms/:roomId', () => {
     it("When roomId is invalid ObjectId then error list is returned", async () => {
         // Arrange:
         const roomId = '123';
@@ -191,7 +191,7 @@ describe('/rooms/:roomId', () => {
     });
 });
 
-describe('/rooms/:id/reservations-preview', () => {
+describe('GET /rooms/:id/reservations-preview', () => {
     test.each([null, '', undefined])('When room id is invalid - %s - then error is returned', async id => {
         // Act:
         const result = await request.get(`/rooms/${id}/reservations-preview`);
