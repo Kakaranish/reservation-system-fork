@@ -400,34 +400,6 @@ describe('userExistenceValidatorMW', () => {
     });
 });
 
-describe('asd', () => {
-    it('sadas', async () => {
-        const app = express();
-        const router = express.Router();
-
-        const request = supertest(app);
-
-
-        router.get('/test', (req, res, next) => {
-            console.log('XD');
-            next();
-        });
-        app.use('/', router);
-        await request.get('/test');
-    })
-
-    it('asdasd', async () => {
-        const app = express();
-        const request = supertest(app);
-        app.get('/test', (req, res, next) => {
-            console.log('XD');
-            next();
-        });
-
-    });
-})
-
-
 afterAll(() => {
     mongoose.connection.close();
 });
