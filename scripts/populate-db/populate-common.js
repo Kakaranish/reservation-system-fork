@@ -4,8 +4,8 @@ import Reservation from '../../src/models/reservation-model';
 import { parseObjectId, parseIsoDatetime } from '../../src/common';
 
 export const dummyInterval = {
-    fromDate: parseIsoDatetime('2020-04-01T00:00:00.000Z').toDate(),
-    toDate: parseIsoDatetime('2020-04-30T00:00:00.000Z').toDate()
+    fromDate: parseIsoDatetime('2010-01-01T00:00:00.000Z').toDate(),
+    toDate: parseIsoDatetime('2010-01-30T00:00:00.000Z').toDate()
 };
 
 export const commonUser = new User({
@@ -40,7 +40,7 @@ export const createDummyReservation = (userId, roomId) => {
         pricePerDay: 400,
         totalPrice: 400,
         status: 'ACCEPTED',
-        createDate: parseIsoDatetime('2020-01-01T00:00:00.000Z').toDate(),
-        updateDate: parseIsoDatetime('2020-01-01T00:00:00.000Z').toDate()
+        createDate: parseIsoDatetime('2000-01-01T00:00:00.000Z').toDate(),
+        updateDate: parseIsoDatetime('2000-01-01T00:00:00.000Z').toDate()
     });
 }

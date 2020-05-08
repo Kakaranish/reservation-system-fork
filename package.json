@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npx nodemon --inspect=2137 --exec babel-node src/start.js",
     "debug": "npx nodemon --exec babel-node src/start.js",
-    "populate-test-db": "npx babel-node populate-test-db.js",
+    "populate-test-db": "npx babel-node scripts/populate-db/populate.js",
     "test": "jest"
   },
   "author": "Stanislaw Gruz",

@@ -29,25 +29,25 @@ let testAdminAccessToken = TestUtils.createTestAccessToken({
 /*
     Room1: 5ea55125e95cc70df70870f7
     Reservations: 
-    2020-04-03 - 2020-04-03
-    2020-04-05 - 2020-04-30
+    2010-01-03 - 2010-01-03
+    2010-01-05 - 2010-01-30
 
     Room2: 5ea551627698ad8c1c5a4759
     Reservations: 
-    2020-04-02 - 2020-04-04
-    2020-04-06 - 2020-04-30
+    2010-01-02 - 2010-01-04
+    2010-01-06 - 2010-01-30
 */
 
 describe('/rooms', () => {
     it('When one of dates is not iso then errors are returned in json', async () => {
         // Arrange:
-        const invalidIsoDate = "01.02.2020";
+        const invalidIsoDate = "01.01.2010";
 
         // Act:
         const result = await request.get('/rooms')
             .query({
                 fromDate: invalidIsoDate,
-                toDate: "2020-04-16T00:00:00Z",
+                toDate: "2010-01-01T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
             });
@@ -55,8 +55,25 @@ describe('/rooms', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe("fromDate");
+        expect(result.body.errors[0].param).toBe('fromDate');
         expect(result.body.errors[0].msg.includes('ISO8601')).toBe(true);
+    });
+
+    it('When toDate precedes fromDate then error is returned', async () => {
+        // Act:
+        const result = await request.get('/rooms')
+            .query({
+                fromDate: '2010-01-02T00:00:00.000Z',
+                toDate: '2010-01-01T00:00:00.000Z',
+                fromPrice: 100,
+                toPrice: 200
+            });
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('fromDate&toDate');
+        expect(result.body.errors[0].msg.includes('must precede')).toBe(true);
     });
 
     test.each([
@@ -67,8 +84,8 @@ describe('/rooms', () => {
         // Act:
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-16T00:00:00Z",
-                toDate: "2020-04-16T00:00:00Z",
+                fromDate: '2010-01-01T00:00:00.000Z',
+                toDate: '2010-01-01T00:00:00.000Z',
                 fromPrice: price,
                 toPrice: 200
             });
@@ -76,7 +93,7 @@ describe('/rooms', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe("fromPrice");
+        expect(result.body.errors[0].param).toBe('fromPrice');
         expect(result.body.errors[0].msg.includes('price')).toBe(true);
     });
 
@@ -84,8 +101,8 @@ describe('/rooms', () => {
         // Act
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-04T00:00:00Z",
-                toDate: "2020-04-04T00:00:00Z",
+                fromDate: "2010-01-04T00:00:00Z",
+                toDate: "2010-01-04T00:00:00Z",
                 fromPrice: "100",
                 toPrice: "200"
             });
@@ -100,8 +117,8 @@ describe('/rooms', () => {
         // Act
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-01T00:00:00Z",
-                toDate: "2020-04-02T00:00:00Z",
+                fromDate: "2010-01-01T00:00:00Z",
+                toDate: "2010-01-02T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
             });
@@ -116,8 +133,8 @@ describe('/rooms', () => {
         // Act
         const result = await request.get('/rooms')
             .query({
-                fromDate: "2020-04-02T00:00:00Z",
-                toDate: "2020-04-04T00:00:00Z",
+                fromDate: "2010-01-02T00:00:00Z",
+                toDate: "2010-01-04T00:00:00Z",
                 fromPrice: 100,
                 toPrice: 200
             });
@@ -143,34 +160,34 @@ describe('/rooms/:roomId', () => {
 
     it("When room does not exist empty json is returned", async () => {
         // Arrange:
-        const roomId = '5ea551627698ad8c1c5a4758';
+        const anyRoomId = '5ea551627698ad8c1c5a4758';
 
         // Act:
-        const result = await request.get(`/rooms/${roomId}`);
+        const result = await request.get(`/rooms/${anyRoomId}`);
 
         // Assert:
         expect(result.status).toBe(200);
         expect(result.body).toBe(null);
     });
 
-    it("When room exists then it's returned", async () => {
+    it('When room exists then it is returned', async () => {
         // Arrange:
-        const roomId = '5ea551627698ad8c1c5a4759';
+        const roomId = '5eb57deb0af1b7089cecace3';
 
         // Act:
         const result = await request.get(`/rooms/${roomId}`);
 
         // Assert:
         expect(result.status).toBe(200);
-        expect(result.body.message).toBe(undefined);
-        expect(result.body.name).toBe('Conference Room #2');
-        expect(result.body.location).toBe('Warsaw');
-        expect(result.body.capacity).toBe(10);
-        expect(result.body.pricePerDay).toBe(400.99);
-        expect(result.body.description).toBe('Some description 2');
-        expect(result.body.photoUrl).toBe('/some/path2');
-        expect(result.body.amenities).toHaveLength(4);
-        expect(result.body.dows).toHaveLength(3);
+        expect(result.body.errors).toBeUndefined();
+        expect(result.body.name).toBe('Conference Room 5eb57deb0af1b7089cecace3');
+        expect(result.body.location).toBe('Krakow');
+        expect(result.body.capacity).toBe(20);
+        expect(result.body.pricePerDay).toBe(300);
+        expect(result.body.description).toBe('Some description 1');
+        expect(result.body.photoUrl).toBe('/some/path');
+        expect(result.body.amenities).toHaveLength(3);
+        expect(result.body.dows).toHaveLength(5);
     });
 });
 
@@ -196,7 +213,7 @@ describe('/rooms/:id/reservations-preview', () => {
         // Assert:
         expect(result.status).toBe(200);
         expect(result.body.errors).toBeUndefined();
-        expect(result.body).toHaveLength(2);
+        expect(result.body).toHaveLength(3);
         expect(result.body.some(r => r._id == '5eb56dd66537e93af7419ab7')).toBe(true);
         expect(result.body.some(r => r._id == '5eb56dfbb499cd1fe08ee942')).toBe(true);
         expect(result.body.some(r => r._id == '5eb56df6b5de2905eac47329')).toBe(false);

@@ -4,7 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import Room from "../models/room-model";
 import '../auth/passport-config';
 import * as dbQueries from '../DbQueries2';
-import { withAsyncRequestHandler } from '../common';
+import {
+    withAsyncRequestHandler,
+    errorSummarizerMW,
+    queryDateIntervalValidatorMW
+} from '../common';
 import { query, validationResult, param, header, body } from 'express-validator';
 import { tokenValidatorMW } from '../auth/auth-validators';
 import FindReservationQueryBuilder from "../queries/FindReservationQueryBuilder";
@@ -18,8 +22,8 @@ const router = express.Router();
     ADD PRICES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
 router.get('/', getRoomsValidationMiddlewares(), async (req, res) => {
-    if (validationResult(req).errors.length)
-        return res.status(400).json(validationResult(req));
+    if (req.body.errors?.length > 0)
+        return res.status(400).json({ errors: req.body.errors });
 
     withAsyncRequestHandler(res, async () => {
         const roomPreviews = await dbQueries.getAvailableRoomPreviews({
@@ -102,18 +106,14 @@ router.post('/', tokenValidatorMW, createRoomValidationMiddlewares(), async (req
 
 function getRoomsValidationMiddlewares() {
     return [
-        query('fromDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty()
-            .withMessage('not in ISO8601 format'),
-        query('toDate').customSanitizer(date => parseIsoDatetime(date))
-            .notEmpty()
-            .withMessage('not in ISO8601 format'),
+        queryDateIntervalValidatorMW,
         query('fromPrice').customSanitizer(price => preparePrice(price))
             .notEmpty()
             .withMessage('price must match regex: \d+(\.\d{1,2})?'),
         query('toPrice').customSanitizer(price => preparePrice(price))
             .notEmpty()
-            .withMessage('price must match regex: \d+(\.\d{1,2})?')
+            .withMessage('price must match regex: \d+(\.\d{1,2})?'),
+        errorSummarizerMW
     ];
 }
 

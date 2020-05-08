@@ -9,6 +9,8 @@ import { createRefreshToken } from '../../src/auth/auth-utils';
 import * as Common from './populate-common';
 import {populateReservations} from "./populate-reservation-router"
 import { populateTemp } from './temp';
+import { populateRoomRouter } from './populate-room-router';
+import { populateReservationModifyRouter } from './populate-reservation-modify-router';
 
 require('dotenv').config();
 
@@ -25,8 +27,10 @@ require('dotenv').config();
 
     // ---  POPULATE  ----------------------------------------------------------
 
-    await populateReservations();
     await populateTemp();
+    await populateReservations();
+    await populateReservationModifyRouter();
+    await populateRoomRouter();
 
     // -------------------------------------------------------------------------
 
