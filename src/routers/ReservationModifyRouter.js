@@ -11,7 +11,7 @@ import * as dbQueries from '../DbQueries2';
 const router = express.Router({ mergeParams: true });
 
 // ADMIN
-router.post('/accept', accceptReservationValidationMWs(), async (req, res) => {
+router.put('/accept', accceptReservationValidationMWs(), async (req, res) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
 
@@ -54,7 +54,7 @@ router.post('/accept', accceptReservationValidationMWs(), async (req, res) => {
 });
 
 // ADMIN
-router.post('/reject', [tokenValidatorMW, adminValidatorMW,
+router.put('/reject', [tokenValidatorMW, adminValidatorMW,
     param('id').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {
@@ -71,7 +71,7 @@ router.post('/reject', [tokenValidatorMW, adminValidatorMW,
 });
 
 // USER
-router.post('/cancel', [tokenValidatorMW, userValidatorMW,
+router.put('/cancel', [tokenValidatorMW, userValidatorMW,
     param('id').customSanitizer(roomId => parseObjectId(roomId))
         .notEmpty().withMessage('invalid mongo ObjectId'),
 ], async (req, res) => {

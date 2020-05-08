@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import * as AuthUtils from '../auth/auth-utils';
-import { body, validationResult, cookie } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 import RefreshToken from '../models/refresh-token-model';
 import '../auth/passport-config';
 const router = express();

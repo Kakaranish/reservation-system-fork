@@ -33,7 +33,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const reservationId = 'ANY';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/accept`);
+        const result = await request.put(`/reservations/${reservationId}/modify/accept`);
 
         // Assert:
         expect(result.status).toBe(401);
@@ -46,7 +46,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const reservationId = 'ANY';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+        const result = await request.put(`/reservations/${reservationId}/modify/accept`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`]);
 
         // Assert:
@@ -60,7 +60,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const reservationId = 'ANY';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+        const result = await request.put(`/reservations/${reservationId}/modify/accept`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
@@ -75,7 +75,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const reservationId = '5eac25f135b036c9168abfbe';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+        const result = await request.put(`/reservations/${reservationId}/modify/accept`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
@@ -90,7 +90,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const reservationId = '5eac23434fcb4261665be561';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+        const result = await request.put(`/reservations/${reservationId}/modify/accept`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
@@ -105,7 +105,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const reservationId = '5eac2249372b7676ffb9c88e';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/accept`)
+        const result = await request.put(`/reservations/${reservationId}/modify/accept`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
@@ -134,7 +134,7 @@ describe('PUT /reservations/:id/modify/accept', () => {
         const alreadyCancelledReservationId = '5eac358cac8b270b1c1863f0';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationToAcceptId}/modify/accept`)
+        const result = await request.put(`/reservations/${reservationToAcceptId}/modify/accept`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`])
 
         // Assert:
@@ -165,7 +165,7 @@ describe('PUT /reservations/:id/modify/reject', () => {
         const reservationId = 'INVALID';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/reject`);
+        const result = await request.put(`/reservations/${reservationId}/modify/reject`);
 
         // Assert:
         expect(result.status).toBe(401);
@@ -178,7 +178,7 @@ describe('PUT /reservations/:id/modify/reject', () => {
         const reservationId = 'INVALID';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/reject`)
+        const result = await request.put(`/reservations/${reservationId}/modify/reject`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`]);
 
         // Assert:
@@ -192,7 +192,7 @@ describe('PUT /reservations/:id/modify/reject', () => {
         const reservationId = 'INVALID';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/reject`)
+        const result = await request.put(`/reservations/${reservationId}/modify/reject`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
@@ -207,7 +207,7 @@ describe('PUT /reservations/:id/modify/reject', () => {
         const randomReservationId = '5eae996fececcab610a66b62';
 
         // Act:
-        const result = await request.post(`/reservations/${randomReservationId}/modify/reject`)
+        const result = await request.put(`/reservations/${randomReservationId}/modify/reject`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         // Assert:
@@ -226,7 +226,7 @@ describe('PUT /reservations/:id/modify/reject', () => {
             throw Error('TEST CANT BE RUN - RESERVATION DOES IS ALREADY REJECTED');
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/reject`)
+        const result = await request.put(`/reservations/${reservationId}/modify/reject`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`]);
 
         try {
@@ -255,7 +255,7 @@ describe('PUT /reservations/:id/modify/cancel', () => {
         const reservationId = 'INVALID';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
+        const result = await request.put(`/reservations/${reservationId}/modify/cancel`)
             .send({ reservationId: 'INVALID' });
 
         // Assert:
@@ -269,7 +269,7 @@ describe('PUT /reservations/:id/modify/cancel', () => {
         const reservationId = 'INVALID';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
+        const result = await request.put(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testAdminAccessToken}`])
             .send({ reservationId: 'INVALID' });
 
@@ -284,7 +284,7 @@ describe('PUT /reservations/:id/modify/cancel', () => {
         const reservationId = 'INVALID';
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
+        const result = await request.put(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({ reservationId: 'INVALID' });
 
@@ -300,7 +300,7 @@ describe('PUT /reservations/:id/modify/cancel', () => {
         const reservationId = '5eae996fececcab610a66b62'; // Random
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
+        const result = await request.put(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({ reservationId: reservationId });
 
@@ -320,7 +320,7 @@ describe('PUT /reservations/:id/modify/cancel', () => {
             throw Error('TEST CANT BE RUN - RESERVATION DOES IS ALREADY CANCELLED');
 
         // Act:
-        const result = await request.post(`/reservations/${reservationId}/modify/cancel`)
+        const result = await request.put(`/reservations/${reservationId}/modify/cancel`)
             .set('Cookie', [`accessToken=${testUserAccessToken}`])
             .send({ reservationId: reservationId });
 
