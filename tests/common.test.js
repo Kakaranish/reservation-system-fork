@@ -4,7 +4,7 @@ import {
     preparePrice,
     parseIsoDatetime,
     parseObjectId,
-    queryDateIntervalValidatorMW
+    queryOptionalDateIntervalValidatorMW
 } from '../src/common';
 
 describe('preparePrice', () => {
@@ -138,7 +138,7 @@ describe('parseObjectId', () => {
     })
 });
 
-describe('queryDateIntervalValidatorMW', () => {
+describe('queryOptionalDateIntervalValidatorMW', () => {
     it('When fromDate and toDate are not provided then no errors are returned', () => {
         // Arrange:
         const req = Mocks.createRequest({ query: {} });
@@ -146,7 +146,7 @@ describe('queryDateIntervalValidatorMW', () => {
         const next = jest.fn();
 
         // Act:
-        queryDateIntervalValidatorMW(req, res, next);
+        queryOptionalDateIntervalValidatorMW(req, res, next);
 
         // Assert:
         expect(next).toBeCalledTimes(1);
@@ -166,7 +166,7 @@ describe('queryDateIntervalValidatorMW', () => {
             const next = jest.fn();
 
             // Act:
-            queryDateIntervalValidatorMW(req, res, next);
+            queryOptionalDateIntervalValidatorMW(req, res, next);
 
             // Assert:
             expect(next).toBeCalledTimes(1);
@@ -188,7 +188,7 @@ describe('queryDateIntervalValidatorMW', () => {
             const next = jest.fn();
 
             // Act:
-            queryDateIntervalValidatorMW(req, res, next);
+            queryOptionalDateIntervalValidatorMW(req, res, next);
 
             // Assert:
             expect(next).toBeCalledTimes(1);
@@ -209,7 +209,7 @@ describe('queryDateIntervalValidatorMW', () => {
         const next = jest.fn();
 
         // Act:
-        queryDateIntervalValidatorMW(req, res, next);
+        queryOptionalDateIntervalValidatorMW(req, res, next);
 
         // Assert:
         expect(next).toBeCalledTimes(1);
@@ -232,7 +232,7 @@ describe('queryDateIntervalValidatorMW', () => {
         const next = jest.fn();
 
         // Act:
-        queryDateIntervalValidatorMW(req, res, next);
+        queryOptionalDateIntervalValidatorMW(req, res, next);
 
         // Assert:
         expect(next).toBeCalledTimes(1);
@@ -251,7 +251,7 @@ describe('queryDateIntervalValidatorMW', () => {
         const next = jest.fn();
 
         // Act:
-        queryDateIntervalValidatorMW(req, res, next);
+        queryOptionalDateIntervalValidatorMW(req, res, next);
 
         // Assert:
         expect(next).toBeCalledTimes(1);

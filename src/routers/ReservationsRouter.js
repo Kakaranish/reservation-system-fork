@@ -19,7 +19,7 @@ import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
 
-// Probably admin only
+// ADMIN
 router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     if (req.body.errors?.length > 0)
         return res.status(400).json({ errors: req.body.errors });
@@ -38,6 +38,7 @@ router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     });
 });
 
+// USER
 router.get('/reservations/user', reservationsForUserValidationMWs(), async (req, res) => {
     if (req.body.errors) return res.status(400).json({ errors: req.body.errors });
 
@@ -57,7 +58,7 @@ router.get('/reservations/user', reservationsForUserValidationMWs(), async (req,
     });
 });
 
-// USER & ADMIN
+// USER, ADMIN
 router.post('/reservations', createReservationValidationMiddlewares(),
     async (req, res, next) => {
         if (validationResult(req).errors.length > 0)
