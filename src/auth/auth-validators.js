@@ -22,7 +22,6 @@ export const tokenValidatorMW = async (req, res, next) => {
         errors: ['cannot refresh access token - such user does not exist']
     });
     
-
     res.cookie('accessToken', newAccessToken, { httpOnly: true });
     setUserInReq(req, refreshToken);
     next();
@@ -37,6 +36,13 @@ export const adminValidatorMW = (req, res, next) => {
 export const userValidatorMW = (req, res, next) => {
     if (req?.user?.role !== 'USER')
         return res.status(401).json({ errors: ['user role required'] });
+    next();
+}
+
+export const identityValidatorMW = (req, res, next) => {
+    if(!req.allowedId) next();
+    if(req.allowedId !== req.user?._id)
+        return res.status(401).json({ errors: ['unauthorized access'] });
     next();
 }
 

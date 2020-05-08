@@ -40,7 +40,8 @@ router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
 
 // USER
 router.get('/reservations/user', reservationsForUserValidationMWs(), async (req, res) => {
-    if (req.body.errors) return res.status(400).json({ errors: req.body.errors });
+    if (req.body.errors?.length > 0)
+        return res.status(400).json({ errors: req.body.errors });
 
     withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
@@ -48,12 +49,13 @@ router.get('/reservations/user', reservationsForUserValidationMWs(), async (req,
             .withUserId(req.user._id)
             .withPopulatedUserData('-_id email firstName lastName')
             .withPopulatedRoomData('-_id name location photoUrl')
-            .select('id fromDate toDate pricePerDay totalPrice userId roomId');
+            .select('id fromDate toDate pricePerDay totalPrice userId roomId')
+            .build();
         if (req.query.fromDate) query = query.overlappingDateIterval(
             req.query.fromDate.toDate(), req.query.toDate.toDate());
         if (req.query.status) query = query.withStatus(req.query.status);
 
-        const reservations = await query.build();
+        const reservations = await query;
         res.status(200).json(reservations);
     });
 });

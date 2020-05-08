@@ -4,7 +4,6 @@ import fileUpload from "express-fileupload";
 import RoomRouter from "./routers/RoomRouter";
 import ReservationsRouter from "./routers/ReservationsRouter";
 import AuthRouter from "./routers/AuthRouter";
-import UserRouter from './routers/UserRouter';
 import ReservationModifyRouter from './routers/ReservationModifyRouter';
 import cookieParser from 'cookie-parser';
 import './auth/passport-config';
@@ -21,13 +20,10 @@ app.use('/rooms', RoomRouter);
 app.use('/', ReservationsRouter);
 app.use('/reservations/:id/modify', ReservationModifyRouter);
 app.use('/auth', AuthRouter);
-app.use('/user', UserRouter);
 
-app.use(async (err, req, res) => {
-    console.log(`Error: ${err}`)
-    return res.status(500).json({
-        message: "Error: Server internal error"
-    });
+app.use(async (req, res) => {
+    console.log('Error: Unknown internal error');
+    if (res) res.status(500).json({ errors: ['Internal error'] });
 });
 
 export default app;
