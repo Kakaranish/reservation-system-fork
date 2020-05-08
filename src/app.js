@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import fileUpload from "express-fileupload";
 import RoomRouter from "./routers/RoomRouter";
-import ReservationsRouter from "./routers/ReservationsRouter";
+import ReservationsRouter from "./routers/ReservationRouter";
 import AuthRouter from "./routers/AuthRouter";
 import ReservationModifyRouter from './routers/ReservationModifyRouter';
 import cookieParser from 'cookie-parser';
