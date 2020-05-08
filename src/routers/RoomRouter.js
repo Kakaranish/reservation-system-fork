@@ -7,6 +7,7 @@ import * as dbQueries from '../DbQueries2';
 import { withAsyncRequestHandler } from '../common';
 import { query, validationResult, param, header, body } from 'express-validator';
 import { tokenValidatorMW } from '../auth/auth-validators';
+import FindReservationQueryBuilder from "../queries/FindReservationQueryBuilder";
 
 const preparePrice = require('../common').preparePrice;
 const parseIsoDatetime = require('../common').parseIsoDatetime;
@@ -41,6 +42,25 @@ router.get('/:id', [
     withAsyncRequestHandler(res, async () => {
         const room = await Room.findById(req.params.id);
         return res.status(200).json(room);
+    });
+});
+
+router.get('/:id/reservations-preview', [
+    param('id').customSanitizer(id => parseObjectId(id))
+        .notEmpty().withMessage('invalid mongo ObjectId')
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+
+    withAsyncRequestHandler(res, async () => {
+        const queryBuilder = new FindReservationQueryBuilder();
+        const query = queryBuilder
+            .withRoomId(req.params.id.toHexString())
+            .withStatus('ACCEPTED')
+            .select('_id fromDate toDate')
+            .build();
+        const reservations = await query;
+        return res.status(200).json(reservations);
     });
 });
 

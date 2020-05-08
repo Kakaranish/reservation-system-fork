@@ -174,6 +174,35 @@ describe('/rooms/:roomId', () => {
     });
 });
 
+describe('/rooms/:id/reservations-preview', () => {
+    test.each([null, '', undefined])('When room id is invalid - %s - then error is returned', async id => {
+        // Act:
+        const result = await request.get(`/rooms/${id}/reservations-preview`);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
+    });
+
+    it('When there are accepted reservations then they are returned', async () => {
+        // Arrange:
+        const roomId = '5eb56bf24630ccf6ebcd8853';
+
+        // Act:
+        const result = await request.get(`/rooms/${roomId}/reservations-preview`);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body.errors).toBeUndefined();
+        expect(result.body).toHaveLength(2);
+        expect(result.body.some(r => r._id == '5eb56dd66537e93af7419ab7')).toBe(true);
+        expect(result.body.some(r => r._id == '5eb56dfbb499cd1fe08ee942')).toBe(true);
+        expect(result.body.some(r => r._id == '5eb56df6b5de2905eac47329')).toBe(false);
+    });
+});
+
 describe('POST /rooms', () => {
     it('When no token is provided then unathorized status is returned', async () => {
         ``
