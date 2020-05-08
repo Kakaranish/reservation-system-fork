@@ -160,27 +160,3 @@ describe('withAsyncRequestHandler', () => {
         expect(res._getStatusCode()).toBe(200);
     });
 });
-
-// describe('middlewareContext', () => {
-//     it('Test', () => {
-//         middlewareContext();
-//     });
-// }); 
-
-// function middlewareContext() {
-//     const middlewares = [
-//         (req, res, next) => {
-//             console.log('1');
-//             next();
-//         },
-//         (req, res, next) => {
-//             console.log('2');
-//             next();
-//         }
-//     ];
-//     let req, res;
-//     middlewares[0](req, res, middlewares[1]);
-//     // for (let i = 0; i < middlewares.length; i++) {
-//     //     let next = middlewares[i + 1];
-//     // }
-// }
