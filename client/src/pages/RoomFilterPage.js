@@ -44,8 +44,8 @@ const RoomFilterPage = () => {
     };
 
     const [priceInterval, setPriceInterval] = useState({
-        start: 50,
-        end: 150
+        start: 100,
+        end: 300
     });
 
     const priceIntervalOnChange = value => {
@@ -96,8 +96,8 @@ const RoomFilterPage = () => {
                     {priceInterval.start} PLN
                 </div>
                 <div className="col-8">
-                    <Range min={0} max={500} defaultValue={[priceInterval.start, priceInterval.end]}
-                        step={10} onChange={priceIntervalOnChange} />
+                    <Range min={0} max={2000} defaultValue={[priceInterval.start, priceInterval.end]}
+                        step={20} onChange={priceIntervalOnChange} />
                 </div>
                 <div className="col-2">
                     {priceInterval.end} PLN

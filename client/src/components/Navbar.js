@@ -40,13 +40,13 @@ const Navbar = (props) => {
         </div>
 
         {
-          !props.email ? null
+          !props.user ? null
             : <ul className="navbar-nav ml-auto mt-lg-0">
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle" href="#"
                   id="navbarDropdown" role="button" data-toggle="dropdown"
                   aria-haspopup="true" aria-expanded="false">
-                  {props.email}
+                  {props.user.email}
                 </a>
 
                 <div className="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown" onClick={handleLogout}>

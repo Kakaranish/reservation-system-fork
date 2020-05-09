@@ -49,15 +49,25 @@ router.post('/logout', async (req, res) => {
 
 router.post('/verify', async (req, res) => {
     const accessToken = decodeJwtAccessToken(req.cookies.accessToken);
-    if (accessToken) return res.status(200).json({ email: accessToken.email });
+    if (accessToken) return res.status(200).json({
+        user: {
+            email: accessToken.email,
+            role: accessToken.role
+        }
+    });
 
     const refreshToken = await decodeJwtRefreshToken(req.cookies.refreshToken);
-    if (!refreshToken) return res.status(200).json({ email: null });
+    if (!refreshToken) return res.status(200).json({ user: null });
 
     const newAccessToken = await refreshAccessToken(req.cookies.refreshToken);
-    if (!newAccessToken) return res.status(200).json({ email: null });
+    if (!newAccessToken) return res.status(200).json({ user: null });
     res.cookie('accessToken', newAccessToken, { httpOnly: true });
-    res.status(200).json({ email: refreshToken.email });
+    res.status(200).json({
+        user: {
+            email: refreshToken.email,
+            role: refreshToken.role
+        }
+    });
 });
 
 function registerValidators() {

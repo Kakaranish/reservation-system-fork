@@ -9,7 +9,8 @@ import CreatedReservationModal from '../components/CreatedRervationModal';
 
 const images = require.context('../assets/images/amenities', true);
 
-const RoomPage = ({ match }) => {
+const RoomPage = (props) => {
+    const match = props.match;
     const roomId = match.params.id;
 
     const dateIntervalToGenerate = {
@@ -30,7 +31,7 @@ const RoomPage = ({ match }) => {
                 setMessage(`Unable to get room with id ${roomId}. Some error occured :C`);
             }
         }
-        if(isObjectIdValid(roomId)) getRoom(roomId);
+        if (isObjectIdValid(roomId)) getRoom(roomId);
     }, []);
 
     const [selectedInterval, setSelectedInterval] = useState(null);
@@ -127,13 +128,20 @@ const RoomPage = ({ match }) => {
                                 onSelectedInterval={onSelectedInterval}
                                 dateIntervalToGenerate={dateIntervalToGenerate}
                                 dows={room.dows}
-                                roomId={roomId} />
+                                roomId={roomId}
+                                email={props.user?.email} />
                         </div>
 
                         {
                             !selectedInterval
                                 ? <div className="col-12 mt-3">
-                                    <button type="submit" className="btn btn-block secondary-btn" disabled={true}>Make reservation</button>
+                                    <button type="submit" className="btn btn-block secondary-btn" disabled={true}>
+                                        {
+                                            props.user
+                                                ? <>Make reservation</>
+                                                : <>Log in to make reservation</>
+                                        }
+                                    </button>
                                 </div>
                                 : <>
                                     <div className="col-12">

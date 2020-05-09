@@ -253,7 +253,9 @@ describe('POST /verify', () => {
             .set('Cookie', [`accessToken=${accessToken}`]);
 
         // Assert:
-        expect(result.body.email).toBe('user@mail.com');
+        expect(result.body.user).not.toBe(null);
+        expect(result.body.user.email).toBe('user@mail.com');
+        expect(result.body.user.role).toBe('USER');
     });
 
     it('When refresh token is expired/not provided but cannot be refreshed then no email is returned', async () => {
@@ -273,7 +275,7 @@ describe('POST /verify', () => {
             ]);
 
         // Assert:
-        expect(result.body.email).toBe(null);
+        expect(result.body.user).toBe(null);
     });
 
     it('When access token is expired but no refresh token is provided then null email is returned', async () => {
@@ -290,7 +292,7 @@ describe('POST /verify', () => {
             .set('Cookie', [`accessToken=${accessToken}`]);
 
         // Assert:
-        expect(result.body.email).toBe(null);
+        expect(result.body.user).toBe(null);
     });
 
     it('When access token is expired but can be refreshed then email is returned', async () => {
@@ -311,7 +313,9 @@ describe('POST /verify', () => {
             ]);
 
         // Assert:
-        expect(result.body.email).toBe('user@mail.com');
+        expect(result.body.user).not.toBe(null);
+        expect(result.body.user.email).toBe('user@mail.com');
+        expect(result.body.user.role).toBe('USER');
     });
 });
 

@@ -11,7 +11,7 @@ import settingsIcon from '../assets/icons/sidebar/settings.svg';
 import helpIcon from '../assets/icons/sidebar/help.svg';
 import RoomFilterPage from "../pages/RoomFilterPage";
 
-const Sidebar = () => {
+const Sidebar = (props) => {
     return (
         <div className="border-right sidebar" id="sidebar-wrapper">
             <div id="sidebar-title">
@@ -35,20 +35,25 @@ const Sidebar = () => {
                     </div>
                 </Link>
 
+                {
+                    !props.user ? <></>
+                        : <Link to="/user/manage-reservations">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                <img src={reservationsIcon} className="icon" />
+                                <>Your Reservations</>
+                            </div>
+                        </Link>
+                }
 
-                <Link to="/user/manage-reservations">
-                    <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                        <img src={reservationsIcon} className="icon" />
-                        <>Your Reservations</>
-                    </div>
-                </Link>
-
-                <Link to="/admin/manage-reservations">
-                    <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                        <img src={settingsIcon} className="icon" />
-                        <>Admin Reservations</>
-                    </div>
-                </Link>
+                {
+                    props.user?.role !== 'ADMIN' ? <></>
+                        : <Link to="/admin/manage-reservations">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                <img src={settingsIcon} className="icon" />
+                                <>Admin Reservations</>
+                            </div>
+                        </Link>
+                }
 
                 <Link to={TestPage}>
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">

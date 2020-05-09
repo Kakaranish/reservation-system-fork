@@ -13,8 +13,8 @@ const resolveQueryParams = queryParams => {
 
 	if (fromDate.isAfter(toDate)) [fromDate, toDate] = [toDate, fromDate];
 
-	let fromPrice = parseInt(queryParams.fromPrice) || 50;
-	let toPrice = parseInt(queryParams.toPrice) || 150;
+	let fromPrice = parseInt(queryParams.fromPrice) || 0;
+	let toPrice = parseInt(queryParams.toPrice) || 2000;
 	if (fromPrice > toPrice) [fromPrice, toPrice] = [toPrice, fromPrice];
 
 	return {
@@ -34,6 +34,7 @@ const RoomsPage = (props) => {
 		const intervalLength = resolvedQueryParams.toDate.diff(resolvedQueryParams.fromDate, 'days') + 1;
 		const getRooms = async queryParams => {
 			const result = await axios.get('/rooms', {
+				validateStatus: false,
 				params: {
 					fromPrice: queryParams.fromPrice,
 					toPrice: queryParams.toPrice,
@@ -42,9 +43,9 @@ const RoomsPage = (props) => {
 				}
 			});
 
-			result.data.rooms.forEach(room =>
-				room.totalPrice = room.pricePerDay * intervalLength);
-			setRooms(result.data.rooms);
+			const rooms = result.data ?? [];
+			rooms.forEach(r => r.totalPrice = r.pricePerDay * intervalLength);
+			setRooms(rooms);
 		};
 		getRooms(resolvedQueryParams);
 	}, []);

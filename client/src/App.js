@@ -21,7 +21,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Switch>
-        <DashboardLayoutRoute path="/" component={TestPage} authRequired={false} exact />
+        <DashboardLayoutRoute path="/" component={TestPage} exact />
         <DashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
         <DashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
         <DashboardLayoutRoute path="/create-room" component={CreateRoomPage} />

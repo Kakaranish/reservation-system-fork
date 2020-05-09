@@ -3,7 +3,6 @@ import Checkbox from "../components/Checkbox";
 import ImageUploader from "../components/ImageUploader";
 import axios from 'axios';
 
-
 const CreateRoomPage = () => {
     const [file, setFile] = useState(null);
     const [validationErrors, setValidationErrors] = useState(null);
@@ -29,8 +28,7 @@ const CreateRoomPage = () => {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
-            }
-            );
+            });
             const roomId = res.data.roomId;
             window.location = `/rooms/${roomId}`;
         } catch (error) {
