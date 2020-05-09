@@ -165,7 +165,8 @@ describe('/login', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('no user with such email')).toBe(true);
+        expect(result.body.errors[0].param).toBe('email&password');
+        expect(result.body.errors[0].msg.includes('invalid email or password')).toBe(true);
     });
 
     it('When provided password is not valid then error is returned', async () => {
@@ -179,7 +180,8 @@ describe('/login', () => {
         // Assert:
         expect(result.status).toBe(400);
         expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].includes('wrong password')).toBe(true);
+        expect(result.body.errors[0].param).toBe('email&password');
+        expect(result.body.errors[0].msg.includes('invalid email or password')).toBe(true);
     });
 
     it('When everything is ok then tokens are sent as cookies', async () => {

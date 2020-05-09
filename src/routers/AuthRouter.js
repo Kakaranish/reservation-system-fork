@@ -13,7 +13,6 @@ router.post('/register', registerValidators(), async (req, res) => {
     passport.authenticate('register', { session: false },
         async (error, user) => {
             if (!user) return res.status(400).json({ errors: [error] });
-
             const refreshToken = await AuthUtils.createRefreshToken(user);
             res.cookie('accessToken', AuthUtils.createAccessToken(user), { httpOnly: true });
             res.cookie('refreshToken', refreshToken, { httpOnly: true });
@@ -25,8 +24,14 @@ router.post('/register', registerValidators(), async (req, res) => {
 router.post('/login', loginValidators(), async (req, res, next) => {
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
-    passport.authenticate('login', async (error, user) => {
-        if (!user) return res.status(400).json({ errors: [error] });
+    passport.authenticate('login', async (_error, user) => {
+        if (!user) return res.status(400).json({
+            errors: [{
+                param: 'email&password',
+                msg: 'invalid email or password',
+                location: 'body'
+            }]
+        });
 
         const refreshTokenDoc = await RefreshToken.findOne({ userId: user._id });
         res.cookie('accessToken', AuthUtils.createAccessToken(user), { httpOnly: true });
