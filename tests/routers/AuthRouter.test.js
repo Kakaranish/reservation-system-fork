@@ -215,6 +215,29 @@ describe('/login', () => {
     });
 });
 
+describe('POST /auth/logout', () => {
+    it('When there are tokens in request then they are cleared', async () => {
+        // Arrange:
+        const user = {
+            _id: '123123',
+            email: 'user@mail.com',
+            role: 'USER'
+        };
+        const accessToken = createTestAccessToken(user, 60 * 1000);
+        const refreshToken = createTestRefreshToken(user);
+
+        // Act:
+        const result = await request.post('/auth/logout')
+            .set('Cookie', [
+                `accessToken=${accessToken};refreshToken=${refreshToken.token}`
+            ]);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.cookies).toBeUndefined();
+    });
+});
+
 describe('POST /verify', () => {
     it('When access token is not expired then email is returned', async () => {
         // Arrange:

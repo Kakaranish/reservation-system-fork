@@ -41,6 +41,12 @@ router.post('/login', loginValidators(), async (req, res, next) => {
     })(req, res, next);
 });
 
+router.post('/logout', async (req, res) => {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.sendStatus(200);
+});
+
 router.post('/verify', async (req, res) => {
     const accessToken = decodeJwtAccessToken(req.cookies.accessToken);
     if (accessToken) return res.status(200).json({ email: accessToken.email });
