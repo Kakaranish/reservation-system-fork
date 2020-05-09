@@ -1,15 +1,15 @@
 import React from 'react';
 import { Route } from "react-router-dom";
-import EmptyLayout from "./EmptyLayout";
+import AuthLayout from "./AuthLayout";
 
-const EmptyLayoutRoute = ({ component: Component, ...rest }) => {
+const AuthLayoutRoute = ({ component: Component, ...rest }) => {
     return (
         <Route {...rest} render={matchProps => (
-            <EmptyLayout>
+            <AuthLayout>
                 <Component {...matchProps} />
-            </EmptyLayout>
+            </AuthLayout>
         )} />
     )
 };
 
-export default EmptyLayoutRoute;
+export default AuthLayoutRoute;
