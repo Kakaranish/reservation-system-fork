@@ -3,7 +3,7 @@ import { Redirect, Route } from "react-router-dom";
 import axios from 'axios';
 import DashbordLayout from "./DashbordLayout";
 
-const AuthDashboardLayoutRoute = ({ component: Component, ...rest }) => {
+const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
     const [state, setState] = useState({ loading: true, email: null })
 
     useEffect(() => {
@@ -31,4 +31,4 @@ const AuthDashboardLayoutRoute = ({ component: Component, ...rest }) => {
     )} />
 };
 
-export default AuthDashboardLayoutRoute;
+export default DashboardLayoutRoute;

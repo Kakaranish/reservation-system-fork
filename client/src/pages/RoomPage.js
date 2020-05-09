@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ObjectID } from "mongodb";
 import axios from 'axios';
 import '../assets/css/RoomPage.css';
 import noImagePlaceholder from "../assets/icons/no-image.svg";
@@ -31,7 +30,7 @@ const RoomPage = ({ match }) => {
                 setMessage(`Unable to get room with id ${roomId}. Some error occured :C`);
             }
         }
-        if (ObjectID.isValid(roomId)) getRoom(roomId);
+        if(isObjectIdValid(roomId)) getRoom(roomId);
     }, []);
 
     const [selectedInterval, setSelectedInterval] = useState(null);
@@ -39,7 +38,7 @@ const RoomPage = ({ match }) => {
         setSelectedInterval(passedSelectedInterval)
     }
 
-    if (!ObjectID.isValid(roomId)) {
+    if (!isObjectIdValid(roomId)) {
         return (
             <div className="row">
                 <div className="col-12">
@@ -176,5 +175,10 @@ const calculateTotalPrice = (room, selectedInterval) => {
     const days = selectedInterval.toDate.diff(selectedInterval.fromDate, 'days') + 1;
     return room.pricePerDay * days;
 };
+
+const isObjectIdValid = objectId => {
+    var checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
+    return checkForHexRegExp.test(objectId);
+}
 
 export default RoomPage;

@@ -3,7 +3,6 @@ import { BrowserRouter, Switch } from "react-router-dom";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
-import DashboardLayoutRoute from './pages/layouts/DashbordLayoutRoute';
 import TestPage from './pages/TestPage';
 import RoomFilterPage from './pages/RoomFilterPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -15,24 +14,24 @@ import CreateRoomPage from './pages/CreateRoomPage';
 import AdminManageReservations from './pages/admin/ManageReservations';
 import UserManageReservations from './pages/user/ManageReservations';
 import EmptyLayoutRoute from './pages/layouts/EmptyLayoutRoute';
-import AuthDashboardLayoutRoute from './pages/layouts/AuthDashboardLayoutRoute';
+import DashboardLayoutRoute from './pages/layouts/DashboardLayoutRoute';
 
 const App = () => {
 
   return (
     <BrowserRouter>
       <Switch>
-        <AuthDashboardLayoutRoute path="/" component={TestPage} authRequired={false} exact />
-        <AuthDashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
-        <AuthDashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
-        <AuthDashboardLayoutRoute path="/create-room" component={CreateRoomPage} />
-        <AuthDashboardLayoutRoute path="/admin/manage-reservations" component={AdminManageReservations} />
-        <AuthDashboardLayoutRoute path="/user/manage-reservations" component={UserManageReservations} />
-        <AuthDashboardLayoutRoute path="/rooms" component={RoomsPage} />
+        <DashboardLayoutRoute path="/" component={TestPage} authRequired={false} exact />
+        <DashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
+        <DashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
+        <DashboardLayoutRoute path="/create-room" component={CreateRoomPage} />
+        <DashboardLayoutRoute path="/admin/manage-reservations" component={AdminManageReservations} />
+        <DashboardLayoutRoute path="/user/manage-reservations" component={UserManageReservations} />
+        <DashboardLayoutRoute path="/rooms" component={RoomsPage} />
         <EmptyLayoutRoute path="/login" component={LoginPage} />
         <EmptyLayoutRoute path="/register" component={RegisterPage} />
 
-        <AuthDashboardLayoutRoute component={NotFoundPage} />
+        <DashboardLayoutRoute component={NotFoundPage} />
       </Switch>
     </BrowserRouter>
   );
