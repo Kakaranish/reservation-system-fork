@@ -4,28 +4,28 @@ import axios from 'axios';
 import DashbordLayout from "./DashbordLayout";
 
 const AuthDashboardLayoutRoute = ({ component: Component, ...rest }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [email, setEmail] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const auth = async () => {
-            const userEmail = (await axios.post('/auth/verify')).data.email;
-            setIsAuthenticated(userEmail ? true : false);
+            const result = (await axios.post('/auth/verify'));
+            setEmail(result.data.email);
             setLoading(false);
         };
         auth();
     }, []);
 
-    if (loading) return <div>Loading...</div>
+    if (loading) return <DashbordLayout></DashbordLayout>;
     else return <Route {...rest} render={matchProps => (
-        isAuthenticated ?
-            <DashbordLayout>
-                <Component {...matchProps} />
+        email ?
+            <DashbordLayout email={email}>
+                <Component {...matchProps} email={email} />
             </DashbordLayout>
             : (() => {
                 alert('You must be logged in. Redirecting to login screen...');
                 return <Redirect to={{ pathname: '/login' }} />
-            })()
+            })
     )} />
 };
 
