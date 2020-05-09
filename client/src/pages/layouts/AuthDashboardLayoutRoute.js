@@ -11,6 +11,7 @@ const AuthDashboardLayoutRoute = ({ component: Component, ...rest }) => {
         const auth = async () => {
             const result = (await axios.post('/auth/verify'));
             setEmail(result.data.email);
+            if (!result.data.email) alert('You must be logged in. Redirecting to login screen...');
             setLoading(false);
         };
         auth();
@@ -22,10 +23,7 @@ const AuthDashboardLayoutRoute = ({ component: Component, ...rest }) => {
             <DashbordLayout email={email}>
                 <Component {...matchProps} email={email} />
             </DashbordLayout>
-            : (() => {
-                alert('You must be logged in. Redirecting to login screen...');
-                return <Redirect to={{ pathname: '/login' }} />
-            })
+            : <Redirect to={{ pathname: '/login' }} />
     )} />
 };
 
