@@ -4,6 +4,7 @@ import * as AuthUtils from '../auth/auth-utils';
 import { body, validationResult } from 'express-validator';
 import RefreshToken from '../models/refresh-token-model';
 import '../auth/passport-config';
+import { decodeJwtAccessToken, decodeJwtRefreshToken, refreshAccessToken } from '../auth/auth-utils';
 const router = express();
 
 router.post('/register', registerValidators(), async (req, res) => {
@@ -38,6 +39,19 @@ router.post('/login', loginValidators(), async (req, res, next) => {
         res.cookie('refreshToken', refreshTokenDoc.token, { httpOnly: true });
         return res.sendStatus(200);
     })(req, res, next);
+});
+
+router.post('/verify', async (req, res) => {
+    const accessToken = decodeJwtAccessToken(req.cookies.accessToken);
+    if (accessToken) return res.status(200).json({ email: accessToken.email });
+
+    const refreshToken = await decodeJwtRefreshToken(req.cookies.refreshToken);
+    if (!refreshToken) return res.status(200).json({ email: null });
+
+    const newAccessToken = await refreshAccessToken(req.cookies.refreshToken);
+    if (!newAccessToken) return res.status(200).json({ email: null });
+    res.cookie('accessToken', newAccessToken, { httpOnly: true });
+    res.status(200).json({ email: refreshToken.email });
 });
 
 function registerValidators() {
