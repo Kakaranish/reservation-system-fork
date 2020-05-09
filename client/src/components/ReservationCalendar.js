@@ -4,7 +4,7 @@ import moment from "moment";
 import axios from "axios";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToGenerate }) => {
+const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToGenerate, email }) => {
     const localizer = momentLocalizer(moment);
     moment.locale('ko', {
         week: {
@@ -23,12 +23,8 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
     useEffect(() => {
         const getEventsForRoomReservations = async (roomId) => {
             try {
-                const result = await axios.get(`/accepted-reservations/${roomId}`, {
-                    params: {
-                        fromDate: dateIntervalToGenerate.start.format('YYYY-MM-DD'),
-                        toDate: dateIntervalToGenerate.end.format("YYYY-MM-DD")
-                    }
-                });
+                const result = await axios.get(`/rooms/${roomId}/reservations-preview`,
+                    { validateStatus: false });
                 const reservations = result.data;
                 const reservationEvents = mapReservationsToEvents(reservations);
                 setEvents({
@@ -44,6 +40,10 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
     }, []);
 
     const onSelectSlot = slotInfo => {
+        if(!email) {
+            alert('Log in to make reservation');
+            return;
+        }
         const userDateInterval = {
             start: moment(slotInfo.start).startOf('day'),
             end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds')
