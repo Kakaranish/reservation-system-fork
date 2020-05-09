@@ -22,17 +22,17 @@ const App = () => {
   return (
     <BrowserRouter>
       <Switch>
-        <AuthDashboardLayoutRoute path="/" component={TestPage} exact />
-        <DashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
-        <DashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
-        <DashboardLayoutRoute path="/create-room" component={CreateRoomPage} />
-        <DashboardLayoutRoute path="/admin/manage-reservations" component={AdminManageReservations} />
-        <DashboardLayoutRoute path="/user/manage-reservations" component={UserManageReservations} />
-        <DashboardLayoutRoute path="/rooms" component={RoomsPage} />
+        <AuthDashboardLayoutRoute path="/" component={TestPage} authRequired={false} exact />
+        <AuthDashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
+        <AuthDashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
+        <AuthDashboardLayoutRoute path="/create-room" component={CreateRoomPage} />
+        <AuthDashboardLayoutRoute path="/admin/manage-reservations" component={AdminManageReservations} />
+        <AuthDashboardLayoutRoute path="/user/manage-reservations" component={UserManageReservations} />
+        <AuthDashboardLayoutRoute path="/rooms" component={RoomsPage} />
         <EmptyLayoutRoute path="/login" component={LoginPage} />
         <EmptyLayoutRoute path="/register" component={RegisterPage} />
 
-        <DashboardLayoutRoute component={NotFoundPage} />
+        <AuthDashboardLayoutRoute component={NotFoundPage} />
       </Switch>
     </BrowserRouter>
   );

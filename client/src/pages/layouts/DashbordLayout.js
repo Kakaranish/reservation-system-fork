@@ -7,7 +7,7 @@ const DashboardLayout = (props) => {
         <div className="d-flex" id="wrapper">
             <Sidebar />
             <div id="page-content-wrapper">
-                <Navbar />
+                <Navbar email={props.email} />
                 <div className="container-fluid py-4 px-5">
                     {props.children}
                 </div>

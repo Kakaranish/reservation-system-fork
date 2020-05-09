@@ -10,38 +10,26 @@ const RegisterPage = () => {
 
     const handleOnSubmit = async event => {
         event.preventDefault();
-
-        const errors = [];
         const formData = new FormData(event.target);
-        if (formData.get("password") !== formData.get("confirmedPassword")) {
-            errors.push("Passwords are different");
+
+        let formDataJson = {};
+        for (const [key, value] of formData.entries()) {
+            formDataJson[key] = value;
         }
 
-        const result = await axios.post('/user/check-if-email-available', {}, {
-            data: {
-                email: formData.get("email")
-            }
-        });
-
-        if (result.data.available === false) {
-            errors.push("Other user has account with this email");
-        }
-
-        if (errors.length > 0) {
-            setValidationErrors(errors);
+        if (formDataJson.password !== formDataJson.confirmedPassword) {
+            setValidationErrors(['Passwords are different']);
             return;
         }
 
-        await axios.post('/account/singup', {}, {
-            data: {
-                email: formData.get("email"),
-                password: formData.get("password"),
-                firstName: formData.get("firstName"),
-                lastName: formData.get("lastName")
-            }
-        });
+        const result = await axios.post('/auth/register', formDataJson, { validateStatus: false });
+        if(result.data.errors?.length > 0) {
+            setValidationErrors(result.data.errors.map(e => e.msg ?? e));
+            return;
+        }
 
-        window.location = `/login`;
+        setValidationErrors(null);
+        window.location = `/`;
     }
 
     return (
@@ -118,11 +106,13 @@ const RegisterPage = () => {
                                                 ? null
                                                 :
                                                 <div className="col-12 mt-2">
-                                                    <h4 className="text-danger">Validation errors</h4>
-                                                    <ul>
+                                                    <p className="text-danger font-weight-bold" style={{ marginBottom: '0px' }}>
+                                                        Validation errors
+                                                        </p>
+                                                    <ul style={{ paddingTop: "0" }, { marginTop: "0px" }}>
                                                         {
                                                             validationErrors.map((error, i) => {
-                                                                return <li key={`val-err-${i}`} className="text-danger font-weight-bold">{error}</li>
+                                                                return <li key={`val-err-${i}`} className="text-danger">{error}</li>
                                                             })
                                                         }
                                                     </ul>

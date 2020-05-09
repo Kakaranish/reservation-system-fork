@@ -2,15 +2,25 @@ import React from "react";
 import $ from 'jquery';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
-import stockAvatar from '../assets/images/test/stock-avatar.jpg';
 import "../assets/css/Navbar.css";
+import axios from 'axios';
 
 const toggleMenu = event => {
   event.preventDefault();
   $("#wrapper").toggleClass("toggled");
 }
 
-const Navbar = () => {
+const Navbar = (props) => {
+
+  const handleLogout = async () => {
+    const result = await axios.post('/auth/logout', {}, { validateStatus: false });
+    if (result.status !== 200) {
+      console.log('error while logging out');
+      return;
+    }
+    window.location = `/`;
+  };
+
   return (
     <nav className="navbar navbar-expand-md navbar-light bg-light border-bottom">
       <button className="btn btn-primary d-md-none" id="menu-toggle" onClick={toggleMenu}>Toggle Menu</button>
@@ -29,26 +39,22 @@ const Navbar = () => {
           </div>
         </div>
 
-        <ul className="navbar-nav ml-auto mt-lg-0">
-          <li className="nav-item dropdown">
-            <a className="nav-link dropdown-toggle" href="#"
-              id="navbarDropdown" role="button" data-toggle="dropdown"
-              aria-haspopup="true" aria-expanded="false">
-              John
-            </a>
+        {
+          !props.email ? null
+            : <ul className="navbar-nav ml-auto mt-lg-0">
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#"
+                  id="navbarDropdown" role="button" data-toggle="dropdown"
+                  aria-haspopup="true" aria-expanded="false">
+                  {props.email}
+                </a>
 
-            <div className="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-              <a className="dropdown-item" href="#">Settings</a>
-              <a className="dropdown-item" href="#">Log out</a>
-            </div>
-          </li>
-
-          <li className="nav-item">
-            <span className="nav-link">
-              <img id="avatar-img" src={stockAvatar} />
-            </span>
-          </li>
-        </ul>
+                <div className="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown" onClick={handleLogout}>
+                  <a className="dropdown-item" href="#">Log out</a>
+                </div>
+              </li>
+            </ul>
+        }
       </div>
     </nav>
   );

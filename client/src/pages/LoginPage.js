@@ -76,7 +76,7 @@ const LoginPage = () => {
                                             </div>
                                         </div>
                                         <div className="row">
-                                            {
+                                        {
                                                 !validationErrors
                                                     ? null
                                                     :
