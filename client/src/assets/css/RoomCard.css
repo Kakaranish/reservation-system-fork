@@ -3,6 +3,7 @@
 .room-card-title {
   font-size: 20px;
   font-weight: 600;
+  word-wrap: break-word;
 }
 
 .primary-font {

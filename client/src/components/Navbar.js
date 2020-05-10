@@ -21,6 +21,14 @@ const Navbar = (props) => {
     window.location = `/`;
   };
 
+  const handleOnKeyDown = event => {
+    if (event.charCode === 13) {
+      const searchPhrase = document.getElementById('searchBar').value;
+      if (!searchPhrase || searchPhrase.trim() === '') return;
+      window.location = `/rooms/search?phrase=${encodeURIComponent(searchPhrase)}`;
+    }
+  }
+
   return (
     <nav className="navbar navbar-expand-md navbar-light bg-light border-bottom">
       <button className="btn btn-primary d-md-none" id="menu-toggle" onClick={toggleMenu}>Toggle Menu</button>
@@ -31,12 +39,16 @@ const Navbar = (props) => {
 
       <div className="collapse navbar-collapse mt-2" id="navbarSupportedContent">
         <div className="input-group py-1 px-2 px-0 py-3 py-md-0">
-          <input className="form-control form-control-dark" type="text" placeholder="Search here..." aria-label="Search" />
+
+          <input id='searchBar' className="form-control form-control-dark" type="text" placeholder="Search here..."
+            aria-label="Search" onKeyPress={handleOnKeyDown} />
+
           <div className="input-group-append">
             <button className="btn btn-outline-success" type="submit">
               <i className="fa fa-search" />
             </button>
           </div>
+
         </div>
 
         {
