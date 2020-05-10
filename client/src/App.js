@@ -3,7 +3,7 @@ import { BrowserRouter, Switch } from "react-router-dom";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
-import TestPage from './pages/TestPage';
+import MainPage from './pages/MainPage';
 import RoomFilterPage from './pages/RoomFilterPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
@@ -22,7 +22,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Switch>
-        <DashboardLayoutRoute path="/" component={TestPage} exact />
+        <DashboardLayoutRoute path="/" component={MainPage} exact />
         <DashboardLayoutRoute path="/filter-rooms" component={RoomFilterPage} />
         <DashboardLayoutRoute path='/rooms/search' component={SearchRoomsPage} />
         <DashboardLayoutRoute path="/rooms/:id" component={RoomPage} />

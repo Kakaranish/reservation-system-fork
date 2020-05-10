@@ -22,20 +22,20 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
 
     useEffect(() => {
         const getEventsForRoomReservations = async (roomId) => {
-            try {
-                const result = await axios.get(`/rooms/${roomId}/reservations-preview`,
-                    { validateStatus: false });
-                const reservations = result.data;
-                const reservationEvents = mapReservationsToEvents(reservations);
-                setEvents({
-                    dateIntervals: [...notAvailableEvents, ...reservationEvents]
-                });
-            } catch (error) {
-                // Some error handling...
-                console.log(error);
+            const result = await axios.get(`/rooms/${roomId}/reservations-preview`,
+                { validateStatus: false });
+            if (result.status !== 200) {
+                result.data.errors.forEach(e => console.log(e?.msg ?? e));
+                alert('Internal error. Try to refresh page.');
+                return;
             }
+            
+            const reservations = result.data;
+            const reservationEvents = mapReservationsToEvents(reservations);
+            setEvents({
+                dateIntervals: [...notAvailableEvents, ...reservationEvents]
+            });
         }
-
         getEventsForRoomReservations(roomId);
     }, []);
 
