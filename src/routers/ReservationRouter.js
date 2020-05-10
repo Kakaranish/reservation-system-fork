@@ -47,17 +47,16 @@ router.get('/reservations/user', reservationsForUserValidationMWs(), async (req,
 
     withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
-        const query = queryBuilder
+        let query = queryBuilder
             .withUserId(req.user._id)
             .withPopulatedUserData('-_id email firstName lastName')
             .withPopulatedRoomData('-_id name location photoUrl')
-            .select('id fromDate toDate pricePerDay totalPrice userId roomId')
-            .build();
+            .select('id fromDate toDate pricePerDay totalPrice userId roomId');
         if (req.query.fromDate) query = query.overlappingDateIterval(
             req.query.fromDate.toDate(), req.query.toDate.toDate());
         if (req.query.status) query = query.withStatus(req.query.status);
 
-        const reservations = await query;
+        const reservations = await query.build();
         res.status(200).json(reservations);
     });
 });

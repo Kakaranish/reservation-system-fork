@@ -24,15 +24,23 @@
 
 .sidebar-item:hover {
   color: white;
-  background: #4E4D6E;
+  background: #4e4d6e;
 }
 
 .sidebar-item:hover > .icon {
-  filter:invert(1);
+  filter: invert(1);
 }
 
 body {
   overflow-x: hidden;
+}
+
+.items-separator {
+  height: 1px;
+  border: 0;
+  margin: 7px 0;
+  border-top: 0.75px solid #bbbbbb;
+  padding: 0;
 }
 
 #sidebar-wrapper {
@@ -56,7 +64,7 @@ body {
 }
 
 #wrapper {
-  background: #F0F0F7;
+  background: #f0f0f7;
 }
 
 @media (min-width: 768px) {

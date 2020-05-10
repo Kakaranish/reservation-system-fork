@@ -9,9 +9,23 @@ import reservationsIcon from '../assets/icons/sidebar/reservations.svg';
 import roomsIcon from '../assets/icons/sidebar/rooms.svg';
 import settingsIcon from '../assets/icons/sidebar/settings.svg';
 import helpIcon from '../assets/icons/sidebar/help.svg';
+import loginIcon from '../assets/icons/sidebar/log-in.svg';
+import logoutIcon from '../assets/icons/sidebar/log-out.svg';
+import registerIcon from '../assets/icons/sidebar/register.svg';
 import RoomFilterPage from "../pages/RoomFilterPage";
+import axios from 'axios';
 
 const Sidebar = (props) => {
+
+    const handleLogout = async () => {
+        const result = await axios.post('/auth/logout', {}, { validateStatus: false });
+        if (result.status !== 200) {
+            console.log('error while logging out');
+            return;
+        }
+        window.location = `/`;
+    };
+
     return (
         <div className="border-right sidebar" id="sidebar-wrapper">
             <div id="sidebar-title">
@@ -61,6 +75,35 @@ const Sidebar = (props) => {
                         <>Help</>
                     </div>
                 </Link>
+
+                <div className='items-separator'></div>
+
+                {
+                    props.user
+                        ?
+                        <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center"
+                            style={{ cursor: 'pointer' }} onClick={handleLogout}>
+                            <img src={logoutIcon} className="icon" />
+                            <>Log Out</>
+                        </div>
+                        :
+                        <>
+                            <Link to="/login" >
+                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                    <img src={loginIcon} className="icon" />
+                                    <>Log In</>
+                                </div>
+                            </Link>
+
+                            <Link to="/register" >
+                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                    <img src={registerIcon} className="icon" />
+                                    <>Register</>
+                                </div>
+                            </Link>
+                        </>
+                }
+
             </div>
         </div>
     );

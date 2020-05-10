@@ -13,7 +13,7 @@ import RoomPage from "./pages/RoomPage";
 import CreateRoomPage from './pages/CreateRoomPage';
 import AdminManageReservations from './pages/admin/ManageReservations';
 import UserManageReservations from './pages/user/ManageReservations';
-import EmptyLayoutRoute from './pages/layouts/EmptyLayoutRoute';
+import AuthLayoutRoute from './pages/layouts/AuthLayoutRoute';
 import DashboardLayoutRoute from './pages/layouts/DashboardLayoutRoute';
 
 const App = () => {
@@ -28,8 +28,8 @@ const App = () => {
         <DashboardLayoutRoute path="/admin/manage-reservations" component={AdminManageReservations} />
         <DashboardLayoutRoute path="/user/manage-reservations" component={UserManageReservations} />
         <DashboardLayoutRoute path="/rooms" component={RoomsPage} />
-        <EmptyLayoutRoute path="/login" component={LoginPage} />
-        <EmptyLayoutRoute path="/register" component={RegisterPage} />
+        <AuthLayoutRoute path="/login" component={LoginPage} />
+        <AuthLayoutRoute path="/register" component={RegisterPage} />
 
         <DashboardLayoutRoute component={NotFoundPage} />
       </Switch>
