@@ -22,7 +22,7 @@ import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 const router = express();
 
 // ADMIN
-router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
+router.get('/reservations', getReservationsValidationMWs(), async (req, res) => {
     if (req.body.errors?.length > 0)
         return res.status(400).json({ errors: req.body.errors });
 
@@ -42,46 +42,7 @@ router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
 });
 
 // USER & ADMIN
-router.get('/reservations/:id/user', [
-    tokenValidatorMW,
-    param('id').customSanitizer(roomId => parseObjectId(roomId))
-        .notEmpty().withMessage('invalid mongo ObjectId')
-], async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-
-    withAsyncRequestHandler(res, async () => {
-        const reservation = await Reservation.findById({ _id: req.params.id });
-        if (!reservation) return res.status(200).json(null);
-
-        const belongsToUser = reservation.userId == req.user?._id;
-        res.status(200).json(belongsToUser ? reservation : null);
-    });
-});
-
-// USER & ADMIN
-router.put('/reservations/:id/user', updateReservationMiddlewares(), async (req, res) => {
-    if (req.body.errors?.length > 0)
-        return res.status(400).json({ errors: req.body.errors });
-
-    withAsyncRequestHandler(res, async () => {
-        const numDaysBetween = req.body.toDate.diff(req.body.fromDate, 'days') + 1;
-        const result = await Reservation.updateOne({ _id: req.reservation._id }, {
-            $set: {
-                fromDate: req.body.fromDate.toDate(),
-                toDate: req.body.toDate.toDate(),
-                pricePerDay: req.reservation.pricePerDay,
-                totalPrice: req.reservation.pricePerDay * numDaysBetween,
-                status: 'PENDING'
-            }
-        });
-
-        return res.status(200).json({ _id: result._id });
-    });
-});
-
-// USER
-router.get('/reservations/user', reservationsForUserValidationMWs(), async (req, res) => {
+router.get('/reservations/user', getReservationsForUserValidationMWs(), async (req, res) => {
     if (req.body.errors?.length > 0)
         return res.status(400).json({ errors: req.body.errors });
 
@@ -101,8 +62,20 @@ router.get('/reservations/user', reservationsForUserValidationMWs(), async (req,
     });
 });
 
+// USER & ADMIN
+router.get('/reservations/:id/user', getReservationForUserValidationMWs(), async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+
+    withAsyncRequestHandler(res, async () => {
+        if (!req.reservation) return res.status(200).json(null);
+        const belongsToUser = req.reservation.userId == req.user?._id;
+        res.status(200).json(belongsToUser ? req.reservation : null);
+    });
+});
+
 // USER, ADMIN
-router.post('/reservations', createReservationValidationMiddlewares(),
+router.post('/reservations', createReservationValidationMWs(),
     async (req, res, next) => {
         if (validationResult(req).errors.length > 0)
             return res.status(400).json(validationResult(req));
@@ -146,6 +119,27 @@ router.post('/reservations', createReservationValidationMiddlewares(),
     }
 );
 
+// USER & ADMIN
+router.put('/reservations/:id/user', updateReservationMWs(), async (req, res) => {
+    if (req.body.errors?.length > 0)
+        return res.status(400).json({ errors: req.body.errors });
+
+    withAsyncRequestHandler(res, async () => {
+        const numDaysBetween = req.body.toDate.diff(req.body.fromDate, 'days') + 1;
+        const result = await Reservation.findOneAndUpdate({ _id: req.reservation._id }, {
+            $set: {
+                fromDate: req.body.fromDate.toDate(),
+                toDate: req.body.toDate.toDate(),
+                pricePerDay: req.reservation.pricePerDay,
+                totalPrice: req.reservation.pricePerDay * numDaysBetween,
+                status: 'PENDING'
+            }
+        });
+
+        return res.status(200).json({ _id: result._id });
+    });
+});
+
 // ADMIN
 router.delete('/reservations/:id', [tokenValidatorMW, adminValidatorMW,
     param('id').customSanitizer(roomId => parseObjectId(roomId))
@@ -160,7 +154,7 @@ router.delete('/reservations/:id', [tokenValidatorMW, adminValidatorMW,
     });
 });
 
-function reservationsValidationMWs() {
+function getReservationsValidationMWs() {
     return [
         tokenValidatorMW,
         adminValidatorMW,
@@ -184,7 +178,7 @@ function reservationsValidationMWs() {
     ];
 }
 
-function reservationsForUserValidationMWs() {
+function getReservationsForUserValidationMWs() {
     return [
         tokenValidatorMW,
         userExistenceValidatorMW,
@@ -200,10 +194,23 @@ function reservationsForUserValidationMWs() {
     ];
 }
 
-function updateReservationMiddlewares() {
+function getReservationForUserValidationMWs() {
     return [
         tokenValidatorMW,
-        param('id').customSanitizer(roomId => parseObjectId(roomId))
+        param('id').customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId')
+            .custom(async (id, {req}) => {
+                req.reservation = await Reservation.findById(id);
+                return true;
+            }),
+        errorSummarizerMW
+    ];
+}
+
+function updateReservationMWs() {
+    return [
+        tokenValidatorMW,
+        param('id').customSanitizer(id => parseObjectId(id))
             .notEmpty().withMessage('invalid mongo ObjectId').bail()
             .custom(async (id, { req }) => {
                 const reservation = await Reservation.findById(id);
@@ -221,7 +228,7 @@ function updateReservationMiddlewares() {
     ];
 }
 
-function createReservationValidationMiddlewares() {
+function createReservationValidationMWs() {
     return [
         tokenValidatorMW,
         body('roomId').customSanitizer(id => parseObjectId(id))

@@ -4,8 +4,9 @@ import mongoose from 'mongoose';
 import 'regenerator-runtime';
 import Reservation from '../../src/models/reservation-model';
 import * as TestUtils from '../test-utils';
-import { parseObjectId } from '../../src/common';
+import { parseObjectId, parseIsoDatetime } from '../../src/common';
 import { connectTestDb } from '../../src/mongo-utils';
+import moment from 'moment';
 
 const request = supertest(app);
 
@@ -287,6 +288,228 @@ describe('GET /reservations/user', () => {
 
     it('When everything is OK and date interval and status are provided then reservations are returned', async () => {
 
+    });
+});
+
+describe('GET /reservations/:id/user', () => {
+    it('When no/invalid token is provided then error is returned', async () => {
+        // Arrange:
+        const randomReservationId = '5eb86e1e0095f3b081fb2279';
+
+        // Act:
+        const result = await request.get(`/reservations/${randomReservationId}/user`);
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('no/invalid refresh'));
+    });
+
+    it('When reservation id is invalid then error is returned', async () => {
+        // Arrange:
+        const reservationId = 'INVNALID';
+
+        // Act:
+        const result = await request.get(`/reservations/${reservationId}/user`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
+    });
+
+    it('When reservation with given id does not exist then null is returned', async () => {
+        // Arrange:
+        const randomReservationId = '5eb86e1e0095f3b081fb2279';
+
+        // Act:
+        const result = await request.get(`/reservations/${randomReservationId}/user`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body).toBe(null);
+    });
+
+    it('When reservation userId is different than token userId then null is returned', async () => {
+        // Arrange:
+        const reservationId = '5eb86e1e0095f3b081fb2279';
+        const nonExistingUser = {
+            _id: '5eb87150bddf948ccb9b0a02',
+            email: 'nonexisting@mail.com',
+            role: 'USER'
+        };
+        const accessToken = TestUtils.createTestAccessToken(nonExistingUser, 60 * 1000);
+
+        // Act:
+        const result = await request.get(`/reservations/${reservationId}/user`)
+            .set('Cookie', [`accessToken=${accessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body).toBe(null);
+    });
+
+    it('When everything is ok then reservation is returned', async () => {
+        // Arrange:
+        const reservationId = '5eb870bcc32e3d4b7cb8af1c';
+
+        // Act:
+        const result = await request.get(`/reservations/${reservationId}/user`)
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body._id).toBe('5eb870bcc32e3d4b7cb8af1c');
+    });
+});
+
+describe('PUT /reservations/:id/user', () => {
+    it('When auth token is invalid or not provided then error is returned', async () => {
+        // Arrange:
+        const randomReservationId = '5eb86e1e0095f3b081fb2279';
+
+        // Act:
+        const result = await request.put(`/reservations/${randomReservationId}/user`);
+
+        // Assert:
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].includes('no/invalid refresh'));
+    });
+
+    it('When reservation id is invalid/not provided then error is returned', async () => {
+        // Arrange:
+        const invalidReservationId = 'INVALID';
+
+        // Act:
+        const result = await request.put(`/reservations/${invalidReservationId}/user`)
+            .send({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
+    });
+
+    it('When reservation with given id does not exist then error is returned', async () => {
+        // Arrange:
+        const randomReservationId = '5eb87407271a7e8139246020';
+
+        // Act:
+        const result = await request.put(`/reservations/${randomReservationId}/user`)
+            .send({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('with given id does not exist')).toBe(true);
+    });
+
+    it('When reservation has state different than PENDING and ACCEPTED then error is returned', async () => {
+        // Arrange:
+        const reservationId = '5eb8793a6cd93061c15e263d';
+
+        // Act:
+        const result = await request.put(`/reservations/${reservationId}/user`)
+            .send({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('has illegal status')).toBe(true);
+    });
+
+    it('When reservation userId is diffrent than token userId then error is returned', async () => {
+        // Arrange:
+        const reservationId = '5eb8795ea7644880b7c215ad';
+        const anyUser = {
+            _id: '5eb879e28717ea91b6f7a09f',
+            user: 'nonexisting@mail.com',
+            role: 'USER'
+        };
+        const accessToken = TestUtils.createTestAccessToken(anyUser, 60 * 1000);
+
+        // Act:
+        const result = await request.put(`/reservations/${reservationId}/user`)
+            .send({
+                fromDate: '2020-01-01T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            })
+            .set('Cookie', [`accessToken=${accessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('id');
+        expect(result.body.errors[0].msg.includes('to token bearer')).toBe(true);
+    });
+
+    it('When date interval is invalid then error is returned', async () => {
+        // Arrange:
+        const reservationId = '5eb8795ea7644880b7c215ad';
+
+        // Act:
+        const result = await request.put(`/reservations/${reservationId}/user`)
+            .send({
+                fromDate: '2020-01-02T00:00:00.000Z',
+                toDate: '2020-01-01T00:00:00.000Z'
+            })
+            .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+        // Assert:
+        expect(result.status).toBe(400);
+        expect(result.body.errors).toHaveLength(1);
+        expect(result.body.errors[0].param).toBe('fromDate&toDate');
+        expect(result.body.errors[0].msg.includes('must precede')).toBe(true);
+    });
+
+    it('When everything is ok then reservation is updated and reservation _id is returned', async () => {
+        // Arrange:
+        const reservationId = '5eb8795ea7644880b7c215ad';
+        const reservationBackup = (await Reservation.findById(reservationId)).toObject();
+
+        try {
+            // Act:
+            const result = await request.put(`/reservations/${reservationId}/user`)
+                .send({
+                    fromDate: '2020-03-02T00:00:00.000Z',
+                    toDate: '2020-03-05T00:00:00.000Z'
+                })
+                .set('Cookie', [`accessToken=${testUserAccessToken}`]);
+
+            // Assert:
+            expect(result.status).toBe(200);
+            expect(result.body._id).toBe(reservationId);
+            const reservation = await Reservation.findById(reservationId);
+            expect(moment(reservation.fromDate).toISOString()).toBe('2020-03-02T00:00:00.000Z');
+            expect(moment(reservation.toDate).toISOString()).toBe('2020-03-05T00:00:00.000Z');
+            expect(reservation.status).toBe('PENDING');
+            expect(reservation.pricePerDay).toBe(400);
+            expect(reservation.totalPrice).toBe(1600);
+        } catch (error) {
+            throw error;
+        } finally {
+            await Reservation.findByIdAndUpdate(reservationId, reservationBackup);
+        }
     });
 });
 
