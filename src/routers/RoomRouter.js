@@ -29,6 +29,22 @@ router.get('/', getRoomsValidationMiddlewares(), async (req, res) => {
     });
 });
 
+router.get('/with-phrase/:phrase', [
+    param('phrase').notEmpty().withMessage('cannot be empty')
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+    const rooms = await Room.find({
+        $or: [
+            { name: { $regex: `.*${req.params.phrase}.*` } },
+            { description: { $regex: `.*${req.params.phrase}.*` } },
+            { location: { $regex: `.*${req.params.phrase}.*` } }
+        ]
+    }).select('_id name location capacity photoUrl pricePerDay amenities');
+
+    res.status(200).json(rooms);
+});
+
 router.get('/:id', [
     param('id').customSanitizer(id => parseObjectId(id))
         .notEmpty().withMessage('invalid mongo ObjectId')

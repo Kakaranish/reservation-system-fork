@@ -120,7 +120,8 @@ const RoomPage = (props) => {
                                 dateIntervalToGenerate={dateIntervalToGenerate}
                                 dows={room.dows}
                                 roomId={roomId}
-                                email={props.user?.email} />
+                                email={props.user?.email}
+                            />
                         </div>
 
                         {
@@ -150,7 +151,7 @@ const RoomPage = (props) => {
                                     </div>
                                 </>
                         }
-                        
+
                     </div>
                 </div>
             </div>

@@ -16,6 +16,7 @@ import UserManageReservations from './pages/user/ManageReservations';
 import AuthLayoutRoute from './pages/layouts/AuthLayoutRoute';
 import DashboardLayoutRoute from './pages/layouts/DashboardLayoutRoute';
 import SearchRoomsPage from './pages/SearchRoomsPage';
+import EditReservationPage from './pages/EditReservationPage';
 
 const App = () => {
 
@@ -27,6 +28,8 @@ const App = () => {
         <DashboardLayoutRoute path='/rooms/search' component={SearchRoomsPage} />
         <DashboardLayoutRoute path="/rooms/:id" component={RoomPage} />
         <DashboardLayoutRoute path="/rooms" component={RoomsPage} />
+        <DashboardLayoutRoute path='/edit-reservation/:reservationId'
+          component={EditReservationPage} roles={['USER', 'ADMIN']} />
         <DashboardLayoutRoute path="/create-room" component={CreateRoomPage}
           roles={['ADMIN']} />
         <DashboardLayoutRoute path="/admin/manage-reservations"

@@ -40,6 +40,24 @@ router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     });
 });
 
+// USER & ADMIN
+router.get('/reservations/:id/user', [
+    tokenValidatorMW,
+    param('id').customSanitizer(roomId => parseObjectId(roomId))
+        .notEmpty().withMessage('invalid mongo ObjectId')
+], async (req, res) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req));
+
+    const reservation = await Reservation.findById({ _id: req.params.id });
+    if (!reservation) return res.status(200).json(null);
+
+    console.log(parseObjectId(req.user?._id));
+    const belongsToUser = reservation.userId == req.user?._id;
+    res.status(200).json(belongsToUser ? reservation : null
+    );
+});
+
 // USER
 router.get('/reservations/user', reservationsForUserValidationMWs(), async (req, res) => {
     if (req.body.errors?.length > 0)
