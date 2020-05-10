@@ -1,5 +1,6 @@
 import { validationResult } from 'express-validator';
 import User from './models/user-model';
+import Reservation from './models/reservation-model';
 import { parseIsoDatetime } from './common'
 import 'regenerator-runtime';
 
@@ -94,6 +95,48 @@ export const queryDateIntervalValidatorMW = (req, res, next) => {
  * @param {Response} res 
  * @param {Function} next 
  */
+export const bodyDateIntervalValidatorMW = (req, res, next) => {
+    req.body.fromDate = parseIsoDatetime(req.body.fromDate);
+    req.body.toDate = parseIsoDatetime(req.body.toDate);
+    if (req.body.fromDate && req.body.toDate) {
+        if (req.body.fromDate.toDate() > req.body.toDate.toDate()) {
+            if (!req.body.errors) req.body.errors = [];
+            req.body.errors.push({
+                param: 'fromDate&toDate',
+                msg: 'fromDate must precede toDate',
+                location: 'body'
+            });
+            return next();
+        }
+    }
+
+    if (!req.body.fromDate) {
+        if (!req.body.errors) req.body.errors = [];
+        req.body.errors.push({
+            param: 'fromDate',
+            msg: 'not in ISO8601 format',
+            location: 'body'
+        });
+    }
+
+    if (!req.body.toDate) {
+        if (!req.body.errors) req.body.errors = [];
+        req.body.errors.push({
+            param: 'toDate',
+            msg: 'not in ISO8601 format',
+            location: 'body'
+        });
+    }
+
+    next();
+}
+
+/**
+ * 
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {Function} next 
+ */
 export const errorSummarizerMW = (req, res, next) => {
     const expressValidatorErrors = validationResult(req).errors;
     if(!req.body) req.body = {};
@@ -104,7 +147,6 @@ export const errorSummarizerMW = (req, res, next) => {
 };
 
 /**
- * 
  * @param {Request} req 
  * @param {Response} res 
  * @param {Function} next 

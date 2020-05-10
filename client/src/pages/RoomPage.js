@@ -62,8 +62,12 @@ const RoomPage = (props) => {
             { data: dataJson, validateStatus: false });
 
         if (result.status !== 200) {
+            alert('Internal error. Try refresh page.');
+            result.data.errors.forEach(e => console.log(e?.msg ?? e));
             return;
         }
+
+        window.location = '/user/manage-reservations';
     }
 
     if (!room) return <h3>{message}</h3>

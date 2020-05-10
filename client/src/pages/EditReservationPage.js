@@ -18,6 +18,17 @@ const EditReservationPage = (props) => {
     }
 
     const handleMakeChange = async () => {
+        const uri = `/reservations/${state.reservation._id}/user`
+        const result = await axios.put(uri, {
+            fromDate: selectedInterval.start.toDate(),
+            toDate: selectedInterval.end.toDate()
+        });
+        if(result.status !== 200) {
+            alert('Internal error. Try refresh page.');
+            result.data.errors.forEach(e => console.log(e.msg ?? e));
+            return;
+        }
+        alert('Reservation updated. Pending for admin acceptation.');
         window.location = '/user/manage-reservations';
     };
 

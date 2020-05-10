@@ -3,8 +3,12 @@ import moment from "moment";
 
 const PendingReservation = ({ reservation, onCancelReservation }) => {
     const onCancel = () => {
-        onCancelReservation(reservation["_id"]);
+        onCancelReservation(reservation._id);
     }
+
+    const onEdit = () => {
+        window.location = `/edit-reservation/${reservation._id}`
+    };
 
     return (
         <div className="card p-1 border-0">
@@ -32,7 +36,7 @@ const PendingReservation = ({ reservation, onCancelReservation }) => {
                 <div className="card-footer w-100 bg-white border-0 mt-sm-2 px-0">
                     <div className="row">
                         <div className="col-12">
-                            <button className="btn btn-block text-uppercase mb-2 btn-info">
+                            <button className="btn btn-block text-uppercase mb-2 btn-info" onClick={onEdit}>
                                 Edit
                             </button>
                             <button className="btn btn-block text-uppercase mb-2 btn-danger" onClick={onCancel}>

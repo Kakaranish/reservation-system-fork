@@ -20,13 +20,11 @@ const reservationSchema = new Schema({
     },
     pricePerDay: {
         type: Number,
-        get: v => v.toFixed(2),
         set: v => v.toFixed(2),
         alias: 'i'
     },
     totalPrice: {
         type: Number,
-        get: v => v.toFixed(2),
         set: v => v.toFixed(2),
         alias: 'i'
     },
