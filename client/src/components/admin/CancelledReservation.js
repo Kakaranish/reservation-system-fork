@@ -3,26 +3,26 @@ import moment from "moment";
 
 const CancelledReservation = ({ reservation }) => {
     return (
-        <div class="card p-1 border-0">
-            <div class="row no-gutters mb-3">
-                <div class="col-auto">
-                    <img src={reservation.roomPhoto} style={{ width: "20vh" }} />
+        <div className="card p-1 border-0">
+            <div className="row no-gutters mb-3">
+                <div className="col-auto">
+                    <img src={reservation.room.photoUrl} style={{ width: "20vh" }} />
                 </div>
-                <div class="col pb-3">
-                    <div class="card-block px-4">
-                        <h4 class="card-title room-page-title">
-                            {reservation.roomName} | <span style={{ color: "gray" }, { fontSize: "18px" }}>{reservation.roomLocation}</span>
+                <div className="col pb-3">
+                    <div className="card-block px-4">
+                        <h4 className="card-title room-page-title">
+                            {reservation.room.name} | <span style={{ color: "gray" }, { fontSize: "18px" }}>{reservation.room.location}</span>
                         </h4>
-                        <p class="card-text">
-                            Who's making reservation?: <b>{reservation.userEmail}</b>
+                        <p className="card-text">
+                            Who's making reservation?: <b>{reservation.user.email}</b>
                         </p>
-                        <p class="card-text">
-                            When?: <b>{moment(reservation.startDate).format("YYYY-MM-DD")} - {moment(reservation.endDate).format("YYYY-MM-DD")}</b>
+                        <p className="card-text">
+                            When?: <b>{moment(reservation.fromDate).format("YYYY-MM-DD")} - {moment(reservation.toDate).format("YYYY-MM-DD")}</b>
                         </p>
-                        <p class="card-text">
+                        <p className="card-text">
                             Pice Per Day: <b>{reservation.pricePerDay}PLN</b>
                         </p>
-                        <p class="card-text">
+                        <p className="card-text">
                             Total Price: <b>{reservation.totalPrice}PLN</b>
                         </p>
                     </div>

@@ -16,7 +16,7 @@ const ManageReservations = () => {
         const uri = `/reservations/${reservationId}/modify/accept`;
         const result = await axios.put(uri, {}, { validateStatus: false });
         if (result.status !== 200) {
-            console.log('Internal error');
+            alert('Internal error');
             result.data.errors.forEach(e => console.log(e?.msg ?? e));
             return;
         }
@@ -28,7 +28,7 @@ const ManageReservations = () => {
         const uri = `/reservations/${reservationId}/modify/reject`;
         const result = await axios.put(uri, {}, { validateStatus: false });
         if (result.status !== 200) {
-            console.log('Internal error');
+            alert('Internal error');
             result.data.errors.forEach(e => console.log(e?.msg ?? e));
             return;
         }

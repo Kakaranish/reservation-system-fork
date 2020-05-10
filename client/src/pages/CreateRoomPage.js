@@ -13,31 +13,27 @@ const CreateRoomPage = () => {
 
     const handleSubmit = async event => {
         event.preventDefault();
+        
         const formData = new FormData(event.target);
         formData.append('file', file);
         processFormData(formData);
+
         const formDataValidationErrors = validateFormData(formData, file);
         if (formDataValidationErrors.length > 0) {
             setValidationErrors(formDataValidationErrors);
             return;
         }
 
-        try {
-            const res = await axios.post(`/create-room?secret_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc`,
-                formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            const roomId = res.data.roomId;
-            window.location = `/rooms/${roomId}`;
-        } catch (error) {
-            if (error.response.status === 500) {
-                console.log("There was a problem with the server.");
-            } else {
-                console.log(error.response.data.errors);
-            }
+        const result = await axios.post('/rooms', formData, {
+            validateStatus: false,
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        if (result.status !== 200) {
+            alert('Internal error!');
+            console.log(result);
+            return;
         }
+        window.location = `/rooms`;
     };
 
     return (
@@ -46,7 +42,8 @@ const CreateRoomPage = () => {
                 <div className="row" className="text-center" style={{ "marginBottom": "30px" }}>
                     <h2>Create room</h2>
                 </div>
-                <form id="createRoomForm" onSubmit={(event) => { event.preventDefault(); handleSubmit(event); }}>
+
+                <form onSubmit={handleSubmit}>
                     <div className="form-group row">
                         <label htmlFor="Name" className="col-sm-2 col-form-label">Name</label>
                         <div className="col-sm-10">
@@ -109,6 +106,7 @@ const CreateRoomPage = () => {
                                     </ul>
                                 </div>
                         }
+
                         <div className="col-12 mt-2">
                             <button type="submit" className="btn btn-block primary-btn">Create Room</button>
                         </div>

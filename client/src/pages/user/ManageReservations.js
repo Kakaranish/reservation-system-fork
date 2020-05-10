@@ -11,17 +11,14 @@ const ManageReservations = () => {
     const [currentTab, setCurrentTab] = useState("pending");
 
     const onCancelReservation = async reservationId => {
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlOGEyY2JjNTQzYWU0MDNhYWI3NWQxMiIsImVtYWlsIjoic3Rhc2lla2dydXoxQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NjExMzc0Mn0.7rOzSpnsHDtrLwnCLgRroQ6ldwiFklxUT2ih_WOm16g";
-        try {
-            await axios.post(`/user/cancel-reservation/${reservationId}`, {}, {
-                params: {
-                    secret_token: secret_token
-                }
-            });
-            window.location.reload();
-        } catch (error) {
-            console.log(error);
+        const result = await axios.put(`/reservations/${reservationId}/modify/cancel`,
+            {}, { validateStatus: false });
+        if (result.status !== 200) {
+            result.data.forEach(e => console.log(e?.msg ?? e));
+            alert('Internal error');
+            return;
         }
+        window.location.reload();
     }
 
     useEffect(() => {
@@ -48,7 +45,6 @@ const ManageReservations = () => {
                 if (pendingContent) return;
                 const content = await axios.get(`/reservations/user?status=PENDING`,
                     { validateStatus: false });
-                console.log(content);
                 setPendingContent(content.data);
             }
         };

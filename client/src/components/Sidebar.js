@@ -7,6 +7,7 @@ import TestPage from "../pages/TestPage";
 import homeIcon from '../assets/icons/sidebar/home.svg';
 import reservationsIcon from '../assets/icons/sidebar/reservations.svg';
 import roomsIcon from '../assets/icons/sidebar/rooms.svg';
+import createRoomIcon from '../assets/icons/sidebar/create-room.svg';
 import settingsIcon from '../assets/icons/sidebar/settings.svg';
 import helpIcon from '../assets/icons/sidebar/help.svg';
 import loginIcon from '../assets/icons/sidebar/log-in.svg';
@@ -60,13 +61,26 @@ const Sidebar = (props) => {
                 }
 
                 {
-                    props.user?.role !== 'ADMIN' ? <></>
-                        : <Link to="/admin/manage-reservations">
-                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                                <img src={settingsIcon} className="icon" />
-                                <>Admin Reservations</>
-                            </div>
-                        </Link>
+                    props.user?.role !== 'ADMIN'
+                        ?
+                        <></>
+
+                        :
+                        <>
+                            <Link to="/admin/manage-reservations">
+                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                    <img src={settingsIcon} className="icon" />
+                                    <>Users Reservations</>
+                                </div>
+                            </Link>
+
+                            <Link to="/create-room">
+                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                    <img src={createRoomIcon} className="icon" />
+                                    <>Create Room</>
+                                </div>
+                            </Link>
+                        </>
                 }
 
                 <Link to={TestPage}>

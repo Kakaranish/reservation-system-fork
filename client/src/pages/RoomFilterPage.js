@@ -115,7 +115,7 @@ const RoomFilterPage = () => {
                             toPrice: priceInterval.end
                         })
                     }}>
-                        <button type="button" class="btn btn-primary btn-lg btn-block">Search Rooms!</button>
+                        <button type="button" className="btn btn-primary btn-lg btn-block">Search Rooms!</button>
                     </Link>
                 </div>
             </div>

@@ -23,20 +23,24 @@ const RoomCard = ({ roomData }) => {
             <div className="card mb-3">
                 <div className="card-body primary-font" style={{ fontSize: "14px" }}>
                     <div className="card-title">
-                        <div className="d-flex justify-content-between pt-1 pb-3 room-card-title-box">
+                        <div className="pt-1 pb-3 room-card-title-box">
                             <div className="room-card-title">
                                 {roomData.name}
                             </div>
-                            <div className="align-self-center room-price-color">
-                                Total Price:
+
+                            {
+                                roomData.totalPrice &&
+                                <div className="room-price-color">
+                                    Total Price:
                                 <span className="px-1">
-                                    {roomData.totalPrice}PLN
+                                        {roomData.totalPrice}PLN
                                 </span>
-                            </div>
+                                </div>
+                            }
                         </div>
                     </div>
 
-                    <img className="card-img mt-1 mb-2 room-card-image" src={roomData.photo ? roomData.photo : noImagePlaceholder} />
+                    <img className="card-img mt-1 mb-2 room-card-image" src={roomData.photoUrl ? roomData.photoUrl : noImagePlaceholder} />
 
                     <div className="text-right room-price-color mb-1">
                         Price/Day: {roomData.pricePerDay}PLN

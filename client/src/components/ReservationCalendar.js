@@ -40,7 +40,7 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
     }, []);
 
     const onSelectSlot = slotInfo => {
-        if(!email) {
+        if (!email) {
             alert('Log in to make reservation');
             return;
         }
@@ -49,13 +49,21 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
             end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds')
         }
 
-        if (userDateIntervalIsOutOfRange(userDateInterval, dateIntervalToGenerate)) return;
+        if (userDateInterval.start.valueOf() < dateIntervalToGenerate.start.valueOf()) {
+            alert('No possibility to make reservation in past. Are you time traveller?')
+            return;
+        }
+
+        if (userDateInterval.end.valueOf() > dateIntervalToGenerate.end.valueOf()) {
+            alert('Out of range');
+            return;
+        }
 
         const newEvent = {
             start: userDateInterval.start.toDate(),
             end: userDateInterval.end.toDate(),
-            title: "YOUR SELECTION",
-            type: "user",
+            title: 'YOUR SELECTION',
+            type: 'user',
             allDay: true
         };
 
@@ -72,8 +80,8 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
             dateIntervals: [...probablyColidingEvents, newEvent]
         });
         onSelectedInterval({
-            "fromDate": userDateInterval.start,
-            "toDate": userDateInterval.end
+            fromDate: userDateInterval.start,
+            toDate: userDateInterval.end
         });
     };
 
@@ -121,11 +129,6 @@ const customEventPropGetter = event => {
             textAlign: "center"
         }
     }
-};
-
-const userDateIntervalIsOutOfRange = (userDateInterval, legalDateInterval) => {
-    return userDateInterval.start.valueOf() < legalDateInterval.start.valueOf() ||
-        userDateInterval.end.valueOf() > legalDateInterval.end.valueOf();
 };
 
 const getEventsForDows = (dows, dateIntervalToGenerate) => {
@@ -190,8 +193,8 @@ const mapReservationsToEvents = reservations => {
     console.log(reservations)
     return reservations.map(reservation => {
         return {
-            start: moment(reservation.startDate).startOf('day').toDate(),
-            end: moment(reservation.endDate).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
+            start: moment(reservation.fromDate).startOf('day').toDate(),
+            end: moment(reservation.toDate).startOf('day').add(1, 'days').subtract(1, 'milliseconds').toDate(),
             title: "RESERVED",
             type: "reserved"
         };

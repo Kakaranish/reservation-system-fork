@@ -7,23 +7,24 @@ const PendingReservation = ({ reservation, onCancelReservation }) => {
     }
 
     return (
-        <div class="card p-1 border-0">
-            <div class="row no-gutters mb-3">
-                <div class="col-auto">
-                    <img src={reservation.roomPhoto} style={{ width: "20vh" }} />
+        <div className="card p-1 border-0">
+            <div className="row no-gutters mb-3">
+                <div className="col-auto">
+                    <img src={reservation.room.photoUrl} style={{ width: "20vh" }} />
                 </div>
-                <div class="col pb-3">
-                    <div class="card-block px-4">
-                        <p class="card-text">
-                            Who's making reservation?: <b>{reservation.userEmail}</b>
+                <div className="col pb-3">
+                    <div className="card-block px-4">
+                        <p className="card-text">
+                            What's requested room?: <b>{reservation.room.name}</b> | {reservation.room.location}
                         </p>
-                        <p class="card-text">
-                            When?: <b>{moment(reservation.startDate).format("YYYY-MM-DD")} - {moment(reservation.endDate).format("YYYY-MM-DD")}</b>
+
+                        <p className="card-text">
+                            When?: <b>{moment(reservation.fromDate).format("YYYY-MM-DD")} - {moment(reservation.toDate).format("YYYY-MM-DD")}</b>
                         </p>
-                        <p class="card-text">
+                        <p className="card-text">
                             Pice Per Day: <b>{reservation.pricePerDay}PLN</b>
                         </p>
-                        <p class="card-text">
+                        <p className="card-text">
                             Total Price: <b>{reservation.totalPrice}PLN</b>
                         </p>
                     </div>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import '../assets/css/RoomPage.css';
-import noImagePlaceholder from "../assets/icons/no-image.svg";
 import moment from "moment";
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import ReservationCalendar from "../components/ReservationCalendar";
 import CreatedReservationModal from '../components/CreatedRervationModal';
+import noImagePlaceholder from "../assets/icons/no-image.svg";
+import '../assets/css/RoomPage.css';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const images = require.context('../assets/images/amenities', true);
 
@@ -50,28 +50,19 @@ const RoomPage = (props) => {
     }
 
     const makeReservationOnClick = async () => {
-        // Temp & not valuable :)
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
-        const userId = "5e8659b0c853a3155c0a4be1";
+        const dataJson = {
+            fromDate: selectedInterval.fromDate.toISOString(),
+            toDate: selectedInterval.toDate.toISOString(),
+            roomId: roomId,
+            pricePerDay: room.pricePerDay,
+            totalPrice: calculateTotalPrice(room, selectedInterval)
+        };
 
-        try {
-            await axios.post(`/create-reservation`, {
-            }, {
-                data: {
-                    startDate: selectedInterval.fromDate.format("YYYY-MM-DD"),
-                    endDate: selectedInterval.toDate.format("YYYY-MM-DD"),
-                    userId: userId,
-                    roomId: roomId,
-                    pricePerDay: room.pricePerDay,
-                    totalPrice: calculateTotalPrice(room, selectedInterval)
-                },
-                params: {
-                    secret_token: secret_token
-                }
-            });
-            window.location = `/`;
-        } catch (error) {
-            console.log(error);
+        const result = await axios.post(`/reservations`, {},
+            { data: dataJson, validateStatus: false });
+
+        if (result.status !== 200) {
+            return;
         }
     }
 
@@ -99,7 +90,7 @@ const RoomPage = (props) => {
 
                         <div className="col-md-5">
                             <div className="row">
-                                <img className="card-img pr-md-4 mt-1 mb-2 room-page-image" src={room.photo ? room.photo : noImagePlaceholder} />
+                                <img className="card-img pr-md-4 mt-1 mb-2 room-page-image" src={room.photoUrl ? room.photoUrl : noImagePlaceholder} />
                             </div>
 
                             <h5 className="title-color mb-3">Amenities</h5>
@@ -159,6 +150,7 @@ const RoomPage = (props) => {
                                     </div>
                                 </>
                         }
+                        
                     </div>
                 </div>
             </div>
