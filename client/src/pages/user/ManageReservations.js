@@ -25,43 +25,30 @@ const ManageReservations = () => {
     }
 
     useEffect(() => {
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlOGEyY2JjNTQzYWU0MDNhYWI3NWQxMiIsImVtYWlsIjoic3Rhc2lla2dydXoxQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIn0sImlhdCI6MTU4NjExMzc0Mn0.7rOzSpnsHDtrLwnCLgRroQ6ldwiFklxUT2ih_WOm16g";
-        const userId = "5e8659b0c853a3155c0a4be1";
         const fetchTabContent = async () => {
             if (currentTab === "cancelled") {
                 if (cancelledContent) return;
-                const content = await axios.get(`/user/cancelled-reservations/${userId}`, {
-                    params: {
-                        secret_token: secret_token
-                    },
-                });
+                const content = await axios.get(`/reservations/user?status=CANCELLED`,
+                    { validateStatus: false });
                 setCancelledContent(content.data);
             }
             else if (currentTab === "accepted") {
                 if (acceptedContent) return;
-                const content = await axios.get(`/user/accepted-reservations/${userId}`, {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get(`/reservations/user?status=ACCEPTED`,
+                    { validateStatus: false });
                 setAcceptedContent(content.data);
             }
             else if (currentTab === "rejected") {
                 if (rejectedContent) return;
-                const content = await axios.get(`/user/rejected-reservations/${userId}`, {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get(`/reservations/user?status=REJECTED`,
+                    { validateStatus: false });
                 setRejectedContent(content.data);
             }
             else {
                 if (pendingContent) return;
-                const content = await axios.get(`/user/pending-reservations/${userId}`, {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get(`/reservations/user?status=PENDING`,
+                    { validateStatus: false });
+                console.log(content);
                 setPendingContent(content.data);
             }
         };
