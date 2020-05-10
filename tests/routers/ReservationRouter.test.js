@@ -312,20 +312,17 @@ describe('POST /reservations', () => {
             .send({
                 fromDate: "2020-05-01T00:00:00.000Z",
                 toDate: "INVALID",
-                userId: "5e8659b0c853a3155c0a4be1",
                 pricePerDay: "222.22",
                 totalPrice: "222.22"
             });
 
         // Assert:
         expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(3);
+        expect(result.body.errors).toHaveLength(2);
         expect(result.body.errors[0].param).toBe('roomId');
         expect(result.body.errors[0].msg.includes('mongo ObjectId')).toBe(true);
-        expect(result.body.errors[1].param).toBe('userId');
-        expect(result.body.errors[1].msg.includes('user with given')).toBe(true);
-        expect(result.body.errors[2].param).toBe('toDate');
-        expect(result.body.errors[2].msg.includes('ISO8601')).toBe(true);
+        expect(result.body.errors[1].param).toBe('toDate');
+        expect(result.body.errors[1].msg.includes('ISO8601')).toBe(true);
     });
 
     it('When room does not exist then errors are returned', async () => {
@@ -349,30 +346,6 @@ describe('POST /reservations', () => {
         expect(result.body.errors).toHaveLength(1);
         expect(result.body.errors[0].param).toBe('roomId');
         expect(result.body.errors[0].msg.includes('room with given')).toBe(true);
-    });
-
-    it('When user does not exist then errors are returned', async () => {
-        // Arrange:
-        const roomId = '5ea6fda6e8ecbe2dad9f1c23';
-        const randomUserId = '5ea6f975f593271424c74017';
-
-        // Act:
-        const result = await request.post(`/reservations`)
-            .set('Cookie', [`accessToken=${testUserAccessToken}`])
-            .send({
-                fromDate: "2020-05-01T00:00:00.000Z",
-                toDate: "2020-05-01T00:00:00.000Z",
-                roomId: roomId,
-                userId: randomUserId,
-                pricePerDay: "222.22",
-                totalPrice: "222.22"
-            });
-
-        // Assert:
-        expect(result.status).toBe(400);
-        expect(result.body.errors).toHaveLength(1);
-        expect(result.body.errors[0].param).toBe('userId');
-        expect(result.body.errors[0].msg.includes('user with given')).toBe(true);
     });
 
     it('When other reservation(s) on this room and date interval exist then errors are returned', async () => {

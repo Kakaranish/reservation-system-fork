@@ -2,7 +2,6 @@ import express from "express";
 import moment from 'moment';
 import { query, validationResult, param, body } from 'express-validator';
 import Room from '../models/room-model';
-import User from '../models/user-model';
 import Reservation from '../models/reservation-model';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import ExistReservationQueryBuilder from '../queries/ExistReservationQueryBuilder';
@@ -29,10 +28,11 @@ router.get('/reservations', reservationsValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         const queryBuilder = new FindReservationQueryBuilder();
         let query = queryBuilder
-            .overlappingDateIterval(req.query.fromDate.toDate(), req.query.toDate.toDate())
             .withPopulatedUserData('-_id email firstName lastName')
             .withPopulatedRoomData('-_id name location photoUrl')
             .select('id fromDate toDate pricePerDay totalPrice userId roomId');
+        if (req.query.fromDate) query = query.overlappingDateIterval
+            (req.query.fromDate.toDate(), req.query.toDate.toDate())
         if (req.query.roomId) query = query.withRoomId(req.query.roomId);
         if (req.query.status) query = query.withStatus(req.query.status);
         const reservations = await query.build();
@@ -82,7 +82,7 @@ router.post('/reservations', createReservationValidationMiddlewares(),
 
             const reservation = new Reservation({
                 roomId: req.body.roomId,
-                userId: req.body.userId,
+                userId: req.user._id,
                 fromDate: req.body.fromDate,
                 toDate: req.body.toDate,
                 pricePerDay: req.body.pricePerDay,
@@ -168,13 +168,6 @@ function createReservationValidationMiddlewares() {
             .custom(async id => {
                 return await Room.exists({ _id: id }).then(exists => {
                     if (!exists) return Promise.reject('room with given id does not exist')
-                });
-            }),
-        body('userId').customSanitizer(id => parseObjectId(id))
-            .notEmpty().withMessage('invalid mongo ObjectId').bail()
-            .custom(async id => {
-                return await User.exists({ _id: id }).then(exists => {
-                    if (!exists) return Promise.reject('user with given id does not exist')
                 });
             }),
         body('fromDate').customSanitizer(date => parseIsoDatetime(date))

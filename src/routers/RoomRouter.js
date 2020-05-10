@@ -122,7 +122,7 @@ function createRoomValidationMiddlewares() {
         body('description').optional().isString(),
         body('amenities').notEmpty().withMessage('cannot be empty').bail()
             .isString().withMessage('must be stringified non-empty array').bail()
-            .custom(amenities => {
+            .custom((amenities, { req }) => {
                 const parsedAmenities = JSON.parse(amenities);
                 if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
                     throw new Error('must be non-empty array');
@@ -130,17 +130,19 @@ function createRoomValidationMiddlewares() {
                 const hasIllegalElements = parsedAmenities.some(
                     amenity => !availableAmenities.includes(amenity));
                 if (hasIllegalElements) throw Error('contains at least one illegal amenity');
+                req.body.amenities = parsedAmenities;
                 return true;
             }),
         body('dows').notEmpty().withMessage('cannot be empty').bail()
             .isString().withMessage('must be stringified non-empty array').bail()
-            .custom(dows => {
+            .custom((dows, { req }) => {
                 const parsedDows = JSON.parse(dows);
                 if (!Array.isArray(parsedDows) || parsedDows.length === 0) {
                     throw Error('must be non-empty array');
                 }
                 const hasIllegalElements = parsedDows.some(dow => !availableDows.includes(dow));
                 if (hasIllegalElements) throw Error("contains at least one illegal dow");
+                req.body.dows = parsedDows;
                 return true;
             })
     ];
