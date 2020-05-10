@@ -4,31 +4,46 @@ import axios from 'axios';
 import DashbordLayout from "./DashbordLayout";
 
 const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
-    const [state, setState] = useState({ loading: true, user: null })
+    const [state, setState] = useState({
+        loading: true,
+        user: null,
+        isAuthorized: false
+    });
 
+    const roles = (rest.roles ?? []).map(role => role.toUpperCase());
     useEffect(() => {
         const auth = async () => {
             const result = await axios.post('/auth/verify');
-            if (!result.data.user && rest.authRequired) alert('You must be logged in. Redirecting to login screen...');
+
+            const user = result.data.user;
+            const isAuthorized = roles.length === 0 || roles.includes(result.data.user?.role);
+            if (!isAuthorized) {
+                if (!user) alert('You must be logged in. Redirecting to login screen...');
+                else alert(`Set of allowed roles is [${roles.join(',')}]. Your is ${user.role}`);
+            }
+
             setState({
                 loading: false,
-                user: result.data.user
+                user: result.data.user,
+                isAuthorized: isAuthorized
             });
         };
         auth();
     }, []);
 
-    if (state.loading) return <DashbordLayout></DashbordLayout>;
-    else return <Route {...rest} render={matchProps => (
-        !rest.authRequired || state.user
-            ?
-            <DashbordLayout user={state.user}>
-                <Component {...matchProps} user={state.user} />
-            </DashbordLayout>
-            
-            :
-            <Redirect to={{ pathname: '/login' }} />
-    )} />
+    if (state.loading) return <></>
+    else {
+        if (state.isAuthorized) {
+            return <Route {...rest} render={matchProps => (
+                <DashbordLayout user={state.user}>
+                    <Component {...matchProps} user={state.user} />
+                </DashbordLayout>
+            )} />
+        } else {
+            if (!state.user) return <Redirect to={{ pathname: '/login' }} />;
+            else return <> {window.location = '/'} </>
+        }
+    }
 };
 
 export default DashboardLayoutRoute;
