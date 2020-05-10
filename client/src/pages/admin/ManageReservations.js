@@ -13,69 +13,53 @@ const ManageReservations = () => {
     const [currentTab, setCurrentTab] = useState("pending");
 
     const onAcceptReservation = async reservationId => {
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
-        await axios.post(`/accept-reservation/`, {}, {
-            data: {
-                reservationId: reservationId
-            },
-            params: {
-                secret_token: secret_token
-            }
-        });
+        const uri = `/reservations/${reservationId}/modify/accept`;
+        const result = await axios.put(uri, {}, { validateStatus: false });
+        if (result.status !== 200) {
+            console.log('Internal error');
+            result.data.errors.forEach(e => console.log(e?.msg ?? e));
+            return;
+        }
+
         window.location.reload();
     };
 
     const onRejectReservation = async reservationId => {
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
-        await axios.post(`/reject-reservation/`, {}, {
-            data: {
-                reservationId: reservationId
-            },
-            params: {
-                secret_token: secret_token
-            }
-        });
+        const uri = `/reservations/${reservationId}/modify/reject`;
+        const result = await axios.put(uri, {}, { validateStatus: false });
+        if (result.status !== 200) {
+            console.log('Internal error');
+            result.data.errors.forEach(e => console.log(e?.msg ?? e));
+            return;
+        }
+
         window.location.reload();
     };
 
     useEffect(() => {
-        console.log(currentTab);
-        const secret_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVlODY1OWIwYzg1M2EzMTU1YzBhNGJlMSIsImVtYWlsIjoic3Rhc2lla2dydXpAZ21haWwuY29tIiwicm9sZSI6IkFETUlOIn0sImlhdCI6MTU4NTg2MzE3OH0.oXtPbMGX31EExflHnFxM8_-jq-DiQbekVBEkL_S7WNc";
         const fetchTabContent = async () => {
             if (currentTab === "cancelled") {
                 if (cancelledContent) return;
-                const content = await axios.get('/admin/cancelled-reservations', {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get('/reservations?status=CANCELLED',
+                    { validateStatus: false });
                 setCancelledContent(content.data);
             }
             else if (currentTab === "accepted") {
                 if (acceptedContent) return;
-                const content = await axios.get(`/admin/accepted-reservations/`, {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get('/reservations?status=ACCEPTED',
+                    { validateStatus: false });
                 setAcceptedContent(content.data);
             }
             else if (currentTab === "rejected") {
                 if (rejectedContent) return;
-                const content = await axios.get(`/admin/rejected-reservations/`, {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get('/reservations?status=REJECTED',
+                    { validateStatus: false });
                 setRejectedContent(content.data);
             }
             else {
                 if (pendingContent) return;
-                const content = await axios.get(`/admin/pending-reservations/`, {
-                    params: {
-                        secret_token: secret_token
-                    }
-                });
+                const content = await axios.get('/reservations?status=PENDING',
+                    { validateStatus: false });
                 setPendingContent(content.data);
             }
         };
