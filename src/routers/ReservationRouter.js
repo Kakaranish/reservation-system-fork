@@ -14,7 +14,8 @@ import {
 import {
     userExistenceValidatorMW,
     queryOptionalDateIntervalValidatorMW,
-    errorSummarizerMW
+    errorSummarizerMW,
+    bodyDateIntervalValidatorMW
 } from '../common-middlewares';
 import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
@@ -49,13 +50,34 @@ router.get('/reservations/:id/user', [
     if (validationResult(req).errors.length > 0)
         return res.status(400).json(validationResult(req));
 
-    const reservation = await Reservation.findById({ _id: req.params.id });
-    if (!reservation) return res.status(200).json(null);
+    withAsyncRequestHandler(res, async () => {
+        const reservation = await Reservation.findById({ _id: req.params.id });
+        if (!reservation) return res.status(200).json(null);
 
-    console.log(parseObjectId(req.user?._id));
-    const belongsToUser = reservation.userId == req.user?._id;
-    res.status(200).json(belongsToUser ? reservation : null
-    );
+        const belongsToUser = reservation.userId == req.user?._id;
+        res.status(200).json(belongsToUser ? reservation : null);
+    });
+});
+
+// USER & ADMIN
+router.put('/reservations/:id/user', updateReservationMiddlewares(), async (req, res) => {
+    if (req.body.errors?.length > 0)
+        return res.status(400).json({ errors: req.body.errors });
+
+    withAsyncRequestHandler(res, async () => {
+        const numDaysBetween = req.body.toDate.diff(req.body.fromDate, 'days') + 1;
+        const result = await Reservation.updateOne({ _id: req.reservation._id }, {
+            $set: {
+                fromDate: req.body.fromDate.toDate(),
+                toDate: req.body.toDate.toDate(),
+                pricePerDay: req.reservation.pricePerDay,
+                totalPrice: req.reservation.pricePerDay * numDaysBetween,
+                status: 'PENDING'
+            }
+        });
+
+        return res.status(200).json({ _id: result._id });
+    });
 });
 
 // USER
@@ -174,6 +196,27 @@ function reservationsForUserValidationMWs() {
                     throw Error('illegal status');
                 return true;
             }),
+        errorSummarizerMW
+    ];
+}
+
+function updateReservationMiddlewares() {
+    return [
+        tokenValidatorMW,
+        param('id').customSanitizer(roomId => parseObjectId(roomId))
+            .notEmpty().withMessage('invalid mongo ObjectId').bail()
+            .custom(async (id, { req }) => {
+                const reservation = await Reservation.findById(id);
+                if (!reservation)
+                    return Promise.reject('reservation with given id does not exist');
+                if (['CANCELLED', 'REJECTED'].includes(reservation.status))
+                    return Promise.reject('reservation has illegal status');
+                if (reservation.userId != req.user._id)
+                    return Promise.reject('reservation does not belong to token bearer');
+                req.reservation = reservation;
+                return true;
+            }),
+        bodyDateIntervalValidatorMW,
         errorSummarizerMW
     ];
 }
