@@ -176,6 +176,50 @@ describe('GET /rooms', () => {
     });
 });
 
+describe('GET /rooms/with-phrase/:phrase', () => {
+    it('When room contains phrase in name then some results are returned', async () => {
+        // Arrange:
+        const phrase = '5eb91a37ee66aecd968b46b3';
+
+        // Act:
+        const result = await request.get(`/rooms/with-phrase/${phrase}`);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body.errors).toBeUndefined();
+        expect(result.body).toHaveLength(1);
+        expect(result.body[0]._id).toBe('5eb91a37ee66aecd968b46b3');
+    });
+
+    it('When room contains phrase in location then some results are returned', async () => {
+        // Arrange:
+        const phrase = '5eb91a91b2f4ba915de68f5a';
+
+        // Act:
+        const result = await request.get(`/rooms/with-phrase/${phrase}`);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body.errors).toBeUndefined();
+        expect(result.body).toHaveLength(1);
+        expect(result.body[0]._id).toBe('5eb91a91b2f4ba915de68f5a');
+    });
+
+    it('When room contains phrase in description then some results are returned', async () => {
+        // Arrange:
+        const phrase = '5eb91ac8acc75b4e0ef2df9c';
+
+        // Act:
+        const result = await request.get(`/rooms/with-phrase/${phrase}`);
+
+        // Assert:
+        expect(result.status).toBe(200);
+        expect(result.body.errors).toBeUndefined();
+        expect(result.body).toHaveLength(1);
+        expect(result.body[0]._id).toBe('5eb91ac8acc75b4e0ef2df9c');
+    });
+});
+
 describe('GET /rooms/:roomId', () => {
     it("When roomId is invalid ObjectId then error list is returned", async () => {
         // Arrange:

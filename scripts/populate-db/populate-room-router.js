@@ -182,4 +182,63 @@ export const populateRoomRouter = async () => {
             })
         ]);
     }
+
+    // -------------------------------------------------------------------------
+    // -- GET /rooms/with-phrase/:phrase
+
+    {
+        const room = new Room({
+            _id: parseObjectId('5eb91a37ee66aecd968b46b3'),
+            name: 'Conference Room 5eb91a37ee66aecd968b46b3',
+            location: 'Krakow',
+            capacity: 20,
+            pricePerDay: 300,
+            description: 'Some description 1',
+            amenities: [
+                'amtTV', 'amtMicrophone', 'amtProjector'
+            ],
+            dows: [
+                'dowMonday', 'dowTuesday', 'dowThursday', 'dowFriday', 'dowSunday'
+            ],
+            photoUrl: '/some/path'
+        });
+        await room.save();
+        await Common.createDummyReservation(Common.user, room._id).save();
+
+        const room2 = new Room({
+            _id: parseObjectId('5eb91a91b2f4ba915de68f5a'),
+            name: 'Conference Room',
+            location: '5eb91a91b2f4ba915de68f5a',
+            capacity: 20,
+            pricePerDay: 300,
+            description: 'Some description 1',
+            amenities: [
+                'amtTV', 'amtMicrophone', 'amtProjector'
+            ],
+            dows: [
+                'dowMonday', 'dowTuesday', 'dowThursday', 'dowFriday', 'dowSunday'
+            ],
+            photoUrl: '/some/path'
+        });
+        await room2.save();
+        await Common.createDummyReservation(Common.user, room2._id).save();
+
+        const room3 = new Room({
+            _id: parseObjectId('5eb91ac8acc75b4e0ef2df9c'),
+            name: 'Conference Room',
+            location: 'Krakow',
+            capacity: 20,
+            pricePerDay: 300,
+            description: '5eb91ac8acc75b4e0ef2df9c XXDD',
+            amenities: [
+                'amtTV', 'amtMicrophone', 'amtProjector'
+            ],
+            dows: [
+                'dowMonday', 'dowTuesday', 'dowThursday', 'dowFriday', 'dowSunday'
+            ],
+            photoUrl: '/some/path'
+        });
+        await room3.save();
+        await Common.createDummyReservation(Common.user, room3._id).save();
+    }
 };
