@@ -4,19 +4,6 @@ import { Link } from "react-router-dom";
 import noImagePlaceholder from "../assets/icons/no-image.svg";
 var images = require.context('../assets/images/amenities', true);
 
-const mapAmenityNameToAssetFilename = amenityName => {
-    switch (amenityName) {
-        case "amtTV":
-            return "tv.svg";
-        case "amtMicrophone":
-            return "mic.svg";
-        case "amtProjector":
-            return "projector.svg";
-        case "amtPhone":
-            return "phone.svg";
-    }
-}
-
 const RoomCard = ({ roomData }) => {
     return (
         <div className="col-12 col-sm-6 col-xl-4" >
@@ -32,9 +19,8 @@ const RoomCard = ({ roomData }) => {
                                 roomData.totalPrice &&
                                 <div className="room-price-color">
                                     Total Price:
-                                <span className="px-1">
-                                        {roomData.totalPrice}PLN
-                                </span>
+                                    <span className="px-1"></span>
+                                    {roomData.totalPrice}PLN
                                 </div>
                             }
                         </div>
@@ -83,5 +69,18 @@ const RoomCard = ({ roomData }) => {
         </div>
     );
 };
+
+const mapAmenityNameToAssetFilename = amenityName => {
+    switch (amenityName) {
+        case "amtTV":
+            return "tv.svg";
+        case "amtMicrophone":
+            return "mic.svg";
+        case "amtProjector":
+            return "projector.svg";
+        case "amtPhone":
+            return "phone.svg";
+    }
+}
 
 export default RoomCard;

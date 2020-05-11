@@ -52,21 +52,22 @@ const Navbar = (props) => {
         </div>
 
         {
-          !props.user ? null
-            : <ul className="navbar-nav ml-auto mt-lg-0">
-              <li className="nav-item dropdown">
-                <a className="nav-link dropdown-toggle" href="#"
-                  id="navbarDropdown" role="button" data-toggle="dropdown"
-                  aria-haspopup="true" aria-expanded="false">
-                  {props.user.email}
-                </a>
+          props.user &&
+          <ul className="navbar-nav ml-auto mt-lg-0">
+            <li className="nav-item dropdown">
+              <a className="nav-link dropdown-toggle" href="#"
+                id="navbarDropdown" role="button" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                {props.user.email}
+              </a>
 
-                <div className="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown" onClick={handleLogout}>
-                  <a className="dropdown-item" href="#">Log out</a>
-                </div>
-              </li>
-            </ul>
+              <div className="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown" onClick={handleLogout}>
+                <a className="dropdown-item" href="#">Log out</a>
+              </div>
+            </li>
+          </ul>
         }
+        
       </div>
     </nav>
   );

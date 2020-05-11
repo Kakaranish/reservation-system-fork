@@ -2,9 +2,8 @@ import React from "react";
 import moment from "moment";
 
 const RejectedReservation = ({ reservation, onAcceptReservation }) => {
-    const onAccept = () => {
-        onAcceptReservation(reservation["_id"]);
-    }
+    
+    const onAccept = () => onAcceptReservation(reservation._id);
 
     return (
         <div className="card p-1 border-0">
@@ -34,7 +33,7 @@ const RejectedReservation = ({ reservation, onAcceptReservation }) => {
                 <div className="card-footer w-100 bg-white border-0 mt-sm-2 px-0">
                     <div className="row">
                         <div className="col-12">
-                        <button className="btn btn-block text-uppercase mb-2 btn-success" onClick={onAccept}>
+                            <button className="btn btn-block text-uppercase mb-2 btn-success" onClick={onAccept}>
                                 Accept
                             </button>
                         </div>

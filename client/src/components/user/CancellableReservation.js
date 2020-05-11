@@ -2,13 +2,9 @@ import React from "react";
 import moment from "moment";
 
 const PendingReservation = ({ reservation, onCancelReservation }) => {
-    const onCancel = () => {
-        onCancelReservation(reservation._id);
-    }
-
-    const onEdit = () => {
-        window.location = `/edit-reservation/${reservation._id}`
-    };
+    
+    const onCancel = () => onCancelReservation(reservation._id);
+    const onEdit = () => window.location = `/edit-reservation/${reservation._id}`;
 
     return (
         <div className="card p-1 border-0">

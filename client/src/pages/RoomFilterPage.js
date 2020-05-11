@@ -12,48 +12,24 @@ const RoomFilterPage = () => {
         from: new Date(new Date().setUTCHours(0, 0, 0, 0)),
         to: new Date(new Date().setUTCHours(0, 0, 0, 0))
     });
+    const [priceInterval, setPriceInterval] = useState({ start: 100, end: 300 });
 
-    const fromDateOnChange = value => {
-        if (value.getTime() > dateInterval.to.getTime()) {
-            setDateInterval({
-                from: dateInterval.to,
-                to: value
-            });
-        }
-        else {
-            setDateInterval({
-                from: value,
-                to: dateInterval.to
-            });
-        }
+    const handleFromDateChange = value => {
+        if (value.getTime() > dateInterval.to.getTime())
+            setDateInterval({ from: dateInterval.to, to: value });
+        else
+            setDateInterval({ from: value, to: dateInterval.to });
     };
 
-    const toDateOnChange = value => {
-        if (value.getTime() < dateInterval.from.getTime()) {
-            setDateInterval({
-                from: value,
-                to: dateInterval.from
-            });
-        }
-        else {
-            setDateInterval({
-                from: dateInterval.from,
-                to: value
-            });
-        }
+    const handleToDateChange = value => {
+        if (value.getTime() < dateInterval.from.getTime())
+            setDateInterval({ from: value, to: dateInterval.from });
+        else
+            setDateInterval({ from: dateInterval.from, to: value });
     };
 
-    const [priceInterval, setPriceInterval] = useState({
-        start: 100,
-        end: 300
-    });
-
-    const priceIntervalOnChange = value => {
-        setPriceInterval({
-            start: value[0],
-            end: value[1]
-        });
-    }
+    const handlePriceIntervalChange = value =>
+        setPriceInterval({ start: value[0], end: value[1] });
 
     return (
         <div>
@@ -69,7 +45,11 @@ const RoomFilterPage = () => {
                 </div>
                 <div className="col-lg-6">
                     <div className="row justify-content-center">
-                        <Calendar onChange={fromDateOnChange} value={dateInterval.from} minDate={new Date()} maxDate={moment().add(6, 'months').toDate()} />
+                        <Calendar onChange={handleFromDateChange}
+                            value={dateInterval.from}
+                            minDate={new Date()}
+                            maxDate={moment().add(6, 'months').toDate()}
+                        />
                     </div>
                     <div className="row justify-content-center">
                         <b>From</b>
@@ -78,7 +58,11 @@ const RoomFilterPage = () => {
 
                 <div className="col-lg-6">
                     <div className="row justify-content-center">
-                        <Calendar onChange={toDateOnChange} value={dateInterval.to} minDate={new Date()} maxDate={moment().add(6, 'months').toDate()}  />
+                        <Calendar onChange={handleToDateChange}
+                            value={dateInterval.to}
+                            minDate={new Date()}
+                            maxDate={moment().add(6, 'months').toDate()}
+                        />
                     </div>
                     <div className="row justify-content-center">
                         <b>To</b>
@@ -97,7 +81,7 @@ const RoomFilterPage = () => {
                 </div>
                 <div className="col-8">
                     <Range min={0} max={2000} defaultValue={[priceInterval.start, priceInterval.end]}
-                        step={20} onChange={priceIntervalOnChange} />
+                        step={20} onChange={handlePriceIntervalChange} />
                 </div>
                 <div className="col-2">
                     {priceInterval.end} PLN
@@ -115,7 +99,9 @@ const RoomFilterPage = () => {
                             toPrice: priceInterval.end
                         })
                     }}>
-                        <button type="button" className="btn btn-primary btn-lg btn-block">Search Rooms!</button>
+                        <button type="button" className="btn btn-primary btn-lg btn-block">
+                            Search Rooms!
+                        </button>
                     </Link>
                 </div>
             </div>

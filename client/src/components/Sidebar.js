@@ -20,7 +20,8 @@ const Sidebar = (props) => {
     const handleLogout = async () => {
         const result = await axios.post('/auth/logout', {}, { validateStatus: false });
         if (result.status !== 200) {
-            console.log('error while logging out');
+            result.data.errors.forEach(e => console.log(e?.msg ?? e));
+            alert('Internal error. Try to refresh page.');
             return;
         }
         window.location = `/`;
@@ -50,36 +51,32 @@ const Sidebar = (props) => {
                 </Link>
 
                 {
-                    !props.user ? <></>
-                        : <Link to="/user/manage-reservations">
-                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                                <img src={reservationsIcon} className="icon" />
-                                <>Your Reservations</>
-                            </div>
-                        </Link>
+                    props.user &&
+                    <Link to="/user/manage-reservations">
+                        <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                            <img src={reservationsIcon} className="icon" />
+                            <>Your Reservations</>
+                        </div>
+                    </Link>
                 }
 
                 {
-                    props.user?.role !== 'ADMIN'
-                        ?
-                        <></>
+                    props.user?.role === 'ADMIN' &&
+                    <>
+                        <Link to="/admin/manage-reservations">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                <img src={settingsIcon} className="icon" />
+                                <>Users Reservations</>
+                            </div>
+                        </Link>
 
-                        :
-                        <>
-                            <Link to="/admin/manage-reservations">
-                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                                    <img src={settingsIcon} className="icon" />
-                                    <>Users Reservations</>
-                                </div>
-                            </Link>
-
-                            <Link to="/create-room">
-                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                                    <img src={createRoomIcon} className="icon" />
-                                    <>Create Room</>
-                                </div>
-                            </Link>
-                        </>
+                        <Link to="/create-room">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                <img src={createRoomIcon} className="icon" />
+                                <>Create Room</>
+                            </div>
+                        </Link>
+                    </>
                 }
 
                 <Link to={MainPage}>

@@ -4,27 +4,6 @@ import moment from 'moment';
 import axios from "axios";
 import RoomCard from "../components/RoomCard";
 
-const resolveQueryParams = queryParams => {
-	let fromDate = moment.utc(queryParams.fromDate, "DD-MM-YYYY", true);
-	if (!fromDate.isValid()) fromDate = moment.utc().startOf('day');
-
-	let toDate = moment.utc(queryParams.toDate, "DD-MM-YYYY", true);
-	if (!toDate.isValid()) toDate = moment.utc().startOf('day');
-
-	if (fromDate.isAfter(toDate)) [fromDate, toDate] = [toDate, fromDate];
-
-	let fromPrice = parseInt(queryParams.fromPrice) || 0;
-	let toPrice = parseInt(queryParams.toPrice) || 2000;
-	if (fromPrice > toPrice) [fromPrice, toPrice] = [toPrice, fromPrice];
-
-	return {
-		fromDate: fromDate,
-		toDate: toDate,
-		fromPrice: fromPrice,
-		toPrice: toPrice
-	};
-};
-
 const RoomsPage = (props) => {
 	const queryParams = queryString.parse(props.location.search);
 	const resolvedQueryParams = resolveQueryParams(queryParams);
@@ -42,6 +21,11 @@ const RoomsPage = (props) => {
 					toDate: queryParams.toDate.toISOString()
 				}
 			});
+			if (result.status !== 200) {
+				result.data.errors.forEach(e => console.log(e?.msg ?? e));
+				alert('Internal error. Try to refresh page.');
+				return;
+			}
 
 			const rooms = result.data ?? [];
 			rooms.forEach(r => r.totalPrice = r.pricePerDay * intervalLength);
@@ -78,6 +62,27 @@ const RoomsPage = (props) => {
 			}
 		</>
 	);
+};
+
+const resolveQueryParams = queryParams => {
+	let fromDate = moment.utc(queryParams.fromDate, "DD-MM-YYYY", true);
+	if (!fromDate.isValid()) fromDate = moment.utc().startOf('day');
+
+	let toDate = moment.utc(queryParams.toDate, "DD-MM-YYYY", true);
+	if (!toDate.isValid()) toDate = moment.utc().startOf('day');
+
+	if (fromDate.isAfter(toDate)) [fromDate, toDate] = [toDate, fromDate];
+
+	let fromPrice = parseInt(queryParams.fromPrice) || 0;
+	let toPrice = parseInt(queryParams.toPrice) || 2000;
+	if (fromPrice > toPrice) [fromPrice, toPrice] = [toPrice, fromPrice];
+
+	return {
+		fromDate: fromDate,
+		toDate: toDate,
+		fromPrice: fromPrice,
+		toPrice: toPrice
+	};
 };
 
 export default RoomsPage;

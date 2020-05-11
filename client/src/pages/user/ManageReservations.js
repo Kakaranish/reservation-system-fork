@@ -79,72 +79,68 @@ const ManageReservations = () => {
             <div id="reservationTabsContent" className="tab-content bg-white">
                 <div className="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
                     {
-                        !pendingContent
-                            ? null
-                            : <>
-                                <div className="container p-4">
-                                    {
-                                        pendingContent.map(reservation => {
-                                            return <CancellableReservation
-                                                key={reservation["_id"]}
-                                                reservation={reservation}
-                                                onCancelReservation={onCancelReservation} />
-                                        })
-                                    }
-                                </div>
-                            </>
+                        pendingContent &&
+                        <>
+                            <div className="container p-4">
+                                {
+                                    pendingContent.map(reservation => {
+                                        return <CancellableReservation
+                                            key={reservation["_id"]}
+                                            reservation={reservation}
+                                            onCancelReservation={onCancelReservation} />
+                                    })
+                                }
+                            </div>
+                        </>
                     }
                 </div>
                 <div className="tab-pane fade" id="accepted" role="tabpanel" aria-labelledby="accepted-tab">
                     {
-                        !acceptedContent
-                            ? null
-                            : <>
-                                <div className="container p-4">
-                                    {
-                                        acceptedContent.map(reservation => {
-                                            return <CancellableReservation
-                                                key={reservation["_id"]}
-                                                reservation={reservation}
-                                                onCancelReservation={onCancelReservation} />
-                                        })
-                                    }
-                                </div>
-                            </>
+                        acceptedContent &&
+                        <>
+                            <div className="container p-4">
+                                {
+                                    acceptedContent.map(reservation => {
+                                        return <CancellableReservation
+                                            key={reservation["_id"]}
+                                            reservation={reservation}
+                                            onCancelReservation={onCancelReservation} />
+                                    })
+                                }
+                            </div>
+                        </>
                     }
                 </div>
                 <div className="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
                     {
-                        !rejectedContent
-                            ? null
-                            : <>
-                                <div className="container p-4">
-                                    {
-                                        rejectedContent.map(reservation => {
-                                            return <OtherReservation
-                                                key={reservation["_id"]}
-                                                reservation={reservation} />
-                                        })
-                                    }
-                                </div>
-                            </>
+                        rejectedContent &&
+                        <>
+                            <div className="container p-4">
+                                {
+                                    rejectedContent.map(reservation => {
+                                        return <OtherReservation
+                                            key={reservation["_id"]}
+                                            reservation={reservation} />
+                                    })
+                                }
+                            </div>
+                        </>
                     }
                 </div>
                 <div className="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
                     {
-                        !cancelledContent
-                            ? null
-                            : <>
-                                <div className="container p-4">
-                                    {
-                                        cancelledContent.map(reservation => {
-                                            return <OtherReservation
-                                                key={reservation["_id"]}
-                                                reservation={reservation} />
-                                        })
-                                    }
-                                </div>
-                            </>
+                        cancelledContent &&
+                        <>
+                            <div className="container p-4">
+                                {
+                                    cancelledContent.map(reservation => {
+                                        return <OtherReservation
+                                            key={reservation["_id"]}
+                                            reservation={reservation} />
+                                    })
+                                }
+                            </div>
+                        </>
                     }
                 </div>
             </div>

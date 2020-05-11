@@ -19,14 +19,13 @@ const CreatedReservationModal = ({ selectedDateInterval, reservationMakeOnClick 
             <Modal show={show} onHide={handleClose}>
                 <Modal.Body>
                     {
-                        !selectedDateInterval
-                            ? null :
-                            <>
-                                Your reservation request has been created.<br />
+                        selectedDateInterval &&
+                        <>
+                            Your reservation request has been created.<br />
                                 Now wait for administrator approval <br />
                                 Selected date interval:
                                 <b> {selectedDateInterval.fromDate.format("DD-MM-YYYY")} - {selectedDateInterval.toDate.format("DD-MM-YYYY")}</b><br />
-                            </>
+                        </>
                     }
                 </Modal.Body>
                 <Modal.Footer>

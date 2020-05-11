@@ -12,19 +12,17 @@ const LoginPage = () => {
 
     const handleSubmit = async event => {
         event.preventDefault();
-        console.log(document.cookie);
         const formData = new FormData(event.target);
 
         let formDataJson = {};
-        for (const [key, value] of formData.entries()) {
-            formDataJson[key] = value;
-        }
+        for (const [key, value] of formData.entries()) formDataJson[key] = value;
 
         const result = await axios.post('/auth/login', formDataJson, { validateStatus: false })
         if (result.data.errors?.length > 0) {
             setValidationErrors(result.data.errors.map(e => e.msg));
             return;
         }
+        
         setValidationErrors(null);
         window.location = `/`;
     };

@@ -4,19 +4,26 @@ import axios from 'axios';
 import DashbordLayout from "./DashbordLayout";
 
 const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
+
+    const roles = (rest.roles ?? []).map(role => role.toUpperCase());
+
     const [state, setState] = useState({
         loading: true,
         user: null,
         isAuthorized: false
     });
 
-    const roles = (rest.roles ?? []).map(role => role.toUpperCase());
     useEffect(() => {
         const auth = async () => {
             const result = await axios.post('/auth/verify');
+            if (result.status !== 200) {
+                result.data.errors.forEach(e => console.log(e?.msg ?? e));
+                alert('Internal error. Try to refresh page.');
+                return;
+            }
 
             const user = result.data.user;
-            const isAuthorized = roles.length === 0 || roles.includes(result.data.user?.role);
+            const isAuthorized = roles.length === 0 || roles.includes(user?.role);
             if (!isAuthorized) {
                 if (!user) alert('You must be logged in. Redirecting to login screen...');
                 else alert(`Set of allowed roles is [${roles.join(',')}]. Your is ${user.role}`);

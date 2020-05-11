@@ -3,13 +3,8 @@ import moment from "moment";
 
 const PendingReservation = ({ reservation, onAcceptReservation, onRejectReservation }) => {
 
-    const onAccept = () => {
-        onAcceptReservation(reservation["_id"]);
-    }
-
-    const onReject = () => {
-        onRejectReservation(reservation["_id"]);
-    }
+    const onAccept = () => onAcceptReservation(reservation._id);
+    const onReject = () => onRejectReservation(reservation._id);
 
     return (
         <div className="card p-1 border-0">

@@ -89,7 +89,7 @@ const RoomPage = (props) => {
                             <h5 className="title-color">Description</h5>
                             <p className="global-font font-weight-light" style={{ color: "#6A6972" }}>
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin non odio et odio condimentum egestas. Duis viverra pulvinar odio, sit amet luctus nulla mattis quis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Pellentesque urna libero, ullamcorper ac nunc et, sollicitudin tincidunt ex. Donec pharetra purus sed nibh ultricies ullamcorper. Sed ut urna velit. Sed fringilla neque lorem, tincidunt euismod risus congue eu. Vestibulum libero enim, iaculis at arcu id, suscipit feugiat metus.
-                                    </p>
+                            </p>
                         </div>
 
                         <div className="col-md-5">

@@ -7,13 +7,10 @@ const CreateRoomPage = () => {
     const [file, setFile] = useState(null);
     const [validationErrors, setValidationErrors] = useState(null);
 
-    const handleFileChange = passedFile => {
-        setFile(passedFile);
-    };
-
+    const handleFileChange = passedFile => setFile(passedFile);
     const handleSubmit = async event => {
         event.preventDefault();
-        
+
         const formData = new FormData(event.target);
         formData.append('file', file);
         processFormData(formData);
@@ -29,18 +26,18 @@ const CreateRoomPage = () => {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (result.status !== 200) {
-            alert('Internal error!');
-            console.log(result);
+            alert('Internal error. Try refresh page.');
+            result.data.errors.forEach(e => console.log(e?.msg ?? e));
             return;
         }
         window.location = `/rooms`;
     };
 
     return (
-        <React.Fragment>
+        <>
             <div className="py-3 px-4" >
                 <div className="row" className="text-center" style={{ "marginBottom": "30px" }}>
-                    <h2>Create room</h2>
+                    <h2>Create conference room</h2>
                 </div>
 
                 <form onSubmit={handleSubmit}>
@@ -92,19 +89,17 @@ const CreateRoomPage = () => {
                         </div>
 
                         {
-                            !validationErrors
-                                ? null
-                                :
-                                <div className="col-12 mt-2">
-                                    <h4 className="text-danger">Validation errors</h4>
-                                    <ul>
-                                        {
-                                            validationErrors.map((error, i) => {
-                                                return <li key={`val-err-${i}`} className="text-danger font-weight-bold">{error}</li>
-                                            })
-                                        }
-                                    </ul>
-                                </div>
+                            validationErrors &&
+                            <div className="col-12 mt-2">
+                                <h4 className="text-danger">Validation errors</h4>
+                                <ul>
+                                    {
+                                        validationErrors.map((error, i) => {
+                                            return <li key={`val-err-${i}`} className="text-danger font-weight-bold">{error}</li>
+                                        })
+                                    }
+                                </ul>
+                            </div>
                         }
 
                         <div className="col-12 mt-2">
@@ -113,7 +108,7 @@ const CreateRoomPage = () => {
                     </div>
                 </form>
             </div>
-        </React.Fragment >
+        </>
     );
 };
 
@@ -148,20 +143,19 @@ function processFormData(formData) {
 }
 
 /**
- * 
  * @param {FormData} formData 
  */
 const validateFormData = (formData, passedFile) => {
     const validationErrors = [];
-    if (JSON.parse(formData.get('amenities')).length === 0) {
+    
+    if (JSON.parse(formData.get('amenities')).length === 0)
         validationErrors.push("At least one amenity required");
-    }
-    if (JSON.parse(formData.get('dows')).length === 0) {
+    if (JSON.parse(formData.get('dows')).length === 0)
         validationErrors.push("At least one day of availability required");
-    }
-
-    if (!passedFile) validationErrors.push("Conference room must have photo");
-    return validationErrors;
+    if (!passedFile)
+        validationErrors.push("Conference room must have photo");
+    
+        return validationErrors;
 }
 
 export default CreateRoomPage;

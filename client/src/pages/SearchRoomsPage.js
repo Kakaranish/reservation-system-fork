@@ -10,10 +10,11 @@ const SearchRoomsPage = (props) => {
     const [rooms, setRooms] = useState(null);
     useEffect(() => {
         const getRooms = async () => {
-            const result = await axios.get(`/rooms/with-phrase/${encodeURIComponent(phrase)}`,
-                { validateStatus: false });
+            const uri = `/rooms/with-phrase/${encodeURIComponent(phrase)}`;
+            const result = await axios.get(uri, { validateStatus: false });
             if (result.status !== 200) {
-                alert('Internal error');
+                result.data.errors.forEach(e => console.log(e?.msg ?? e));
+                alert('Internal error. Try to refresh page.');
                 return;
             }
             setRooms(result.data);
@@ -23,23 +24,13 @@ const SearchRoomsPage = (props) => {
 
     if (!phrase || phrase === '') return <Redirect to={{ pathname: '/filter-rooms' }} />
     else {
-        return (
-            <>
-                {
-                    !rooms || rooms.length === 0 ?
-                        <>
-                            <h3>No rooms found for phrase '{phrase}'</h3>
-                        </>
-                        :
-                        <>
-                            <h3>Rooms found for phrase '{phrase}'</h3>
-                            <div className="row">
-                                {rooms.map(roomData => <RoomCard key={`room-${roomData["_id"]}`} roomData={roomData} />)}
-                            </div>
-                        </>
-                }
-            </>
-        );
+        if (!rooms || rooms.length === 0) return <h3>No rooms found for phrase '{phrase}'</h3>;
+        else return <>
+            <h3>Rooms found for phrase '{phrase}'</h3>
+            <div className="row">
+                {rooms.map(roomData => <RoomCard key={`room-${roomData["_id"]}`} roomData={roomData} />)}
+            </div>
+        </>;
     }
 };
 
