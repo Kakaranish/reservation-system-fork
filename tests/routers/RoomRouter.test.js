@@ -18,13 +18,13 @@ let testUserAccessToken = TestUtils.createTestAccessToken({
     _id: '5ea54fe32d431462827c2c5e',
     email: 'user@mail.com',
     role: 'USER'
-}, 3600);
+}, 3600 * 1000);
 
 let testAdminAccessToken = TestUtils.createTestAccessToken({
     _id: '5ea5501566815162f73bad80',
     email: 'admin@mail.com',
     role: 'ADMIN'
-}, 3600);
+}, 3600 * 1000);
 
 /*
     Room1: 5ea55125e95cc70df70870f7
@@ -381,7 +381,7 @@ describe('POST /rooms', () => {
             if (result.body.photoUrl) {
                 const photoPath = path.resolve(__dirname, "..", "..", "client", "public")
                     + result.body.photoUrl;
-                await fs.unlink(photoPath);
+                fs.unlink(photoPath, () => { });
             }
         }
     });
@@ -418,7 +418,7 @@ describe('POST /rooms', () => {
             if (result.body.photoUrl) {
                 const photoPath = path.resolve(__dirname, "..", "..", "client", "public")
                     + result.body.photoUrl;
-                await fs.unlink(photoPath);
+                fs.unlink(photoPath, () => {});
             }
         }
     });

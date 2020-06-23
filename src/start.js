@@ -1,7 +1,7 @@
 import app from './app';
-import { connectProdDb } from './mongo-utils';
+import { connectDb } from './mongo-utils';
 
-connectProdDb();
+connectDb();
 
 const port = process.env.PORT
 app.listen(port, () => {

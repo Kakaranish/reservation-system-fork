@@ -95,7 +95,7 @@ describe('/register', () => {
                 firstName: 'firstname',
                 lastName: 'lastname'
             });
-
+            
         // Assert:
         let user;
         try {
@@ -103,7 +103,7 @@ describe('/register', () => {
             user = await User.findOne({ email: userEmail });
             expect(user).not.toBeNull();
 
-            const cookiesStr = result.header['set-cookie'][0].split(',');
+            const cookiesStr = result.header['set-cookie'];
             const cookies = cookiesStr.map(cookieStr => cookie.parse(cookieStr));
             const decodedAccessToken = AuthUtils.decodeJwtAccessToken(cookies[0].accessToken);
             const decodedRefreshToken = AuthUtils.decodeJwtRefreshToken(cookies[1].refreshToken);
@@ -200,7 +200,7 @@ describe('/login', () => {
         // Assert:
         expect(result.status).toBe(200);
 
-        const cookiesStr = result.header['set-cookie'][0].split(',');
+        const cookiesStr = result.header['set-cookie'];
         const cookies = cookiesStr.map(cookieStr => cookie.parse(cookieStr));
         const decodedAccessToken = AuthUtils.decodeJwtAccessToken(cookies[0].accessToken);
         const decodedRefreshToken = AuthUtils.decodeJwtRefreshToken(cookies[1].refreshToken);

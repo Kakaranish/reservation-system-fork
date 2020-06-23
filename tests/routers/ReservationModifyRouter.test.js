@@ -14,13 +14,13 @@ let testUserAccessToken = TestUtils.createTestAccessToken({
     _id: '5ea54fe32d431462827c2c5e',
     email: 'user@mail.com',
     role: 'USER'
-}, 3600);
+}, 3600 * 1000);
 
 let testAdminAccessToken = TestUtils.createTestAccessToken({
     _id: '5ea5501566815162f73bad80',
     email: 'admin@mail.com',
     role: 'ADMIN'
-}, 3600);
+}, 3600 * 1000);
 
 
 beforeAll(async () => {
