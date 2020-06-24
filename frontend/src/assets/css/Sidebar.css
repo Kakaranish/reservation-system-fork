@@ -38,7 +38,6 @@ body {
 .items-separator {
   height: 1px;
   border: 0;
-  margin: 7px 0;
   border-top: 0.75px solid #bbbbbb;
   padding: 0;
 }

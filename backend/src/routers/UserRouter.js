@@ -3,7 +3,7 @@ import { withAsyncRequestHandler } from '../common';
 import User from '../models/user-model';
 import { tokenValidatorMW, adminValidatorMW } from '../auth/auth-validators';
 import { validationExaminator } from '../common-middlewares';
-import { param } from 'express-validator';
+import { param, body } from 'express-validator';
 
 const router = express.Router();
 
@@ -14,10 +14,28 @@ router.get('/', getUsersValidationMWs(), async (req, res) => {
     });
 });
 
+router.get('/me', tokenValidatorMW, async (req, res) => {
+    withAsyncRequestHandler(res, async () => {
+        const user = await User.findById(req.user._id);
+        res.status(200).json(user);
+    });
+});
+
 router.put('/:id/role/:role', updateUserValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         req.user.role = req.params.role;
         await req.user.save();
+
+        res.sendStatus(200);
+    });
+});
+
+router.put('/me', updateMeValidationMWs(), async (req, res) => {
+    withAsyncRequestHandler(res, async () => {
+        const user = await User.findById(req.user._id);
+        user.firstName = req.body.firstName;
+        user.lastName = req.body.lastName;
+        await user.save();
 
         res.sendStatus(200);
     });
@@ -42,6 +60,15 @@ function updateUserValidationMWs() {
                 req.user = user;
             }),
         param('role').isIn(['USER', 'OWNER', 'ADMIN']).withMessage('illegal role'),
+        validationExaminator
+    ];
+}
+
+function updateMeValidationMWs() {
+    return [
+        tokenValidatorMW,
+        body('firstName').notEmpty().withMessage('cannot be empty'),
+        body('lastName').notEmpty().withMessage('cannot be empty'),
         validationExaminator
     ];
 }

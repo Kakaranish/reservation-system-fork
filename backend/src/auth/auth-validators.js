@@ -27,24 +27,30 @@ export const tokenValidatorMW = async (req, res, next) => {
     next();
 };
 
-export const adminValidatorMW = (req, res, next) => {
-    if (req.user.role !== 'ADMIN')
-        return res.status(401).json({ errors: ['admin role required'] });
-    next();
-}
-
 export const userValidatorMW = (req, res, next) => {
     if (req?.user?.role !== 'USER')
         return res.status(401).json({ errors: ['user role required'] });
     next();
-}
+};
+
+export const ownerValidatorMW = (req, res, next) => {
+    if (req?.user?.role !== 'OWNER')
+        return res.status(401).json({ errors: ['owner role required'] });
+    next();
+};
+
+export const adminValidatorMW = (req, res, next) => {
+    if (req.user.role !== 'ADMIN')
+        return res.status(401).json({ errors: ['admin role required'] });
+    next();
+};
 
 export const identityValidatorMW = (req, res, next) => {
     if(!req.allowedId) next();
     if(req.allowedId !== req.user?._id)
         return res.status(401).json({ errors: ['unauthorized access'] });
     next();
-}
+};
 
 /**
  * @param {Object} req

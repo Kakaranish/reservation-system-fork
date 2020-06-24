@@ -17,6 +17,7 @@ import AuthRoutes from './pages/AuthRoutes';
 import AuthOnlyRoute from './pages/layouts/AuthOnlyRoute';
 import ErrorPage from './pages/ErrorPage';
 import UsersPage from './pages/admin/UsersPage';
+import AccountPage from './pages/AccountPage';
 
 const App = () => <>
   <BrowserRouter>
@@ -33,14 +34,16 @@ const App = () => <>
           <Route path="/user/manage-reservations"
             component={UserManageReservations} />
 
+          <AuthOnlyRoute path='/account' component={AccountPage} />
           <AuthOnlyRoute path="/users" component={UsersPage}
             roles={['ADMIN']} />
           <AuthOnlyRoute path='/edit-reservation/:reservationId'
             component={EditReservationPage} roles={['USER', 'ADMIN']} />
-          <AuthOnlyRoute path="/create-room" component={CreateRoomPage}
-            roles={['ADMIN']} />
           <AuthOnlyRoute path="/admin/manage-reservations"
             component={AdminManageReservations} roles={['ADMIN']} />
+
+          <AuthOnlyRoute path="/create-room" component={CreateRoomPage}
+            roles={['OWNER']} />
 
           <Route path='/error/:code' component={ErrorPage} />
           <Route path='/refresh' component={RefreshPage} />

@@ -1,4 +1,5 @@
 import React from "react";
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
 import "../assets/css/Sidebar.css";
@@ -8,12 +9,11 @@ import reservationsIcon from '../assets/icons/sidebar/reservations.svg';
 import roomsIcon from '../assets/icons/sidebar/rooms.svg';
 import createRoomIcon from '../assets/icons/sidebar/create-room.svg';
 import settingsIcon from '../assets/icons/sidebar/settings.svg';
-import helpIcon from '../assets/icons/sidebar/help.svg';
 import loginIcon from '../assets/icons/sidebar/log-in.svg';
 import logoutIcon from '../assets/icons/sidebar/log-out.svg';
 import registerIcon from '../assets/icons/sidebar/register.svg';
-import axios from 'axios';
-import MainPage from "../pages/MainPage";
+import usersIcon from '../assets/icons/sidebar/users.svg';
+import accountIcon from '../assets/icons/sidebar/account.svg';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import AwareComponentBuilder from "../common/AwareComponentBuilder";
 
@@ -76,6 +76,17 @@ const Sidebar = (props) => {
                             </div>
                         </Link>
 
+                        <Link to="/users">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                <img src={usersIcon} className="icon" />
+                                Users
+                            </div>
+                        </Link>
+                    </>
+                }
+
+                {
+                    props.identity?.role === 'OWNER' && <>
                         <Link to="/create-room">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={createRoomIcon} className="icon" />
@@ -85,25 +96,28 @@ const Sidebar = (props) => {
                     </>
                 }
 
-                <Link to={MainPage}>
-                    <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                        <img src={helpIcon} className="icon" />
-                        Help
-                    </div>
-                </Link>
-
                 <div className='items-separator'></div>
 
                 {
                     props.identity
-                        ?
-                        <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center"
-                            style={{ cursor: 'pointer' }} onClick={handleLogout}>
-                            <img src={logoutIcon} className="icon" />
-                            Log Out
-                        </div>
-                        :
-                        <>
+                        ? <>
+                            <Link to="/account" >
+                                <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                    <img src={accountIcon} className="icon" />
+                                    Account
+                                </div>
+                            </Link>
+
+
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center"
+                                style={{ cursor: 'pointer' }} onClick={handleLogout}>
+                                <img src={logoutIcon} className="icon" />
+                                Log Out
+                            </div>
+
+                        </>
+
+                        : <>
                             <Link to="/auth/login" >
                                 <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                     <img src={loginIcon} className="icon" />

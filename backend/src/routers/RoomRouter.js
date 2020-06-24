@@ -1,6 +1,4 @@
 import express from "express";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import Room from "../models/room-model";
 import '../auth/passport-config';
 import * as dbQueries from '../queries/db-queries';
@@ -13,7 +11,7 @@ import {
 } from '../common-middlewares'
 import { preparePrice, parseObjectId } from '../common';
 import { query, param, header, body } from 'express-validator';
-import { tokenValidatorMW } from '../auth/auth-validators';
+import { tokenValidatorMW, ownerValidatorMW } from '../auth/auth-validators';
 import FindReservationQueryBuilder from "../queries/FindReservationQueryBuilder";
 
 const router = express.Router();
@@ -90,7 +88,7 @@ router.post('/', tokenValidatorMW, createRoomValidationMiddlewares(),
                 pricePerDay: req.body.pricePerDay,
                 description: req.body.description,
                 amenities: req.amenities,
-                dows: req   .dows,
+                dows: req.dows,
                 image: req.image
             });
             await room.save();
@@ -115,6 +113,8 @@ function getRoomsValidationMiddlewares() {
 
 function createRoomValidationMiddlewares() {
     return [
+        tokenValidatorMW,
+        ownerValidatorMW,
         body('name').isLength({ min: 3 }).withMessage('must have length 3'),
         body('location').isString().isLength({ min: 3 }),
         body('capacity').isInt({ min: 0 }),
