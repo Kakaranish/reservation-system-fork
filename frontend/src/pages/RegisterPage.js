@@ -3,8 +3,9 @@ import { Link, useHistory } from "react-router-dom";
 import axios from 'axios';
 import '../assets/css/auth.css';
 import '../assets/css/common.css';
+import AwareComponentBuilder from "../common/AwareComponentBuilder";
 
-const RegisterPage = () => {
+const RegisterPage = (props) => {
 
     const history = useHistory();
 
@@ -31,6 +32,7 @@ const RegisterPage = () => {
         }
 
         setValidationErrors(null);
+        props.setIdentity(result.data);
         history.push('/');
     }
 
@@ -97,7 +99,7 @@ const RegisterPage = () => {
                                             </div>
 
                                             <div className="col-12 mt-2 have-already-account text-center">
-                                                <Link to="/login">
+                                                <Link to="/auth/login">
                                                     Already have account? Sign In.
                                                 </Link>
                                             </div>
@@ -129,4 +131,6 @@ const RegisterPage = () => {
     );
 };
 
-export default RegisterPage;
+export default new AwareComponentBuilder()
+    .withIdentityAwareness()
+    .build(RegisterPage);

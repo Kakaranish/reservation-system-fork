@@ -39,6 +39,14 @@ userSchema.path('role').validate(role =>
     availableRoles.includes(role), "invalid 'role'"
 );
 
+userSchema.methods.toIdentityJson = function ()  {
+    return {
+        id: this._id,
+        email: this.email,
+        role: this.role
+    };
+};
+
 userSchema.post('save', (error, doc, next) => {
     if (error.name === 'MongoError' && error.code === 11000) {
         next(new Error("'email' must be unique"));

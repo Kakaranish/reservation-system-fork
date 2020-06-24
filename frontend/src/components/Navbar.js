@@ -5,6 +5,7 @@ import 'bootstrap/dist/js/bootstrap.bundle';
 import "../assets/css/Navbar.css";
 import axios from 'axios';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import AwareComponentBuilder from "../common/AwareComponentBuilder";
 
 const toggleMenu = event => {
   event.preventDefault();
@@ -21,6 +22,8 @@ const Navbar = (props) => {
       console.log('error while logging out');
       return;
     }
+
+    props.unsetIdentity();
     history.push('/');
   };
 
@@ -28,7 +31,7 @@ const Navbar = (props) => {
     if (event.charCode === 13) {
       const searchPhrase = document.getElementById('searchBar').value;
       if (!searchPhrase || searchPhrase.trim() === '') return;
-      
+
       history.push(`/rooms/search?phrase=${encodeURIComponent(searchPhrase)}`);
     }
   }
@@ -56,13 +59,13 @@ const Navbar = (props) => {
         </div>
 
         {
-          props.user &&
+          props.identity &&
           <ul className="navbar-nav ml-auto mt-lg-0">
             <li className="nav-item dropdown">
               <a className="nav-link dropdown-toggle" href="#"
                 id="navbarDropdown" role="button" data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
-                {props.user.email}
+                {props.identity.email}
               </a>
 
               <div className="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown" onClick={handleLogout}>
@@ -71,10 +74,12 @@ const Navbar = (props) => {
             </li>
           </ul>
         }
-        
+
       </div>
     </nav>
   );
 };
 
-export default Navbar;
+export default new AwareComponentBuilder()
+  .withIdentityAwareness()
+  .build(Navbar);

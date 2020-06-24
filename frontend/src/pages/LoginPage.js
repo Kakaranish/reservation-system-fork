@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useHistory } from "react-router-dom";
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
 import '../assets/css/auth.css';
 import '../assets/css/common.css';
-import axios from 'axios';
+import AwareComponentBuilder from '../common/AwareComponentBuilder';
 
-const LoginPage = () => {
+const LoginPage = (props) => {
 
     const history = useHistory();
-    
+
     const [validationErrors, setValidationErrors] = useState(null);
 
     const handleSubmit = async event => {
@@ -19,12 +20,15 @@ const LoginPage = () => {
         let formDataJson = {};
         for (const [key, value] of formData.entries()) formDataJson[key] = value;
 
-        const result = await axios.post('/auth/login', formDataJson, { validateStatus: false })
-        if (result.data.errors?.length > 0) {
+        const result = await axios.post('/auth/login', formDataJson,
+            { validateStatus: false })
+        if (result.status !== 200 && result.data.errors?.length > 0) {
             setValidationErrors(result.data.errors.map(e => e.msg));
             return;
         }
-        
+
+        props.setIdentity(result.data);
+
         setValidationErrors(null);
         history.push('/');
     };
@@ -43,8 +47,8 @@ const LoginPage = () => {
                             <div className="row">
                                 <div className="col-md-9 col-lg-8 mx-auto">
                                     <h3 className="mb-2 title">
-                                        <>Conference Room</><br />
-                                        <>Reservation System</>
+                                        Conference Room<br />
+                                        Reservation System
                                     </h3>
 
                                     <p className="subtitle">
@@ -68,7 +72,7 @@ const LoginPage = () => {
                                             </div>
 
                                             <div className="col-12 col-md-6 ">
-                                                <Link to="/register">
+                                                <Link to="/auth/register">
                                                     <button id="singup-button" type="button" className="btn btn-lg btn-block btn-login text-uppercase mb-2 mt-md-5 mt-2 secondary-btn">
                                                         Sign Up
                                                     </button>
@@ -76,22 +80,20 @@ const LoginPage = () => {
                                             </div>
                                         </div>
                                         <div className="row">
-                                        {
-                                                !validationErrors
-                                                    ? null
-                                                    :
-                                                    <div className="col-12 mt-2">
-                                                        <p className="text-danger font-weight-bold" style={{ marginBottom: '0px' }}>
-                                                            Validation errors
+                                            {
+                                                validationErrors?.length > 0 &&
+                                                <div className="col-12 mt-2">
+                                                    <p className="text-danger font-weight-bold" style={{ marginBottom: '0px' }}>
+                                                        Validation errors
                                                         </p>
-                                                        <ul style={{ paddingTop: "0" }, { marginTop: "0px" }}>
-                                                            {
-                                                                validationErrors.map((error, i) => {
-                                                                    return <li key={`val-err-${i}`} className="text-danger">{error}</li>
-                                                                })
-                                                            }
-                                                        </ul>
-                                                    </div>
+                                                    <ul style={{ paddingTop: "0" }, { marginTop: "0px" }}>
+                                                        {
+                                                            validationErrors.map((error, i) => {
+                                                                return <li key={`val-err-${i}`} className="text-danger">{error}</li>
+                                                            })
+                                                        }
+                                                    </ul>
+                                                </div>
                                             }
                                         </div>
                                     </form>
@@ -105,4 +107,6 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;
+export default new AwareComponentBuilder()
+    .withIdentityAwareness()
+    .build(LoginPage);

@@ -47,7 +47,7 @@ const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
                 </DashbordLayout>
             )} />
         } else {
-            if (!state.user) return <Redirect to={{ pathname: '/login' }} />;
+            if (!state.user) return <Redirect to={{ pathname: '/auth/login' }} />;
             else return <> {window.location = '/'} </>
         }
     }

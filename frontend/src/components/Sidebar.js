@@ -15,6 +15,7 @@ import registerIcon from '../assets/icons/sidebar/register.svg';
 import axios from 'axios';
 import MainPage from "../pages/MainPage";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import AwareComponentBuilder from "../common/AwareComponentBuilder";
 
 const Sidebar = (props) => {
 
@@ -27,7 +28,8 @@ const Sidebar = (props) => {
             alert('Internal error. Try to refresh page.');
             return;
         }
-        
+
+        props.unsetIdentity();
         history.push('/');
     };
 
@@ -39,45 +41,45 @@ const Sidebar = (props) => {
                     Reservation System
                 </div>
             </div>
+
             <div className="list-group list-group-flush">
                 <Link to="/">
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={homeIcon} className="icon" />
-                        <>Dashboard</>
+                        Dashboard
                     </div>
                 </Link>
 
                 <Link to="/filter-rooms" >
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={roomsIcon} className="icon" />
-                        <>Conference Rooms</>
+                        Conference Rooms
                     </div>
                 </Link>
 
                 {
-                    props.user &&
+                    props.identity &&
                     <Link to="/user/manage-reservations">
                         <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                             <img src={reservationsIcon} className="icon" />
-                            <>Your Reservations</>
+                            Your Reservations
                         </div>
                     </Link>
                 }
 
                 {
-                    props.user?.role === 'ADMIN' &&
-                    <>
+                    props.identity?.role === 'ADMIN' && <>
                         <Link to="/admin/manage-reservations">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={settingsIcon} className="icon" />
-                                <>Users Reservations</>
+                                Users Reservations
                             </div>
                         </Link>
 
                         <Link to="/create-room">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={createRoomIcon} className="icon" />
-                                <>Create Room</>
+                                Create Room
                             </div>
                         </Link>
                     </>
@@ -86,33 +88,33 @@ const Sidebar = (props) => {
                 <Link to={MainPage}>
                     <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                         <img src={helpIcon} className="icon" />
-                        <>Help</>
+                        Help
                     </div>
                 </Link>
 
                 <div className='items-separator'></div>
 
                 {
-                    props.user
+                    props.identity
                         ?
                         <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center"
                             style={{ cursor: 'pointer' }} onClick={handleLogout}>
                             <img src={logoutIcon} className="icon" />
-                            <>Log Out</>
+                            Log Out
                         </div>
                         :
                         <>
-                            <Link to="/login" >
+                            <Link to="/auth/login" >
                                 <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                     <img src={loginIcon} className="icon" />
-                                    <>Log In</>
+                                    Log In
                                 </div>
                             </Link>
 
-                            <Link to="/register" >
+                            <Link to="/auth/register" >
                                 <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                     <img src={registerIcon} className="icon" />
-                                    <>Register</>
+                                    Register
                                 </div>
                             </Link>
                         </>
@@ -123,4 +125,6 @@ const Sidebar = (props) => {
     );
 };
 
-export default Sidebar;
+export default new AwareComponentBuilder()
+    .withIdentityAwareness()
+    .build(Sidebar);
