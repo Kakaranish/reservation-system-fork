@@ -35,11 +35,11 @@ const PendingReservation = ({ reservation, onCancelReservation }) => {
                         <Link to={`/edit-reservation/${reservation._id}`}
                             className="btn btn-block text-uppercase mb-2 btn-info text-white">
                             Edit
-                            </Link>
+                        </Link>
 
                         <button className="btn btn-block text-uppercase mb-2 btn-danger" onClick={onCancel}>
                             Cancel
-                            </button>
+                        </button>
                     </div>
                 </div>
             </div>

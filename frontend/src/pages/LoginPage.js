@@ -22,7 +22,7 @@ const LoginPage = (props) => {
         for (const [key, value] of formData.entries()) formDataJson[key] = value;
 
         const result = await axios.post('/auth/login', formDataJson,
-            { validateStatus: false })
+            { validateStatus: false });
         if (result.status !== 200 && result.data.errors?.length > 0) {
             setValidationErrors(result.data.errors.map(e => e.msg));
             return;

@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import emailValidator from 'email-validator';
-const Schema = mongoose.Schema;
 
 const availableRoles = [
     "USER",
+    "OWNER",
     "ADMIN"
 ];
 
@@ -15,7 +15,8 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        select: false
     },
     firstName: {
         type: String,
@@ -39,7 +40,7 @@ userSchema.path('role').validate(role =>
     availableRoles.includes(role), "invalid 'role'"
 );
 
-userSchema.methods.toIdentityJson = function ()  {
+userSchema.methods.toIdentityJson = function () {
     return {
         id: this._id,
         email: this.email,

@@ -40,7 +40,8 @@ passport.use('login', new LocalStrategy({
     passwordField: 'password'
 }, async (email, password, done) => {
     try {
-        const user = await User.findOne({ email: email });
+        const user = await (User.findOne({ email: email })
+            .select("_id email role password"));
         if (!user) return done('no user with such email', false);
 
         const passwordIsCorrect = await bcryptjs.compare(password, user.password);

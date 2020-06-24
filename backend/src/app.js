@@ -4,6 +4,7 @@ import fileUpload from "express-fileupload";
 import RoomRouter from "./routers/RoomRouter";
 import ReservationsRouter from "./routers/ReservationRouter";
 import AuthRouter from "./routers/AuthRouter";
+import UserRouter from './routers/UserRouter';
 import ReservationModifyRouter from './routers/ReservationModifyRouter';
 import cookieParser from 'cookie-parser';
 import './auth/passport-config';
@@ -16,6 +17,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(fileUpload());
+
+app.use('/users', UserRouter);
 app.use('/rooms', RoomRouter);
 app.use('/', ReservationsRouter);
 app.use('/reservations/:id/modify', ReservationModifyRouter);

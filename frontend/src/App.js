@@ -16,11 +16,11 @@ import DashboardLayout from './pages/layouts/DashbordLayout';
 import AuthRoutes from './pages/AuthRoutes';
 import AuthOnlyRoute from './pages/layouts/AuthOnlyRoute';
 import ErrorPage from './pages/ErrorPage';
+import UsersPage from './pages/admin/UsersPage';
 
 const App = () => <>
   <BrowserRouter>
     <Switch>
-
       <Route path="/auth" component={AuthRoutes} />
 
       <DashboardLayout>
@@ -33,6 +33,8 @@ const App = () => <>
           <Route path="/user/manage-reservations"
             component={UserManageReservations} />
 
+          <AuthOnlyRoute path="/users" component={UsersPage}
+            roles={['ADMIN']} />
           <AuthOnlyRoute path='/edit-reservation/:reservationId'
             component={EditReservationPage} roles={['USER', 'ADMIN']} />
           <AuthOnlyRoute path="/create-room" component={CreateRoomPage}
