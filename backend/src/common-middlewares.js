@@ -1,8 +1,13 @@
 import { validationResult } from 'express-validator';
-import User from './models/user-model';
-import Reservation from './models/reservation-model';
+import path from "path";
+import { v4 as uuid } from 'uuid';
+import azure from 'azure-storage';
+import sharp from 'sharp';
 import { parseIsoDatetime } from './common'
 import 'regenerator-runtime';
+import User from './models/user-model';
+
+require('dotenv').config();
 
 /**
  * @param {Request} req 
@@ -139,7 +144,7 @@ export const bodyDateIntervalValidatorMW = (req, res, next) => {
  */
 export const errorSummarizerMW = (req, res, next) => {
     const expressValidatorErrors = validationResult(req).errors;
-    if(!req.body) req.body = {};
+    if (!req.body) req.body = {};
     req.body.errors = [...(req.body.errors ?? []), ...expressValidatorErrors];
     if (!req.body.errors.length) req.body.errors = undefined;
 
@@ -160,5 +165,60 @@ export const userExistenceValidatorMW = async (req, res, next) => {
             }]
         });
     }
+    next();
+};
+
+/**
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {Function} next 
+ */
+export const uploadImageMW = async (req, res, next) => {
+    if (!req.files?.file) return res.status(400).json({
+        errors: ["No file uploaded"]
+    });
+
+    const file = req.files.file;
+    const fileExt = path.extname(file.name);
+
+    let blobOptions;
+    if (fileExt === '.jpg' || fileExt === '.jpeg')
+        blobOptions = { contentSettings: { contentType: 'image/jpeg' } }
+    else if (fileExt === '.png')
+        blobOptions = { contentSettings: { contentType: 'image/png' } };
+    else return res.json({ errors: ['must be image type'] });
+
+    const blobService = azure.createBlobService();
+    const img = await sharp(file.data)
+        .resize({ width: 400 })
+        .toBuffer();
+
+    const commonUuid = uuid();
+    const generatedFilename = commonUuid + fileExt;
+    const thumbnailGeneratedFilename = commonUuid + '-thumbnail' + fileExt;
+
+    await blobService.createBlockBlobFromText(process.env.BLOB_CONTAINER,
+        generatedFilename, file.data, blobOptions, err => { if (err) throw err; });
+    await blobService.createBlockBlobFromText(process.env.BLOB_CONTAINER,
+        thumbnailGeneratedFilename, img, blobOptions, err => { if (err) throw err; });
+
+    const blobContainer = process.env.BLOB_CONTAINER;
+    req.image = {
+        uri: blobService.getUrl(blobContainer, generatedFilename),
+        blobName: generatedFilename,
+        thumbnailUri: blobService.getUrl(blobContainer, thumbnailGeneratedFilename),
+        thumbnailBlobName: thumbnailGeneratedFilename,
+    };
+    next();
+};
+
+/**
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {Function} next 
+ */
+export const validationExaminator = async (req, res, next) => {
+    if (validationResult(req).errors.length > 0)
+        return res.status(400).json(validationResult(req).errors);
     next();
 };

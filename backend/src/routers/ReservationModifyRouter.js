@@ -1,20 +1,18 @@
 import express from "express";
 import moment from 'moment';
-import { validationResult, param } from 'express-validator';
+import { param } from 'express-validator';
 import Reservation from '../models/reservation-model';
 import { withAsyncRequestHandler } from '../common';
 import FindReservationQueryBuilder from '../queries/FindReservationQueryBuilder';
 import { parseObjectId } from '../common';
-import { userValidatorMW, adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
+import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 import * as dbQueries from '../queries/db-queries';
+import { validationExaminator } from "../common-middlewares";
 
 const router = express.Router({ mergeParams: true });
 
 // ADMIN
 router.put('/accept', accceptReservationValidationMWs(), async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-
     withAsyncRequestHandler(res, async () => {
         const reservation = req.body.reservation;
         const queryBuilder = new FindReservationQueryBuilder();
@@ -54,13 +52,7 @@ router.put('/accept', accceptReservationValidationMWs(), async (req, res) => {
 });
 
 // ADMIN
-router.put('/reject', [tokenValidatorMW, adminValidatorMW,
-    param('id').customSanitizer(roomId => parseObjectId(roomId))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-], async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-
+router.put('/reject', rejectValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         const result = await dbQueries.setReservationStatus(req.params.id, "REJECTED")
         if (!result) return res.status(400).json({
@@ -71,13 +63,7 @@ router.put('/reject', [tokenValidatorMW, adminValidatorMW,
 });
 
 // USER
-router.put('/cancel', [tokenValidatorMW, userValidatorMW,
-    param('id').customSanitizer(roomId => parseObjectId(roomId))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-], async (req, res) => {
-    if (validationResult(req).errors.length > 0)
-        return res.status(400).json(validationResult(req));
-
+router.put('/cancel', cancelValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         const result = await dbQueries.setReservationStatus(req.params.id, "CANCELLED")
         if (!result) return res.status(400).json({
@@ -101,6 +87,26 @@ function accceptReservationValidationMWs() {
                     return Promise.reject('reservation is already accepted')
                 req.body.reservation = reservation;
             }),
+        validationExaminator
+    ];
+}
+
+function rejectValidationMWs() {
+    return [
+        tokenValidatorMW,
+        adminValidatorMW,
+        param('id').customSanitizer(roomId => parseObjectId(roomId))
+            .notEmpty().withMessage('invalid mongo ObjectId'),
+        validationExaminator
+    ];
+}
+
+function cancelValidationMWs() {
+    return [
+        tokenValidatorMW,
+        param('id').customSanitizer(roomId => parseObjectId(roomId))
+            .notEmpty().withMessage('invalid mongo ObjectId'),
+        validationExaminator
     ];
 }
 

@@ -1,4 +1,5 @@
 import mongoose, {Schema} from 'mongoose'
+import ImageSchema from './image-schema';
 
 const roomSchema = new Schema({
     name: {
@@ -31,8 +32,8 @@ const roomSchema = new Schema({
         type: [String],
         validate: [arr => arr.length > 0, 'At least 1 dow required']
     },
-    photoUrl: {
-        type: String,
+    image: {
+        type: ImageSchema,
         required: true
     }
 })

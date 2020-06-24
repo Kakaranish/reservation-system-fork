@@ -6,7 +6,7 @@ const CancelledReservation = ({ reservation }) => {
         <div className="card p-1 border-0">
             <div className="row no-gutters mb-3">
                 <div className="col-auto">
-                    <img src={reservation.room.photoUrl} style={{ width: "20vh" }} />
+                    <img src={reservation.room.image.thumbnailUri} style={{ width: "20vh" }} />
                 </div>
                 <div className="col pb-3">
                     <div className="card-block px-4">

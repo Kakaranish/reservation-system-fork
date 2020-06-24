@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import Checkbox from "../components/Checkbox";
 import ImageUploader from "../components/ImageUploader";
 import axios from 'axios';
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 
 const CreateRoomPage = () => {
+
+    const history = useHistory();
     const [file, setFile] = useState(null);
     const [validationErrors, setValidationErrors] = useState(null);
 
@@ -30,7 +33,8 @@ const CreateRoomPage = () => {
             result.data.errors.forEach(e => console.log(e?.msg ?? e));
             return;
         }
-        window.location = `/rooms`;
+
+        history.push('/rooms');
     };
 
     return (
@@ -147,15 +151,15 @@ function processFormData(formData) {
  */
 const validateFormData = (formData, passedFile) => {
     const validationErrors = [];
-    
+
     if (JSON.parse(formData.get('amenities')).length === 0)
         validationErrors.push("At least one amenity required");
     if (JSON.parse(formData.get('dows')).length === 0)
         validationErrors.push("At least one day of availability required");
     if (!passedFile)
-        validationErrors.push("Conference room must have photo");
-    
-        return validationErrors;
+        validationErrors.push("Conference room must have image");
+
+    return validationErrors;
 }
 
 export default CreateRoomPage;

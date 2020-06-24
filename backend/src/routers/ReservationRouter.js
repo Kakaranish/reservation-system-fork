@@ -30,7 +30,7 @@ router.get('/reservations', getReservationsValidationMWs(), async (req, res) => 
         const queryBuilder = new FindReservationQueryBuilder();
         let query = queryBuilder
             .withPopulatedUserData('-_id email firstName lastName')
-            .withPopulatedRoomData('-_id name location photoUrl')
+            .withPopulatedRoomData('-_id name location image')
             .select('id fromDate toDate pricePerDay totalPrice userId roomId');
         if (req.query.fromDate) query = query.overlappingDateIterval
             (req.query.fromDate.toDate(), req.query.toDate.toDate())
@@ -51,7 +51,7 @@ router.get('/reservations/user', getReservationsForUserValidationMWs(), async (r
         let query = queryBuilder
             .withUserId(req.user._id)
             .withPopulatedUserData('-_id email firstName lastName')
-            .withPopulatedRoomData('-_id name location photoUrl')
+            .withPopulatedRoomData('-_id name location image')
             .select('id fromDate toDate pricePerDay totalPrice userId roomId');
         if (req.query.fromDate) query = query.overlappingDateIterval(
             req.query.fromDate.toDate(), req.query.toDate.toDate());

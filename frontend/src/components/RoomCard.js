@@ -26,7 +26,8 @@ const RoomCard = ({ roomData }) => {
                         </div>
                     </div>
 
-                    <img className="card-img mt-1 mb-2 room-card-image" src={roomData.photoUrl ? roomData.photoUrl : noImagePlaceholder} />
+                    <img className="card-img mt-1 mb-2 room-card-image"
+                        src={roomData.image.thumbnailUri ?? noImagePlaceholder} />
 
                     <div className="text-right room-price-color mb-1">
                         Price/Day: {roomData.pricePerDay}PLN

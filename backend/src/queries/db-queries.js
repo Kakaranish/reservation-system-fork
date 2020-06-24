@@ -64,5 +64,5 @@ export const getAvailableRoomPreviews = async searchData => {
             $gte: searchData.fromPrice,
             $lte: searchData.toPrice
         }
-    }).select('_id name location capacity photoUrl pricePerDay amenities');
+    }).select('_id name location capacity pricePerDay amenities image');
 }
