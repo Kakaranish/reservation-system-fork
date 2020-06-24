@@ -17,6 +17,7 @@ import AuthLayoutRoute from './pages/layouts/AuthLayoutRoute';
 import DashboardLayoutRoute from './pages/layouts/DashboardLayoutRoute';
 import SearchRoomsPage from './pages/SearchRoomsPage';
 import EditReservationPage from './pages/EditReservationPage';
+import RefreshPage from './pages/RefreshPage';
 
 const App = () => {
 
@@ -39,6 +40,7 @@ const App = () => {
         <AuthLayoutRoute path="/login" component={LoginPage} />
         <AuthLayoutRoute path="/register" component={RegisterPage} />
 
+        <DashboardLayoutRoute path='/refresh' component={RefreshPage} />
         <DashboardLayoutRoute component={NotFoundPage} />
       </Switch>
     </BrowserRouter>

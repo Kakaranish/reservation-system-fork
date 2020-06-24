@@ -6,12 +6,15 @@ import CreatedReservationModal from '../components/CreatedRervationModal';
 import noImagePlaceholder from "../assets/icons/no-image.svg";
 import '../assets/css/RoomPage.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { useHistory } from "react-router-dom";
 
 const images = require.context('../assets/images/amenities', true);
 
 const RoomPage = (props) => {
+	
 	const match = props.match;
 	const roomId = match.params.id;
+	const history = useHistory();
 
 	const dateIntervalToGenerate = {
 		start: moment().startOf('day'),
@@ -67,7 +70,7 @@ const RoomPage = (props) => {
 			return;
 		}
 
-		window.location = '/user/manage-reservations';
+		history.push('/user/manage-reservations');
 	}
 
 	if (!room) return <h3>{message}</h3>

@@ -14,8 +14,11 @@ import logoutIcon from '../assets/icons/sidebar/log-out.svg';
 import registerIcon from '../assets/icons/sidebar/register.svg';
 import axios from 'axios';
 import MainPage from "../pages/MainPage";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 
 const Sidebar = (props) => {
+
+    const history = useHistory();
 
     const handleLogout = async () => {
         const result = await axios.post('/auth/logout', {}, { validateStatus: false });
@@ -24,7 +27,8 @@ const Sidebar = (props) => {
             alert('Internal error. Try to refresh page.');
             return;
         }
-        window.location = `/`;
+        
+        history.push('/');
     };
 
     return (

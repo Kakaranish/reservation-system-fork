@@ -2,8 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import CancellableReservation from "../../components/user/CancellableReservation";
 import OtherReservation from '../../components/user/OtherReservation';
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 
 const ManageReservations = () => {
+
+    const history = useHistory();
+
     const [pendingContent, setPendingContent] = useState(null);
     const [acceptedContent, setAcceptedContent] = useState(null);
     const [rejectedContent, setRejectedContent] = useState(null);
@@ -18,7 +22,8 @@ const ManageReservations = () => {
             alert('Internal error');
             return;
         }
-        window.location.reload();
+
+        history.push('/refresh');
     }
 
     useEffect(() => {

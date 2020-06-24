@@ -4,8 +4,12 @@ import PendingReservation from "../../components/admin/PendingReservation";
 import AcceptedReservation from "../../components/admin/AcceptedReservation";
 import CancelledReservation from "../../components/admin/CancelledReservation";
 import RejectedReservation from "../../components/admin/RejectedReservation";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 
 const ManageReservations = () => {
+    
+    const history = useHistory();
+    
     const [pendingContent, setPendingContent] = useState(null);
     const [acceptedContent, setAcceptedContent] = useState(null);
     const [rejectedContent, setRejectedContent] = useState(null);
@@ -21,7 +25,7 @@ const ManageReservations = () => {
             return;
         }
 
-        window.location.reload();
+        history.push('/refresh');
     };
 
     const onRejectReservation = async reservationId => {
@@ -33,7 +37,7 @@ const ManageReservations = () => {
             return;
         }
 
-        window.location.reload();
+        history.push('/refresh');
     };
 
     useEffect(() => {

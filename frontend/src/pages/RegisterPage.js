@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import axios from 'axios';
 import '../assets/css/auth.css';
 import '../assets/css/common.css';
 
 const RegisterPage = () => {
+
+    const history = useHistory();
 
     const [validationErrors, setValidationErrors] = useState(null);
 
@@ -29,7 +31,7 @@ const RegisterPage = () => {
         }
 
         setValidationErrors(null);
-        window.location = `/`;
+        history.push('/');
     }
 
     return (

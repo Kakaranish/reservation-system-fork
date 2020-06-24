@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import moment from 'moment';
 import EditReservationCalendar from '../components/EditReservationCalendar';
 
 const EditReservationPage = (props) => {
+
+    const history = useHistory();
 
     const reservationId = props.match.params.reservationId;
     const [state, setState] = useState({
@@ -23,13 +26,13 @@ const EditReservationPage = (props) => {
             fromDate: selectedInterval.start.toDate(),
             toDate: selectedInterval.end.toDate()
         });
-        if(result.status !== 200) {
+        if (result.status !== 200) {
             alert('Internal error. Try refresh page.');
             result.data.errors.forEach(e => console.log(e.msg ?? e));
             return;
         }
         alert('Reservation updated. Pending for admin acceptation.');
-        window.location = '/user/manage-reservations';
+        history.push('/user/manage-reservations');
     };
 
     const dateIntervalToGenerate = {
@@ -72,7 +75,6 @@ const EditReservationPage = (props) => {
 
             const room = roomResult.data;
             setState({ isLoading: false, reservation: reservation, room: room });
-
         };
 
         if (isObjectIdValid(reservationId)) fireXD();

@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
 import "../assets/css/Navbar.css";
 import axios from 'axios';
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 
 const toggleMenu = event => {
   event.preventDefault();
@@ -12,20 +13,23 @@ const toggleMenu = event => {
 
 const Navbar = (props) => {
 
+  const history = useHistory();
+
   const handleLogout = async () => {
     const result = await axios.post('/auth/logout', {}, { validateStatus: false });
     if (result.status !== 200) {
       console.log('error while logging out');
       return;
     }
-    window.location = `/`;
+    history.push('/');
   };
 
   const handleOnKeyDown = event => {
     if (event.charCode === 13) {
       const searchPhrase = document.getElementById('searchBar').value;
       if (!searchPhrase || searchPhrase.trim() === '') return;
-      window.location = `/rooms/search?phrase=${encodeURIComponent(searchPhrase)}`;
+      
+      history.push(`/rooms/search?phrase=${encodeURIComponent(searchPhrase)}`);
     }
   }
 

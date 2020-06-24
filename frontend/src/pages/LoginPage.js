@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
 import '../assets/css/auth.css';
@@ -8,6 +8,8 @@ import axios from 'axios';
 
 const LoginPage = () => {
 
+    const history = useHistory();
+    
     const [validationErrors, setValidationErrors] = useState(null);
 
     const handleSubmit = async event => {
@@ -24,7 +26,7 @@ const LoginPage = () => {
         }
         
         setValidationErrors(null);
-        window.location = `/`;
+        history.push('/');
     };
 
     return (
