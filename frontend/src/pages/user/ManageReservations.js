@@ -15,8 +15,8 @@ const ManageReservations = () => {
     const [currentTab, setCurrentTab] = useState("pending");
 
     const onCancelReservation = async reservationId => {
-        const result = await axios.put(`/reservations/${reservationId}/modify/cancel`,
-            {}, { validateStatus: false });
+        const uri = `/reservations/${reservationId}/modify/cancel`;
+        const result = await axios.put(uri, {}, { validateStatus: false });
         if (result.status !== 200) {
             result.data.forEach(e => console.log(e?.msg ?? e));
             alert('Internal error');

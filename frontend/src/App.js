@@ -1,10 +1,9 @@
 import React from 'react';
-import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle';
 import MainPage from './pages/MainPage';
 import RoomFilterPage from './pages/RoomFilterPage';
-import NotFoundPage from './pages/NotFoundPage';
 import RoomsPage from "./pages/RoomsPage";
 import RoomPage from "./pages/RoomPage";
 import CreateRoomPage from './pages/CreateRoomPage';
@@ -16,6 +15,7 @@ import RefreshPage from './pages/RefreshPage';
 import DashboardLayout from './pages/layouts/DashbordLayout';
 import AuthRoutes from './pages/AuthRoutes';
 import AuthOnlyRoute from './pages/layouts/AuthOnlyRoute';
+import ErrorPage from './pages/ErrorPage';
 
 const App = () => <>
   <BrowserRouter>
@@ -40,11 +40,12 @@ const App = () => <>
           <AuthOnlyRoute path="/admin/manage-reservations"
             component={AdminManageReservations} roles={['ADMIN']} />
 
+          <Route path='/error/:code' component={ErrorPage} />
           <Route path='/refresh' component={RefreshPage} />
-          <Route component={NotFoundPage} />
+          <Redirect to='/error/404' />
         </Switch>
       </DashboardLayout>
-      
+
     </Switch>
   </BrowserRouter>
 </>

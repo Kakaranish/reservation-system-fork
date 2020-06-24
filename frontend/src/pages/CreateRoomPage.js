@@ -3,6 +3,7 @@ import Checkbox from "../components/Checkbox";
 import ImageUploader from "../components/ImageUploader";
 import axios from 'axios';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import ValidationErrors from "../components/ValidationErrors";
 
 const CreateRoomPage = () => {
 
@@ -92,19 +93,7 @@ const CreateRoomPage = () => {
                             <ImageUploader onChange={handleFileChange} />
                         </div>
 
-                        {
-                            validationErrors &&
-                            <div className="col-12 mt-2">
-                                <h4 className="text-danger">Validation errors</h4>
-                                <ul>
-                                    {
-                                        validationErrors.map((error, i) => {
-                                            return <li key={`val-err-${i}`} className="text-danger font-weight-bold">{error}</li>
-                                        })
-                                    }
-                                </ul>
-                            </div>
-                        }
+                        <ValidationErrors errors={validationErrors} />
 
                         <div className="col-12 mt-2">
                             <button type="submit" className="btn btn-block primary-btn">Create Room</button>

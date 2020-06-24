@@ -34,34 +34,28 @@ const RoomsPage = (props) => {
 		getRooms(resolvedQueryParams);
 	}, []);
 
-	return (
-		<>
-			{
-				!rooms
-					? null
-					: rooms.length > 0
-						?
-						<>
-							<ul className="global-font">
-								<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
-								<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
-							</ul>
+	if (!rooms) return <></>
+	else if (rooms.length > 0) return <>
+		<ul className="global-font">
+			<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
+			<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
+		</ul>
 
-							<div className="row">
-								{rooms.map(roomData => <RoomCard key={`room-${roomData["_id"]}`} roomData={roomData} />)}
-							</div>
-						</>
-						:
-						<div>
-							<h3>There is no rooms for following criterias:</h3>
-							<ul>
-								<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
-								<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
-							</ul>
-						</div>
-			}
-		</>
-	);
+		<div className="row">
+			{rooms.map(roomData => <RoomCard key={`room-${roomData["_id"]}`} roomData={roomData} />)}
+		</div>
+	</>
+
+
+	return <>
+		<div>
+			<h3>There is no rooms for following criterias:</h3>
+			<ul>
+				<li>Date interval: {moment(resolvedQueryParams.fromDate).format("DD-MM-YYYY")} - {moment(resolvedQueryParams.toDate).format("DD-MM-YYYY")}</li>
+				<li>Price: {resolvedQueryParams.fromPrice}PLN - {resolvedQueryParams.toPrice}PLN</li>
+			</ul>
+		</div>
+	</>
 };
 
 const resolveQueryParams = queryParams => {
