@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { requestHandler } from '../../../common/utils';
-import AwareComponentBuilder from '../../../common/AwareComponentBuilder';
-import { toast } from 'react-toastify';
 import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { requestHandler } from '../../common/utils';
+import AwareComponentBuilder from '../../common/AwareComponentBuilder';
 
 const UserItem = (props) => {
 

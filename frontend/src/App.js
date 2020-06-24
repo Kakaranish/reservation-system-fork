@@ -6,18 +6,18 @@ import MainPage from './pages/MainPage';
 import RoomFilterPage from './pages/RoomFilterPage';
 import RoomsPage from "./pages/RoomsPage";
 import RoomPage from "./pages/RoomPage";
-import CreateRoomPage from './pages/CreateRoomPage';
+import CreateRoomPage from './pages/owner/CreateRoomPage';
 import AdminManageReservations from './pages/admin/ManageReservations';
 import UserManageReservations from './pages/user/ManageReservations';
 import SearchRoomsPage from './pages/SearchRoomsPage';
-import EditReservationPage from './pages/EditReservationPage';
-import RefreshPage from './pages/RefreshPage';
-import DashboardLayout from './pages/layouts/DashbordLayout';
-import AuthRoutes from './pages/AuthRoutes';
-import AuthOnlyRoute from './pages/layouts/AuthOnlyRoute';
-import ErrorPage from './pages/ErrorPage';
+import EditReservationPage from './pages/user/EditReservationPage';
+import AuthRoutes from './pages/authentication/AuthRoutes';
 import UsersPage from './pages/admin/UsersPage';
-import AccountPage from './pages/AccountPage';
+import AccountPage from './pages/user/AccountPage';
+import RefreshPage from './pages/special/RefreshPage';
+import ErrorPage from './pages/special/ErrorPage';
+import DashboardLayout from './route-types/DashbordLayout';
+import AuthOnlyRoute from './route-types/AuthOnlyRoute';
 
 const App = () => <>
   <BrowserRouter>

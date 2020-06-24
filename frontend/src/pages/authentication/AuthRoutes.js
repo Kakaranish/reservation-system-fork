@@ -2,7 +2,7 @@ import React from 'react';
 import { Switch } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
-import NotAuthLayoutRoute from './layouts/NotAuthLayoutRoute';
+import NotAuthLayoutRoute from '../../route-types/NotAuthLayoutRoute';
 
 const AuthRoutes = () => <>
     <Switch>

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Route } from "react-router-dom";
 import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
-import { requestHandler } from '../../common/utils';
-import AwareComponentBuilder from '../../common/AwareComponentBuilder';
+import { requestHandler } from '../common/utils';
+import AwareComponentBuilder from '../common/AwareComponentBuilder';
 
 const AuthLayoutRoute = ({ component: Component, ...rest }) => {
 

@@ -116,7 +116,6 @@ const Sidebar = (props) => {
                             </div>
 
                         </>
-
                         : <>
                             <Link to="/auth/login" >
                                 <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">

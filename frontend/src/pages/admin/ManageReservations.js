@@ -3,7 +3,7 @@ import PendingReservation from "../../components/admin/PendingReservation";
 import AcceptedReservation from "../../components/admin/AcceptedReservation";
 import RejectedReservation from "../../components/admin/RejectedReservation";
 import ReservationInfo from "../../components/ReservationInfo";
-import LazyReservations from "../../components/admin/LazyReservations";
+import LazyReservations from "../../components/LazyReservations";
 import TabHeader from "../../components/TabHeader";
 
 const ManageReservations = () => {
@@ -29,7 +29,7 @@ const ManageReservations = () => {
 
 		<div className="tab-content bg-white">
 
-			<LazyReservations currentTab={currentTab} status='pending'
+			<LazyReservations currentTab={currentTab} status='pending' role="ADMIN"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -43,7 +43,7 @@ const ManageReservations = () => {
 					</div>
 				} />
 
-			<LazyReservations currentTab={currentTab} status='accepted'
+			<LazyReservations currentTab={currentTab} status='accepted' role="ADMIN"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -57,7 +57,7 @@ const ManageReservations = () => {
 					</div>
 				} />
 
-			<LazyReservations currentTab={currentTab} status='rejected'
+			<LazyReservations currentTab={currentTab} status='rejected' role="ADMIN"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -71,7 +71,7 @@ const ManageReservations = () => {
 					</div>
 				} />
 
-			<LazyReservations currentTab={currentTab} status='cancelled'
+			<LazyReservations currentTab={currentTab} status='cancelled' role="ADMIN"
 				showReservations={reservations =>
 
 					<div className="container p-4">

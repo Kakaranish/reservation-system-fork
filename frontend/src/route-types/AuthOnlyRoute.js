@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import AwareComponentBuilder from '../../common/AwareComponentBuilder';
 import { useHistory, Route } from 'react-router-dom';
+import AwareComponentBuilder from '../common/AwareComponentBuilder';
 
 const AuthOnlyRoute = ({ component: Component, ...rest }) => {
 

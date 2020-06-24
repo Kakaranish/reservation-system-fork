@@ -82,6 +82,6 @@ const mapAmenityNameToAssetFilename = amenityName => {
         case "amtPhone":
             return "phone.svg";
     }
-}
+};
 
 export default RoomCard;

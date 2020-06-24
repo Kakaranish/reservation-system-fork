@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import axios from 'axios';
-import '../assets/css/auth.css';
-import '../assets/css/common.css';
-import AwareComponentBuilder from "../common/AwareComponentBuilder";
-import ValidationErrors from "../components/ValidationErrors";
+import '../../assets/css/auth.css';
+import '../../assets/css/common.css';
+import AwareComponentBuilder from "../../common/AwareComponentBuilder";
+import ValidationErrors from "../../components/ValidationErrors";
 
 const RegisterPage = (props) => {
 

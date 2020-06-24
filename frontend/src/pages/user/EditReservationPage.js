@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import moment from 'moment';
-import EditReservationCalendar from '../components/EditReservationCalendar';
+import EditReservationCalendar from '../../components/EditReservationCalendar';
 
 const EditReservationPage = (props) => {
 
@@ -15,10 +15,8 @@ const EditReservationPage = (props) => {
         room: null
     });
     const [selectedInterval, setSelectedInterval] = useState(null);
-    const onSelectedInterval = passedSelectedInterval => {
+    const onSelectedInterval = passedSelectedInterval =>
         setSelectedInterval(passedSelectedInterval)
-
-    }
 
     const handleMakeChange = async () => {
         const uri = `/reservations/${state.reservation._id}/user`
@@ -97,7 +95,6 @@ const EditReservationPage = (props) => {
         else return (
             <>
                 <div className="container p-4 bg-white">
-
 
                     <div className='row'>
                         <div className='col-md-6'>

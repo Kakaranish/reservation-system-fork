@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { requestHandler } from '../../common/utils';
-import TabContent from '../TabContent';
+import { requestHandler } from '../common/utils';
+import TabContent from './TabContent';
 
-const LazyReservations = ({ currentTab, status, showReservations }) => {
+const LazyReservations = ({ currentTab, status, showReservations, role }) => {
 
     const uniqueInitial = `navbar-${status}`;
     const isActive = currentTab === uniqueInitial;
@@ -12,7 +12,10 @@ const LazyReservations = ({ currentTab, status, showReservations }) => {
     useEffect(() => {
         const fetch = async () => {
             const statusUpper = status.toUpperCase();
-            const uri = `/reservations?status=${statusUpper}`;
+
+            const uri = role === 'ADMIN'
+                ? `/reservations?status=${statusUpper}`
+                : `/reservations/user?status=${statusUpper}`;
             const action = async () => axios.get(uri, { validateStatus: false });
             const result = await requestHandler(action);
             setReservations(result);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { requestHandler } from '../../common/utils';
-import UserItem from './components/UserItem';
+import UserItem from '../../components/admin/UserItem';
 
 const UsersPage = () => {
 

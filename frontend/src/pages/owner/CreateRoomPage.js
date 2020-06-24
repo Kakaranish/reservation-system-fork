@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Checkbox from "../components/Checkbox";
-import ImageUploader from "../components/ImageUploader";
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import ValidationErrors from "../components/ValidationErrors";
+import Checkbox from "../../components/Checkbox";
+import ImageUploader from "../../components/ImageUploader";
+import ValidationErrors from "../../components/ValidationErrors";
 
 const CreateRoomPage = () => {
 

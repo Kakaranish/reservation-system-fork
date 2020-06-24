@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { requestHandler, getFormDataJsonFromEvent } from '../common/utils';
 import { toast } from 'react-toastify';
+import { requestHandler, getFormDataJsonFromEvent } from '../../common/utils';
 
 const AccountPage = () => {
 
