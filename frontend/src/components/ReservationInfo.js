@@ -1,8 +1,8 @@
-import React from "react";
-import moment from "moment";
+import React from 'react';
+import moment from 'moment';
 
-const OtherReservation = ({ reservation }) => {
-    return (
+const ReservationInfo = ({ reservation, children }) => {
+    return <>
         <div className="card p-1 border-0">
             <div className="row no-gutters mb-3">
                 <div className="col-auto">
@@ -17,17 +17,22 @@ const OtherReservation = ({ reservation }) => {
                         <p className="card-text">
                             When?: <b>{moment(reservation.fromDate).format("YYYY-MM-DD")} - {moment(reservation.toDate).format("YYYY-MM-DD")}</b>
                         </p>
+
                         <p className="card-text">
                             Pice Per Day: <b>{reservation.pricePerDay}PLN</b>
                         </p>
+                        
                         <p className="card-text">
                             Total Price: <b>{reservation.totalPrice}PLN</b>
                         </p>
                     </div>
                 </div>
+
+                {children}
+
             </div>
         </div>
-    );
+    </>
 };
 
-export default OtherReservation;
+export default ReservationInfo;

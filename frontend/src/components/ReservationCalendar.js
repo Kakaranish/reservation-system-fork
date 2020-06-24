@@ -3,15 +3,15 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from "moment";
 import axios from "axios";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import AwareComponentBuilder from "../common/AwareComponentBuilder";
+import { toast } from 'react-toastify';
 
-const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToGenerate, email }) => {
+const ReservationCalendar = (props) => {
+
+    const { roomId, onSelectedInterval, dows, dateIntervalToGenerate } = props;
+
     const localizer = momentLocalizer(moment);
-    moment.locale('ko', {
-        week: {
-            dow: 1,
-            doy: 1
-        }
-    });
+    moment.locale('ko', { week: { dow: 1, doy: 1 } });
 
     const notAvailableEvents = getEventsForDows(dows, dateIntervalToGenerate);
 
@@ -29,7 +29,7 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
                 alert('Internal error. Try to refresh page.');
                 return;
             }
-            
+
             const reservations = result.data;
             const reservationEvents = mapReservationsToEvents(reservations);
             setEvents({
@@ -40,22 +40,23 @@ const ReservationCalendar = ({ roomId, onSelectedInterval, dows, dateIntervalToG
     }, []);
 
     const onSelectSlot = slotInfo => {
-        if (!email) {
-            alert('Log in to make reservation');
+        if (!props.identity) {
+            toast.warn('Log in to make reservation');
             return;
         }
+
         const userDateInterval = {
             start: moment(slotInfo.start).startOf('day'),
             end: moment(slotInfo.end).startOf('day').add(1, 'days').subtract(1, 'milliseconds')
         }
 
         if (userDateInterval.start.valueOf() < dateIntervalToGenerate.start.valueOf()) {
-            alert('No possibility to make reservation in past. Are you time traveller?')
+            toast.warn('Are you time traveller?');
             return;
         }
 
         if (userDateInterval.end.valueOf() > dateIntervalToGenerate.end.valueOf()) {
-            alert('Out of range');
+            toast.warn('Out of range');
             return;
         }
 
@@ -190,7 +191,6 @@ const legalDows = {
  * @param {Array} reservations 
  */
 const mapReservationsToEvents = reservations => {
-    console.log(reservations)
     return reservations.map(reservation => {
         return {
             start: moment(reservation.fromDate).startOf('day').toDate(),
@@ -201,4 +201,6 @@ const mapReservationsToEvents = reservations => {
     })
 };
 
-export default ReservationCalendar;
+export default new AwareComponentBuilder()
+    .withIdentityAwareness()
+    .build(ReservationCalendar);

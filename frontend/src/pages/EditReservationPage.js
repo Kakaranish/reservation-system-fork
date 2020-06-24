@@ -140,7 +140,6 @@ const EditReservationPage = (props) => {
                                 room={state.room}
                                 onSelectedInterval={onSelectedInterval}
                                 dateIntervalToGenerate={dateIntervalToGenerate}
-                                email={props.user?.email}
                             />
                         </div>
                     </div>

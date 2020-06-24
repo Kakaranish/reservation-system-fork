@@ -4,7 +4,10 @@ import moment from "moment";
 import axios from "axios";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-const EditReservationCalendar = ({ onSelectedInterval, room, reservation, dateIntervalToGenerate, email }) => {
+const EditReservationCalendar = (props) => {
+
+    const { onSelectedInterval, room, reservation, dateIntervalToGenerate } = props;
+
     const localizer = momentLocalizer(moment);
     moment.locale('ko', { week: { dow: 1, doy: 1 } });
     const notAvailableEvents = getEventsForDows(room.dows, dateIntervalToGenerate);
