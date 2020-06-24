@@ -6,6 +6,7 @@ import "../assets/css/Navbar.css";
 import axios from 'axios';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import AwareComponentBuilder from "../common/AwareComponentBuilder";
+import { requestHandler } from "../common/utils";
 
 const toggleMenu = event => {
   event.preventDefault();
@@ -17,14 +18,15 @@ const Navbar = (props) => {
   const history = useHistory();
 
   const handleLogout = async () => {
-    const result = await axios.post('/auth/logout', {}, { validateStatus: false });
-    if (result.status !== 200) {
-      console.log('error while logging out');
-      return;
-    }
-
-    props.unsetIdentity();
-    history.push('/');
+    const action = async () => axios.post('/auth/logout', {},
+      { validateStatus: false });
+    await requestHandler(action, {
+      status: 200,
+      callback: async () => {
+        props.unsetIdentity();
+        history.push('/');
+      }
+    });
   };
 
   const handleOnKeyDown = event => {

@@ -16,21 +16,22 @@ import usersIcon from '../assets/icons/sidebar/users.svg';
 import accountIcon from '../assets/icons/sidebar/account.svg';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import AwareComponentBuilder from "../common/AwareComponentBuilder";
+import { requestHandler } from "../common/utils";
 
 const Sidebar = (props) => {
 
     const history = useHistory();
 
     const handleLogout = async () => {
-        const result = await axios.post('/auth/logout', {}, { validateStatus: false });
-        if (result.status !== 200) {
-            result.data.errors.forEach(e => console.log(e?.msg ?? e));
-            alert('Internal error. Try to refresh page.');
-            return;
-        }
-
-        props.unsetIdentity();
-        history.push('/');
+        const action = async () => axios.post('/auth/logout', {},
+            { validateStatus: false });
+        await requestHandler(action, {
+            status: 200,
+            callback: async () => {
+                props.unsetIdentity();
+                history.push('/');
+            }
+        });
     };
 
     return (

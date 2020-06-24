@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from "axios";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import ReservationInfo from "../ReservationInfo";
+import { requestHandler } from "../../common/utils";
 
 const CancellableReservation = ({ reservation }) => {
 
@@ -10,14 +11,11 @@ const CancellableReservation = ({ reservation }) => {
 
     const onCancel = async () => {
         const uri = `/reservations/${reservation._id}/modify/cancel`;
-        const result = await axios.put(uri, {}, { validateStatus: false });
-        if (result.status !== 200) {
-            result.data.forEach(e => console.log(e?.msg ?? e));
-            alert('Internal error');
-            return;
-        }
-
-        history.push('/refresh');
+        const action = async () => axios.put(uri, {}, { validateStatus: false });
+        await requestHandler(action, {
+            status: 200,
+            callback: async () => history.push('/refresh')
+        });
     };
 
     return <ReservationInfo reservation={reservation}>

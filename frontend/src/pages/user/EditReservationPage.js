@@ -3,6 +3,8 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import moment from 'moment';
 import EditReservationCalendar from '../../components/EditReservationCalendar';
+import { requestHandler } from '../../common/utils';
+import { toast } from 'react-toastify';
 
 const EditReservationPage = (props) => {
 
@@ -20,17 +22,17 @@ const EditReservationPage = (props) => {
 
     const handleMakeChange = async () => {
         const uri = `/reservations/${state.reservation._id}/user`
-        const result = await axios.put(uri, {
+        const action = async () => axios.put(uri, {
             fromDate: selectedInterval.start.toDate(),
             toDate: selectedInterval.end.toDate()
         });
-        if (result.status !== 200) {
-            alert('Internal error. Try refresh page.');
-            result.data.errors.forEach(e => console.log(e.msg ?? e));
-            return;
-        }
-        alert('Reservation updated. Pending for admin acceptation.');
-        history.push('/user/manage-reservations');
+        await requestHandler(action, {
+            status: 200,
+            callback: async () => {
+                toast('Reservation updated. Pending for admin acceptation.');
+                history.push('/user/manage-reservations');
+            }
+        });
     };
 
     const dateIntervalToGenerate = {
@@ -40,39 +42,25 @@ const EditReservationPage = (props) => {
 
     useEffect(() => {
         const fireXD = async () => {
-            const reservationResult = await axios.get(`/reservations/${reservationId}/user`,
+            const reservationUri = `/reservations/${reservationId}/user`;
+            const reservationAction = async () => axios.get(reservationUri,
                 { validateStatus: false })
+            const reservation = await requestHandler(reservationAction);
 
-            if (reservationResult.status !== 200) {
-                alert('Error. Try refresh.');
-                reservationResult.data.errors.forEach(e => console.log(e?.msg ?? e));
+            if (!['PENDING', 'ACCEPTED'].includes(reservation?.status)) {
                 setState({ isLoading: false, reservation: null });
                 return;
             }
 
-
-            if (!['PENDING', 'ACCEPTED'].includes(reservationResult.data?.status)) {
-                setState({ isLoading: false, reservation: null });
-                return;
-            }
-
-            const reservation = reservationResult.data;
             setSelectedInterval({
                 start: moment(reservation.fromDate),
                 end: moment(reservation.toDate)
             });
 
-            // TODO: CHANGE TO HAVE CUSTOM ERRORS
-            const roomResult = await axios(`/rooms/${reservation.roomId}`);
-            if (roomResult.status !== 200) {
-                alert('Error. Try refresh.');
-                reservationResult.data.errors.forEach(e => console.log(e?.msg ?? e));
-                setState({ isLoading: false, reservation: null });
-                return;
-            }
-
-            const room = roomResult.data;
-            setState({ isLoading: false, reservation: reservation, room: room });
+        
+            const roomAction = async () => axios(`/rooms/${reservation.roomId}`);
+            const room = await requestHandler(roomAction);
+            setState({ isLoading: false, reservation, room });
         };
 
         if (isObjectIdValid(reservationId)) fireXD();

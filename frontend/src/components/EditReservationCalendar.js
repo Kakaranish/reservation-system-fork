@@ -3,6 +3,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from "moment";
 import axios from "axios";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { requestHandler } from "../common/utils";
 
 const EditReservationCalendar = (props) => {
 
@@ -17,13 +18,9 @@ const EditReservationCalendar = (props) => {
 
     useEffect(() => {
         const getEventsForRoomReservations = async () => {
-            const result = await axios.get(`/rooms/${room._id}/reservations-preview`,
-                { validateStatus: false });
-            if (result.status !== 200) {
-                result.data.errors.forEach(e => console.log(e?.msg ?? e));
-                alert('Internal error. Try to refresh page.');
-                return;
-            }
+            const uri = `/rooms/${room._id}/reservations-preview`;
+            const action = async () => axios.get(uri, { validateStatus: false });
+            const reservations = await requestHandler(action);
 
             const editedReservationEvent = {
                 start: reservation.fromDate,
@@ -34,7 +31,6 @@ const EditReservationCalendar = (props) => {
             };
             setSelectedInterval(editedReservationEvent);
 
-            const reservations = result.data;
             const reservedEvents = mapReservationsToReservedEvents(
                 reservations.filter(r => r._id != reservation._id));
             setEvents({

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Redirect, Route } from "react-router-dom";
 import axios from 'axios';
 import DashbordLayout from "./DashbordLayout";
+import { requestHandler } from '../common/utils';
 
 const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
 
@@ -15,14 +16,10 @@ const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
 
     useEffect(() => {
         const auth = async () => {
-            const result = await axios.post('/auth/verify');
-            if (result.status !== 200) {
-                result.data.errors.forEach(e => console.log(e?.msg ?? e));
-                alert('Internal error. Try to refresh page.');
-                return;
-            }
+            const action = async () => axios.post('/auth/verify');
+            const result = await requestHandler(action);
 
-            const user = result.data.user;
+            const user = result.user;
             const isAuthorized = roles.length === 0 || roles.includes(user?.role);
             if (!isAuthorized) {
                 if (!user) alert('You must be logged in. Redirecting to login screen...');
@@ -31,7 +28,7 @@ const DashboardLayoutRoute = ({ component: Component, ...rest }) => {
 
             setState({
                 loading: false,
-                user: result.data.user,
+                user: result.user,
                 isAuthorized: isAuthorized
             });
         };

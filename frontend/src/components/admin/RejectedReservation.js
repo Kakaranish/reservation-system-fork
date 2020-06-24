@@ -2,6 +2,7 @@ import React from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import ReservationInfo from "../ReservationInfo";
+import { requestHandler } from "../../common/utils";
 
 const RejectedReservation = ({ reservation }) => {
 
@@ -9,14 +10,11 @@ const RejectedReservation = ({ reservation }) => {
 
     const onAccept = async () => {
         const uri = `/reservations/${reservation._id}/modify/accept`;
-        const result = await axios.put(uri, {}, { validateStatus: false });
-        if (result.status !== 200) {
-            alert('Internal error');
-            result.data.errors.forEach(e => console.log(e?.msg ?? e));
-            return;
-        }
-
-        history.push('/refresh');
+        const action = async () => axios.put(uri, {}, { validateStatus: false });
+        await requestHandler(action, {
+            status: 200,
+            callback: async () => history.push('/refresh')
+        });
     };
 
     return <>

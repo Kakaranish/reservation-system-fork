@@ -7,11 +7,12 @@ import noImagePlaceholder from "../assets/icons/no-image.svg";
 import '../assets/css/RoomPage.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useHistory } from "react-router-dom";
+import { requestHandler } from "../common/utils";
 
 const images = require.context('../assets/images/amenities', true);
 
 const RoomPage = (props) => {
-	
+
 	const match = props.match;
 	const roomId = match.params.id;
 	const history = useHistory();
@@ -61,16 +62,12 @@ const RoomPage = (props) => {
 			totalPrice: calculateTotalPrice(room, selectedInterval)
 		};
 
-		const result = await axios.post(`/reservations`, {},
+		const action = async () => axios.post(`/reservations`, {},
 			{ data: dataJson, validateStatus: false });
-
-		if (result.status !== 200) {
-			alert('Internal error. Try refresh page.');
-			result.data.errors.forEach(e => console.log(e?.msg ?? e));
-			return;
-		}
-
-		history.push('/user/manage-reservations');
+		await requestHandler(action, {
+			status: 200,
+			callback: async () => history.push('/user/manage-reservations')
+		});
 	}
 
 	if (!room) return <h3>{message}</h3>

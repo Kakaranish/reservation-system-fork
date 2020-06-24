@@ -4,6 +4,7 @@ import axios from 'axios';
 import Checkbox from "../../components/Checkbox";
 import ImageUploader from "../../components/ImageUploader";
 import ValidationErrors from "../../components/ValidationErrors";
+import { requestHandler } from "../../common/utils";
 
 const CreateRoomPage = () => {
 
@@ -25,17 +26,14 @@ const CreateRoomPage = () => {
             return;
         }
 
-        const result = await axios.post('/rooms', formData, {
+        const action = async () => axios.post('/rooms', formData, {
             validateStatus: false,
             headers: { 'Content-Type': 'multipart/form-data' }
         });
-        if (result.status !== 200) {
-            alert('Internal error. Try refresh page.');
-            result.data.errors.forEach(e => console.log(e?.msg ?? e));
-            return;
-        }
-
-        history.push('/rooms');
+        await requestHandler(action, {
+            status: 200,
+            callback: async () => history.push('/rooms')
+        });
     };
 
     return (

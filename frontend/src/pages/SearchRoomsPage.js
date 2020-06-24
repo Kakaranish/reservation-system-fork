@@ -3,6 +3,7 @@ import axios from 'axios';
 import queryString from 'query-string';
 import { Redirect } from 'react-router-dom';
 import RoomCard from '../components/RoomCard';
+import { requestHandler } from '../common/utils';
 
 const SearchRoomsPage = (props) => {
 	const phrase = queryString.parse(props.location.search).phrase;
@@ -11,13 +12,9 @@ const SearchRoomsPage = (props) => {
 	useEffect(() => {
 		const fetch = async () => {
 			const uri = `/rooms/with-phrase/${encodeURIComponent(phrase)}`;
-			const result = await axios.get(uri, { validateStatus: false });
-			if (result.status !== 200) {
-				result.data.errors.forEach(e => console.log(e?.msg ?? e));
-				alert('Internal error. Try to refresh page.');
-				return;
-			}
-			setState({ loading: false, rooms: result.data });
+			const action = async () => axios.get(uri, { validateStatus: false });
+			const rooms = await requestHandler(action);
+			setState({ loading: false, rooms });
 		};
 		if (phrase) fetch();
 	}, []);

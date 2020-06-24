@@ -3,6 +3,7 @@ import queryString from "query-string";
 import moment from 'moment';
 import axios from "axios";
 import RoomCard from "../components/RoomCard";
+import { requestHandler } from "../common/utils";
 
 const RoomsPage = (props) => {
 	const queryParams = queryString.parse(props.location.search);
@@ -12,7 +13,7 @@ const RoomsPage = (props) => {
 	useEffect(() => {
 		const intervalLength = resolvedQueryParams.toDate.diff(resolvedQueryParams.fromDate, 'days') + 1;
 		const getRooms = async queryParams => {
-			const result = await axios.get('/rooms', {
+			const action = async () => axios.get('/rooms', {
 				validateStatus: false,
 				params: {
 					fromPrice: queryParams.fromPrice,
@@ -21,13 +22,7 @@ const RoomsPage = (props) => {
 					toDate: queryParams.toDate.toISOString()
 				}
 			});
-			if (result.status !== 200) {
-				result.data.errors.forEach(e => console.log(e?.msg ?? e));
-				alert('Internal error. Try to refresh page.');
-				return;
-			}
-
-			const rooms = result.data ?? [];
+			const rooms = (await requestHandler(action)) ?? [];
 			rooms.forEach(r => r.totalPrice = r.pricePerDay * intervalLength);
 			setRooms(rooms);
 		};
