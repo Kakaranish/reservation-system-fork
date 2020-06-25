@@ -21,7 +21,7 @@ const EditReservationPage = (props) => {
         setSelectedInterval(passedSelectedInterval)
 
     const handleMakeChange = async () => {
-        const uri = `/reservations/${state.reservation._id}/user`
+        const uri = `/user/reservations/${state.reservation._id}`
         const action = async () => axios.put(uri, {
             fromDate: selectedInterval.start.toDate(),
             toDate: selectedInterval.end.toDate()
@@ -41,8 +41,8 @@ const EditReservationPage = (props) => {
     };
 
     useEffect(() => {
-        const fireXD = async () => {
-            const reservationUri = `/reservations/${reservationId}/user`;
+        const fetch = async () => {
+            const reservationUri = `/user/reservations/${reservationId}`;
             const reservationAction = async () => axios.get(reservationUri,
                 { validateStatus: false })
             const reservation = await requestHandler(reservationAction);
@@ -63,7 +63,7 @@ const EditReservationPage = (props) => {
             setState({ isLoading: false, reservation, room });
         };
 
-        if (isObjectIdValid(reservationId)) fireXD();
+        if (isObjectIdValid(reservationId)) fetch();
     }, []);
 
 
@@ -130,8 +130,8 @@ const EditReservationPage = (props) => {
                     </div>
 
                     <div className="row">
-
                         {
+                            // TODO:
                             (() => {
                                 const areSame = selectedInterval.start.startOf('day').diff(moment(state.reservation.fromDate).startOf('day')) === 0 &&
                                     selectedInterval.end.startOf('day').diff(moment(state.reservation.toDate).startOf('day')) === 0;

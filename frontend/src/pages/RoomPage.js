@@ -62,7 +62,7 @@ const RoomPage = (props) => {
 			totalPrice: calculateTotalPrice(room, selectedInterval)
 		};
 
-		const action = async () => axios.post(`/reservations`, {},
+		const action = async () => axios.post(`/user/reservations`, {},
 			{ data: dataJson, validateStatus: false });
 		await requestHandler(action, {
 			status: 200,
