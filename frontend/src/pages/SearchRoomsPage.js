@@ -11,7 +11,7 @@ const SearchRoomsPage = (props) => {
 	const [state, setState] = useState({ loading: true });
 	useEffect(() => {
 		const fetch = async () => {
-			const uri = `/rooms/with-phrase/${encodeURIComponent(phrase)}`;
+			const uri = `/rooms/search/${encodeURIComponent(phrase)}`;
 			const action = async () => axios.get(uri, { validateStatus: false });
 			const rooms = await requestHandler(action);
 			setState({ loading: false, rooms });
@@ -33,7 +33,7 @@ const SearchRoomsPage = (props) => {
 						<Link to={`/rooms/${roomData["_id"]}`}>
 							<button type="button" className="btn btn-lg btn-block mt-2 primary-btn show-more-details-btn">
 								Show more information
-                        </button>
+                        	</button>
 						</Link>
 					</RoomCard>
 				)

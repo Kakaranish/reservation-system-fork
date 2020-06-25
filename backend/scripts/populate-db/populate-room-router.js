@@ -184,7 +184,7 @@ export const populateRoomRouter = async () => {
     }
 
     // -------------------------------------------------------------------------
-    // -- GET /rooms/with-phrase/:phrase
+    // -- GET /rooms/search/:phrase
 
     {
         const room = new Room({

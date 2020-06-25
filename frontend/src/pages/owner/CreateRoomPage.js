@@ -3,6 +3,8 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { requestHandler } from "../../common/utils";
 import RoomForm from "../../components/owner/RoomForm";
+import ValidationErrors from "../../components/ValidationErrors";
+import ImageUploader from '../../components/ImageUploader';
 
 const CreateRoomPage = () => {
 
@@ -41,27 +43,23 @@ const CreateRoomPage = () => {
                     <h2>Create conference room</h2>
                 </div>
 
-                <RoomForm handleSubmit={handleSubmit} setFile={setFile} />
+                <RoomForm handleSubmit={handleSubmit} setFile={setFile}>
+                    <ValidationErrors errors={validationErrors} />
+
+                    <div className="row">
+                        <div className="col-12">
+                            <ImageUploader onChange={handleFileChange} />
+                        </div>
+
+                        <div className="col-12 mt-2">
+                            <button type="submit" className="btn btn-block primary-btn">Create Room</button>
+                        </div>
+                    </div>
+                </RoomForm>
             </div>
         </>
     );
 };
-
-const amenities = [
-    { name: "amtTV", label: "TV", "checkedByDefault": false },
-    { name: "amtMicrophone", label: "Microphone", "checkedByDefault": false },
-    { name: "amtProjector", label: "Projector", "checkedByDefault": true },
-    { name: "amtPhone", label: "Phone", "checkedByDefault": false }
-];
-const dows = [
-    { name: "dowMonday", label: "Monday", "checkedByDefault": true },
-    { name: "dowTuesday", label: "Tuesday", "checkedByDefault": true },
-    { name: "dowWednesday", label: "Wednesday", "checkedByDefault": true },
-    { name: "dowThursday", label: "Thursday", "checkedByDefault": true },
-    { name: "dowFriday", label: "Friday", "checkedByDefault": true },
-    { name: "dowSaturday", label: "Satursday", "checkedByDefault": false },
-    { name: "dowSunday", label: "Sunday", "checkedByDefault": false },
-];
 
 function processFormData(formData) {
     const formDataKeyValues = Array.from(formData.entries()).map(x => {

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 
-const ImageUploader = (params) => {
-    const handleFileChange = params.onChange;
-    const [previewPath, setPreviewPath] = useState(null);
+const ImageUploader = (props) => {
+
+    const { defaultPreview, showRestoreDefaultBtn } = props;
+    const handleFileChange = props.onChange;
+    const [previewPath, setPreviewPath] = useState(defaultPreview);
 
     const onChange = async event => {
         const file = event.target.files[0];
@@ -15,12 +17,28 @@ const ImageUploader = (params) => {
         handleFileChange(file);
     };
 
+    const onRestore = () => {
+        setPreviewPath(defaultPreview);
+        handleFileChange(null);
+    }
+
     return (
         <>
             <div className="custom-file">
-                <input className="custom-file-input" type="file" onChange={onChange} accept="image/*" />
-                <label className="custom-file-label" htmlFor="uploadedFile">Choose file</label>
+                <input className="custom-file-input" type="file"
+                    onChange={onChange} accept="image/*" />
+                <label className="custom-file-label" htmlFor="uploadedFile">
+                    Choose file
+                </label>
             </div>
+
+            {
+                showRestoreDefaultBtn &&
+                <button type="button" className="btn btn-secondary btn-block"
+                    onClick={onRestore}>
+                    Restore initial image
+                </button>
+            }
 
             {
                 previewPath &&

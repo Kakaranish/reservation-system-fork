@@ -176,13 +176,13 @@ describe('GET /rooms', () => {
     });
 });
 
-describe('GET /rooms/with-phrase/:phrase', () => {
+describe('GET /rooms/search/:phrase', () => {
     it('When room contains phrase in name then some results are returned', async () => {
         // Arrange:
         const phrase = '5eb91a37ee66aecd968b46b3';
 
         // Act:
-        const result = await request.get(`/rooms/with-phrase/${phrase}`);
+        const result = await request.get(`/rooms/search/${phrase}`);
 
         // Assert:
         expect(result.status).toBe(200);
@@ -196,7 +196,7 @@ describe('GET /rooms/with-phrase/:phrase', () => {
         const phrase = '5eb91a91b2f4ba915de68f5a';
 
         // Act:
-        const result = await request.get(`/rooms/with-phrase/${phrase}`);
+        const result = await request.get(`/rooms/search/${phrase}`);
 
         // Assert:
         expect(result.status).toBe(200);
@@ -210,7 +210,7 @@ describe('GET /rooms/with-phrase/:phrase', () => {
         const phrase = '5eb91ac8acc75b4e0ef2df9c';
 
         // Act:
-        const result = await request.get(`/rooms/with-phrase/${phrase}`);
+        const result = await request.get(`/rooms/search/${phrase}`);
 
         // Assert:
         expect(result.status).toBe(200);
