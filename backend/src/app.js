@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import cors from 'cors';
 import fileUpload from "express-fileupload";
 import RoomRouter from "./routers/RoomRouter";
 import AuthRouter from "./routers/AuthRouter";
@@ -13,10 +14,13 @@ require('dotenv').config();
 
 const app = express();
 
+console.log(process.env.NODE_ENV)
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(fileUpload());
+app.use(cors({ credentials: true, origin: process.env.FRONTEND_URI }));
 
 app.use('/user', UserRouter);
 app.use('/admin', AdminRouter);

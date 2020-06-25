@@ -30,7 +30,7 @@ const ReservationsPage = () => {
 			<LazyReservations currentTab={currentTab} status='pending' role="USER"
 				showReservations={reservations =>
 
-					<div className="container p-4">
+					<div className="p-4">
 						{
 							reservations.map(reservation =>
 								<CancellableReservation
@@ -44,7 +44,7 @@ const ReservationsPage = () => {
 			<LazyReservations currentTab={currentTab} status='accepted' role="USER"
 				showReservations={reservations =>
 
-					<div className="container p-4">
+					<div className="p-4">
 						{
 							reservations.map(reservation =>
 								<CancellableReservation
@@ -58,7 +58,7 @@ const ReservationsPage = () => {
 			<LazyReservations currentTab={currentTab} status='rejected' role="USER"
 				showReservations={reservations =>
 
-					<div className="container p-4">
+					<div className="p-4">
 						{
 							reservations.map(reservation =>
 								<ReservationInfo
@@ -72,12 +72,19 @@ const ReservationsPage = () => {
 			<LazyReservations currentTab={currentTab} status='cancelled' role="USER"
 				showReservations={reservations =>
 
-					<div className="container p-4">
+					<div className="p-4">
 						{
-							reservations.map(reservation =>
-								<ReservationInfo
-									key={reservation._id}
-									reservation={reservation} />
+							reservations.map((reservation, i) =>
+								<>
+									<ReservationInfo
+										key={reservation._id}
+										reservation={reservation} />
+									{
+										(i !== reservations.length - 1) &&
+										<div style={{height: "20px"}}></div>
+									}
+
+								</>
 							)
 						}
 					</div>

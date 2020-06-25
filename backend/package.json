@@ -4,10 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "npx nodemon --exec babel-node src/start.js",
-    "debug": "npx nodemon --inspect=2137 --exec babel-node src/start.js"
+    "start": "cross-env NODE_ENV=development nodemon --exec babel-node src/start.js",
+    "start-prod": "cross-env NODE_ENV=production nodemon --exec babel-node src/start.js"
   },
-  "author": "Stanislaw Gruz",
   "license": "ISC",
   "dependencies": {
     "@babel/cli": "^7.8.4",
@@ -20,6 +19,8 @@
     "body-parser": "^1.19.0",
     "cookie": "^0.4.1",
     "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
@@ -30,6 +31,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.9.10",
     "node-mocks-http": "^1.8.1",
+    "nodemon": "^2.0.4",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "regenerator-runtime": "^0.13.5",
