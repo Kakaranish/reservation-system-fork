@@ -17,10 +17,7 @@ const LazyReservations = ({ currentTab, status, showReservations, role }) => {
                 ? `/owner/reservations/status/${statusUpper}`
                 : `/user/reservations/status/${statusUpper}`;
             const action = async () => axios.get(uri, { validateStatus: false });
-            const result = await requestHandler(action, {
-                status: 400,
-                callback: async res => console.log(res)
-            });
+            const result = await requestHandler(action);
             setReservations(result);
         };
 

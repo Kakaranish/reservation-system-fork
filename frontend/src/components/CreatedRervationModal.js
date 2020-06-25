@@ -22,7 +22,7 @@ const CreatedReservationModal = ({ selectedDateInterval, reservationMakeOnClick 
                         selectedDateInterval &&
                         <>
                             Your reservation request has been created.<br />
-                                Now wait for administrator approval <br />
+                                Now wait for object owner approval <br />
                                 Selected date interval:
                                 <b> {selectedDateInterval.fromDate.format("DD-MM-YYYY")} - {selectedDateInterval.toDate.format("DD-MM-YYYY")}</b><br />
                         </>
