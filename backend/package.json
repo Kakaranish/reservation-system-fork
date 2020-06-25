@@ -5,9 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "npx nodemon --exec babel-node src/start.js",
-    "debug": "npx nodemon --inspect=2137 --exec babel-node src/start.js",
-    "populate-test-db": "npx babel-node scripts/populate-db/populate.js",
-    "test": "jest"
+    "debug": "npx nodemon --inspect=2137 --exec babel-node src/start.js"
   },
   "author": "Stanislaw Gruz",
   "license": "ISC",
@@ -16,7 +14,6 @@
     "@babel/core": "^7.9.0",
     "@babel/node": "^7.8.7",
     "@babel/preset-env": "^7.9.5",
-    "@types/jest": "^25.2.1",
     "axios": "^0.19.2",
     "azure-storage": "^2.10.3",
     "bcryptjs": "^2.4.3",
@@ -38,16 +35,5 @@
     "regenerator-runtime": "^0.13.5",
     "sharp": "^0.25.4",
     "uuid": "^7.0.2"
-  },
-  "devDependencies": {
-    "jest": "^25.4.0",
-    "supertest": "^4.0.2"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/client/"
-    ]
   }
 }
