@@ -10,7 +10,7 @@ const EditReservationPage = (props) => {
 
     const history = useHistory();
 
-    const reservationId = props.match.params.reservationId;
+    const reservationId = props.match.params.id;
     const [state, setState] = useState({
         isLoading: true,
         reservation: null,
@@ -84,7 +84,7 @@ const EditReservationPage = (props) => {
             <>
                 <div className="container p-4 bg-white">
 
-                    <div className='row'>
+                    <div className="row mb-4">
                         <div className='col-md-6'>
                             <div><b className='m-0 p-0'>Before changes</b>:</div>
 

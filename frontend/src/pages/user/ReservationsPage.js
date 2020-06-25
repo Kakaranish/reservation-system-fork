@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import CancellableReservation from "../../components/user/CancellableReservation";
-import ReservationInfo from "../../components/ReservationInfo";
+import ReservationInfo from "../../components/user/ReservationInfo";
 import TabHeader from "../../components/TabHeader";
 import LazyReservations from "../../components/LazyReservations";
 

@@ -37,7 +37,7 @@ const AccountPage = () => {
             <form onSubmit={onSubmit}>
                 <div className="form-group">
                     <label>Contact email</label>
-                    <input name="email" type="text" className="form-control"
+                    <input name="email" className="form-control"
                         defaultValue={state.user.email} readOnly />
                 </div>
 

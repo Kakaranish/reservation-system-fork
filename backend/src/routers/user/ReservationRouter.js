@@ -30,7 +30,7 @@ router.get('/status/:status', getReservationsWithStatusValidationMWs(),
             let query = queryBuilder
                 .withUserId(req.user._id)
                 .withPopulatedUserData('-_id email firstName lastName')
-                .withPopulatedRoomData('-_id name location image')
+                .withPopulatedRoomData('_id name location image')
                 .withStatus(req.params.status)
                 .select('id fromDate toDate pricePerDay totalPrice userId roomId');
 

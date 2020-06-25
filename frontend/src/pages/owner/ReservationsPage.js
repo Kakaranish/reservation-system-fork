@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PendingReservation from "../../components/owner/PendingReservation";
 import AcceptedReservation from "../../components/owner/AcceptedReservation";
 import RejectedReservation from "../../components/owner/RejectedReservation";
-import ReservationInfo from "../../components/ReservationInfo";
+import ReservationInfo from "../../components/user/ReservationInfo";
 import LazyReservations from "../../components/LazyReservations";
 import TabHeader from "../../components/TabHeader";
 

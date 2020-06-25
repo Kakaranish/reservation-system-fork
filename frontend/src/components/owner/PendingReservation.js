@@ -1,5 +1,5 @@
 import React from "react";
-import ReservationInfo from "../ReservationInfo";
+import ReservationInfo from "../owner/ReservationInfo";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import axios from "axios";
 import { requestHandler } from "../../common/utils";

@@ -8,11 +8,11 @@ import homeIcon from '../assets/icons/sidebar/home.svg';
 import reservationsIcon from '../assets/icons/sidebar/reservations.svg';
 import roomsIcon from '../assets/icons/sidebar/rooms.svg';
 import createRoomIcon from '../assets/icons/sidebar/create-room.svg';
-import settingsIcon from '../assets/icons/sidebar/settings.svg';
 import loginIcon from '../assets/icons/sidebar/log-in.svg';
 import logoutIcon from '../assets/icons/sidebar/log-out.svg';
 import registerIcon from '../assets/icons/sidebar/register.svg';
 import usersIcon from '../assets/icons/sidebar/users.svg';
+import multipleIcon from '../assets/icons/sidebar/multiple.svg';
 import accountIcon from '../assets/icons/sidebar/account.svg';
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import AwareComponentBuilder from "../common/AwareComponentBuilder";
@@ -59,7 +59,7 @@ const Sidebar = (props) => {
                 </Link>
 
                 {
-                    props.identity &&
+                    props.identity?.role === 'USER' &&
                     <Link to="/user/reservations">
                         <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                             <img src={reservationsIcon} className="icon" />
@@ -70,7 +70,7 @@ const Sidebar = (props) => {
 
                 {
                     props.identity?.role === 'ADMIN' && <>
-                        <Link to="/users">
+                        <Link to="/admin/users">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={usersIcon} className="icon" />
                                 Users
@@ -81,15 +81,19 @@ const Sidebar = (props) => {
 
                 {
                     props.identity?.role === 'OWNER' && <>
+                        
+                        <div className='items-separator'></div>
+                        
                         <Link to="/owner/reservations">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                                <img src={settingsIcon} className="icon" />
+                                <img src={reservationsIcon} className="icon" />
                                 Users Reservations
                             </div>
                         </Link>
 
                         <Link to="/owner/rooms">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                            <img src={multipleIcon} className="icon" />
                                 Your Rooms
                             </div>
                         </Link>
@@ -108,7 +112,7 @@ const Sidebar = (props) => {
                 {
                     props.identity
                         ? <>
-                            <Link to="/account" >
+                            <Link to="/user/account" >
                                 <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                     <img src={accountIcon} className="icon" />
                                     Account

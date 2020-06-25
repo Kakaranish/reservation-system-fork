@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import ReservationInfo from "../ReservationInfo";
+import ReservationInfo from "../owner/ReservationInfo";
 import { requestHandler } from "../../common/utils";
 
 const AcceptedReservation = ({ reservation }) => {
