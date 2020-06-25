@@ -74,9 +74,9 @@ export const isImageType = file => {
 export const deleteImage = async image => {
     const blobService = azure.createBlobService();
     blobService.deleteBlobIfExists(process.env.BLOB_CONTAINER, image.blobName,
-        err => console.log(err));
+        err => { if (err) console.log(err) });
     blobService.deleteBlobIfExists(process.env.BLOB_CONTAINER, image.thumbnailBlobName,
-        err => console.log(err));
+        err => { if (err) console.log(err) });
 };
 
 /**
@@ -84,7 +84,7 @@ export const deleteImage = async image => {
  */
 export const uploadImage = async file => {
     if (!file) throw Error('no image');
-    
+
     const fileExt = path.extname(file.name);
 
     let blobOptions;

@@ -8,7 +8,7 @@ const UsersPage = () => {
     const [state, setState] = useState({ loading: true });
     useEffect(() => {
         const fetch = async () => {
-            const action = async () => axios.get('/users', { validateStatus: false });
+            const action = async () => axios.get('/admin/users', { validateStatus: false });
             const users = await requestHandler(action);
             setState({ loading: false, users });
         };

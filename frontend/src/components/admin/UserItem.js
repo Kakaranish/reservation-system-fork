@@ -30,7 +30,7 @@ const UserItem = (props) => {
         if (editYourself && !window.confirm('Do you really want to change your role?'))
             return;
 
-        const uri = `/users/${user._id}/role/${selectedRole}`;
+        const uri = `/admin/users/${user._id}/role/${selectedRole}`;
         const action = async () => axios.put(uri, {}, { validateStatus: false });
         await requestHandler(action);
 

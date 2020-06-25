@@ -66,7 +66,7 @@ const RoomPage = (props) => {
 			{ data: dataJson, validateStatus: false });
 		await requestHandler(action, {
 			status: 200,
-			callback: async () => history.push('/user/manage-reservations')
+			callback: async () => history.push('/user/reservations')
 		});
 	}
 

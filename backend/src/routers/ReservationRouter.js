@@ -11,56 +11,10 @@ import {
     parseObjectId,
     withAsyncRequestHandler
 } from '../common';
-import {
-    userExistenceValidatorMW,
-    queryOptionalDateIntervalValidatorMW,
-    errorSummarizerMW,
-    bodyDateIntervalValidatorMW
-} from '../common-middlewares';
+import { errorSummarizerMW, bodyDateIntervalValidatorMW } from '../common-middlewares';
 import { adminValidatorMW, tokenValidatorMW } from '../auth/auth-validators';
 
 const router = express();
-
-// ADMIN
-router.get('/reservations', getReservationsValidationMWs(), async (req, res) => {
-    if (req.body.errors?.length > 0)
-        return res.status(400).json({ errors: req.body.errors });
-
-    withAsyncRequestHandler(res, async () => {
-        const queryBuilder = new FindReservationQueryBuilder();
-        let query = queryBuilder
-            .withPopulatedUserData('-_id email firstName lastName')
-            .withPopulatedRoomData('-_id name location image')
-            .select('id fromDate toDate pricePerDay totalPrice userId roomId');
-        if (req.query.fromDate) query = query.overlappingDateIterval
-            (req.query.fromDate.toDate(), req.query.toDate.toDate())
-        if (req.query.roomId) query = query.withRoomId(req.query.roomId);
-        if (req.query.status) query = query.withStatus(req.query.status);
-        const reservations = await query.build();
-        res.status(200).json(reservations);
-    });
-});
-
-// USER & ADMIN
-router.get('/reservations/user', getReservationsForUserValidationMWs(), async (req, res) => {
-    if (req.body.errors?.length > 0)
-        return res.status(400).json({ errors: req.body.errors });
-
-    withAsyncRequestHandler(res, async () => {
-        const queryBuilder = new FindReservationQueryBuilder();
-        let query = queryBuilder
-            .withUserId(req.user._id)
-            .withPopulatedUserData('-_id email firstName lastName')
-            .withPopulatedRoomData('-_id name location image')
-            .select('id fromDate toDate pricePerDay totalPrice userId roomId');
-        if (req.query.fromDate) query = query.overlappingDateIterval(
-            req.query.fromDate.toDate(), req.query.toDate.toDate());
-        if (req.query.status) query = query.withStatus(req.query.status);
-
-        const reservations = await query.build();
-        res.status(200).json(reservations);
-    });
-});
 
 // USER & ADMIN
 router.get('/reservations/:id/user', getReservationForUserValidationMWs(), async (req, res) => {
@@ -74,7 +28,7 @@ router.get('/reservations/:id/user', getReservationForUserValidationMWs(), async
     });
 });
 
-// USER, ADMIN
+// USER
 router.post('/reservations', createReservationValidationMWs(),
     async (req, res, next) => {
         if (validationResult(req).errors.length > 0)
@@ -155,52 +109,12 @@ router.delete('/reservations/:id', [tokenValidatorMW, adminValidatorMW,
     });
 });
 
-function getReservationsValidationMWs() {
-    return [
-        tokenValidatorMW,
-        adminValidatorMW,
-        queryOptionalDateIntervalValidatorMW,
-        query('status').optional()
-            .custom(status => {
-                const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
-                if (!availableStatuses.includes(status.toUpperCase()))
-                    throw Error('illegal status');
-                return true;
-            }),
-        query('roomId').optional()
-            .customSanitizer(id => parseObjectId(id))
-            .notEmpty().withMessage('invalid mongo ObjectId').bail()
-            .custom(async id => {
-                return await Room.exists({ _id: id }).then(exists => {
-                    if (!exists) return Promise.reject('room with given id does not exist')
-                });
-            }),
-        errorSummarizerMW
-    ];
-}
-
-function getReservationsForUserValidationMWs() {
-    return [
-        tokenValidatorMW,
-        userExistenceValidatorMW,
-        queryOptionalDateIntervalValidatorMW,
-        query('status').optional()
-            .custom(status => {
-                const availableStatuses = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
-                if (!availableStatuses.includes(status.toUpperCase()))
-                    throw Error('illegal status');
-                return true;
-            }),
-        errorSummarizerMW
-    ];
-}
-
 function getReservationForUserValidationMWs() {
     return [
         tokenValidatorMW,
         param('id').customSanitizer(id => parseObjectId(id))
             .notEmpty().withMessage('invalid mongo ObjectId')
-            .custom(async (id, {req}) => {
+            .custom(async (id, { req }) => {
                 req.reservation = await Reservation.findById(id);
                 return true;
             }),

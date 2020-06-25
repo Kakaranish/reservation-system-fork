@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { requestHandler, getFormDataJsonFromEvent } from "../../common/utils";
+import { requestHandler } from "../../common/utils";
 import RoomForm from "../../components/owner/RoomForm";
 import ValidationErrors from "../../components/ValidationErrors";
 import ImageUploader from '../../components/ImageUploader';
@@ -21,8 +21,6 @@ const EditRoomPage = (props) => {
 
             if (room.ownerId === props.identity.id) setState({ loading: false, room });
             else setState({ loading: false });
-
-            console.log(room)
         };
         fetch();
     }, []);
@@ -45,7 +43,7 @@ const EditRoomPage = (props) => {
             return;
         }
 
-        const uri = `/rooms/${roomId}`;
+        const uri = `/owner/rooms/${roomId}`;
         const action = async () => axios.put(uri, formData, {
             validateStatus: false,
             headers: { 'Content-Type': 'multipart/form-data' }

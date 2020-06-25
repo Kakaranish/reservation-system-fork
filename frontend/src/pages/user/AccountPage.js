@@ -8,7 +8,7 @@ const AccountPage = () => {
     const [state, setState] = useState({ loading: true });
     useEffect(() => {
         const fetch = async () => {
-            const action = async () => axios.get('/users/me',
+            const action = async () => axios.get('/admin/users/me',
                 { validateStatus: false });
             const user = await requestHandler(action);
 
@@ -24,7 +24,7 @@ const AccountPage = () => {
         event.preventDefault();
 
         const formData = getFormDataJsonFromEvent(event);
-        const action = async () => axios.put('/users/me', formData,
+        const action = async () => axios.put('/admin/users/me', formData,
             { validateStatus: false });
         await requestHandler(action);
         

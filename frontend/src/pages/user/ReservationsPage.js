@@ -4,7 +4,7 @@ import ReservationInfo from "../../components/ReservationInfo";
 import TabHeader from "../../components/TabHeader";
 import LazyReservations from "../../components/LazyReservations";
 
-const ManageReservations = () => {
+const ReservationsPage = () => {
 
 	const [currentTab, setCurrentTab] = useState('navbar-pending');
 
@@ -47,7 +47,7 @@ const ManageReservations = () => {
 					<div className="container p-4">
 						{
 							reservations.map(reservation =>
-								<ReservationInfo
+								<CancellableReservation
 									key={reservation._id}
 									reservation={reservation} />
 							)
@@ -86,4 +86,4 @@ const ManageReservations = () => {
 	</>
 };
 
-export default ManageReservations;
+export default ReservationsPage;

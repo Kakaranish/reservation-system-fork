@@ -2,21 +2,19 @@ import express from "express";
 import Room from "../models/room-model";
 import '../auth/passport-config';
 import * as dbQueries from '../queries/db-queries';
-import { withAsyncRequestHandler, uploadImage, deleteImage } from '../common';
+import { withAsyncRequestHandler } from '../common';
 import {
     errorSummarizerMW,
     queryDateIntervalValidatorMW,
-    validationExaminator,
-    uploadImageMW
+    validationExaminator
 } from '../common-middlewares'
 import { preparePrice, parseObjectId } from '../common';
-import { query, param, header, body } from 'express-validator';
-import { tokenValidatorMW, ownerValidatorMW } from '../auth/auth-validators';
+import { query, param } from 'express-validator';
 import FindReservationQueryBuilder from "../queries/FindReservationQueryBuilder";
 
 const router = express.Router();
 
-router.get('/', getRoomsValidationMiddlewares(), async (req, res) => {
+router.get('/', getRoomsValidationMWs(), async (req, res) => {
     if (req.body.errors?.length > 0)
         return res.status(400).json({ errors: req.body.errors });
 
@@ -32,10 +30,7 @@ router.get('/', getRoomsValidationMiddlewares(), async (req, res) => {
     });
 });
 
-router.get('/search/:phrase', [
-    param('phrase').notEmpty().withMessage('cannot be empty'),
-    validationExaminator
-], async (req, res) => {
+router.get('/search/:phrase', searchPhraseValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         const rooms = await Room.find({
             $or: [
@@ -49,86 +44,29 @@ router.get('/search/:phrase', [
     });
 });
 
-router.get('/owner', getOwnerRoomsValidationMWs(), async (req, res) => {
-    withAsyncRequestHandler(res, async () => {
-        const rooms = await Room.find({ ownerId: req.user._id });
-        res.status(200).json(rooms);
-    });
-});
-
-router.get('/:id', [
-    param('id').customSanitizer(id => parseObjectId(id))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-    validationExaminator
-], async (req, res) => {
+router.get('/:id', getRoomValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         const room = await Room.findById(req.params.id);
         return res.status(200).json(room);
     });
 });
 
-router.get('/:id/reservations-preview', [
-    param('id').customSanitizer(id => parseObjectId(id))
-        .notEmpty().withMessage('invalid mongo ObjectId'),
-    validationExaminator
-], async (req, res) => {
-    withAsyncRequestHandler(res, async () => {
-        const queryBuilder = new FindReservationQueryBuilder();
-        const query = queryBuilder
-            .withRoomId(req.params.id.toHexString())
-            .withStatus('ACCEPTED')
-            .select('_id fromDate toDate')
-            .build();
-        const reservations = await query;
-        return res.status(200).json(reservations);
-    });
-});
-
-// USER & ADMIN
-router.post('/', createRoomValidationMiddlewares(), uploadImageMW,
+router.get('/:id/reservations-preview', getReservationsPreviewsValidationMWs(),
     async (req, res) => {
         withAsyncRequestHandler(res, async () => {
-            const room = new Room({
-                ownerId: req.user._id,
-                name: req.body.name,
-                location: req.body.location,
-                capacity: req.body.capacity,
-                pricePerDay: req.body.pricePerDay,
-                description: req.body.description,
-                amenities: req.amenities,
-                dows: req.dows,
-                image: req.image
-            });
-            await room.save();
-
-            res.status(200).json({ roomId: room._id });
+            const queryBuilder = new FindReservationQueryBuilder();
+            const query = queryBuilder
+                .withRoomId(req.params.id.toHexString())
+                .withStatus('ACCEPTED')
+                .select('_id fromDate toDate')
+                .build();
+            const reservations = await query;
+            return res.status(200).json(reservations);
         });
     }
 );
 
-router.put('/:id', updateRoomValidationMWs(), async (req, res) => {
-    withAsyncRequestHandler(res, async () => {
-        req.room.name = req.body.name;
-        req.room.location = req.body.location;
-        req.room.capacity = req.body.capacity;
-        req.room.pricePerDay = req.body.pricePerDay;
-        req.room.description = req.body.description;
-        req.room.amenities = req.amenities;
-        req.room.dows = req.dows;
-
-        if(req.files?.file) {
-            await deleteImage(req.room.image);
-            const image = await uploadImage(req.files.file);
-            req.room.image = image;
-        }
-
-        await req.room.save();
-
-        res.sendStatus(200);
-    });
-});
-
-function getRoomsValidationMiddlewares() {
+function getRoomsValidationMWs() {
     return [
         queryDateIntervalValidatorMW,
         query('fromPrice').customSanitizer(price => preparePrice(price))
@@ -141,109 +79,27 @@ function getRoomsValidationMiddlewares() {
     ];
 }
 
-function createRoomValidationMiddlewares() {
+function getRoomValidationMWs() {
     return [
-        tokenValidatorMW,
-        ownerValidatorMW,
-        body('name').isLength({ min: 3 }).withMessage('must have length 3'),
-        body('location').isString().isLength({ min: 3 }),
-        body('capacity').isInt({ min: 0 }),
-        body('pricePerDay').customSanitizer(price => preparePrice(price))
-            .notEmpty().withMessage('price must match regex: \d+(\.\d{1,2})?'),
-        body('description').optional().isString(),
-        body('amenities').notEmpty().withMessage('cannot be empty').bail()
-            .isString().withMessage('must be stringified non-empty array').bail()
-            .custom((amenities, { req }) => {
-                const parsedAmenities = JSON.parse(amenities);
-                if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
-                    throw new Error('must be non-empty array');
-                }
-                const hasIllegalElements = parsedAmenities.some(
-                    amenity => !availableAmenities.includes(amenity));
-                if (hasIllegalElements) throw Error('contains at least one illegal amenity');
-                req.amenities = parsedAmenities;
-                return true;
-            }),
-        body('dows').notEmpty().withMessage('cannot be empty').bail()
-            .isString().withMessage('must be stringified non-empty array').bail()
-            .custom((dows, { req }) => {
-                const parsedDows = JSON.parse(dows);
-                if (!Array.isArray(parsedDows) || parsedDows.length === 0) {
-                    throw Error('must be non-empty array');
-                }
-                const hasIllegalElements = parsedDows.some(dow => !availableDows.includes(dow));
-                if (hasIllegalElements) throw Error("contains at least one illegal dow");
-                req.dows = parsedDows;
-                return true;
-            }),
-        header('content-type').custom(value => value.includes('multipart/form-data'))
-            .withMessage('Content-Type must be multipart/form-data'),
+        param('id').customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId'),
         validationExaminator
     ];
 }
 
-function updateRoomValidationMWs() {
+function searchPhraseValidationMWs() {
     return [
-        tokenValidatorMW,
-        ownerValidatorMW,
-        param('id').custom(async (value, { req }) => {
-            const room = await Room.findOne({
-                _id: value,
-                ownerId: req.user._id
-            });
-            if (!room) return Promise.reject('no such room');
-
-            req.room = room;
-        }),
-        body('name').isLength({ min: 3 }).withMessage('must have length 3'),
-        body('location').isString().isLength({ min: 3 }),
-        body('capacity').isInt({ min: 0 }),
-        body('pricePerDay').customSanitizer(price => preparePrice(price))
-            .notEmpty().withMessage('price must match regex: \d+(\.\d{1,2})?'),
-        body('description').optional().isString(),
-        body('amenities').notEmpty().withMessage('cannot be empty').bail()
-            .isString().withMessage('must be stringified non-empty array').bail()
-            .custom((amenities, { req }) => {
-                const parsedAmenities = JSON.parse(amenities);
-                if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
-                    throw new Error('must be non-empty array');
-                }
-                const hasIllegalElements = parsedAmenities.some(
-                    amenity => !availableAmenities.includes(amenity));
-                if (hasIllegalElements) throw Error('contains at least one illegal amenity');
-                
-                req.amenities = parsedAmenities;
-                return true;
-            }),
-        body('dows').notEmpty().withMessage('cannot be empty').bail()
-            .isString().withMessage('must be stringified non-empty array').bail()
-            .custom((dows, { req }) => {
-                const parsedDows = JSON.parse(dows);
-                if (!Array.isArray(parsedDows) || parsedDows.length === 0) {
-                    throw Error('must be non-empty array');
-                }
-                const hasIllegalElements = parsedDows.some(dow => !availableDows.includes(dow));
-                if (hasIllegalElements) throw Error("contains at least one illegal dow");
-                
-                req.dows = parsedDows;
-                return true;
-            }),
-        header('content-type').custom(value => value.includes('multipart/form-data'))
-            .withMessage('Content-Type must be multipart/form-data'),
+        param('phrase').notEmpty().withMessage('cannot be empty'),
         validationExaminator
     ];
 }
 
-function getOwnerRoomsValidationMWs() {
+function getReservationsPreviewsValidationMWs() {
     return [
-        tokenValidatorMW,
-        ownerValidatorMW
+        param('id').customSanitizer(id => parseObjectId(id))
+            .notEmpty().withMessage('invalid mongo ObjectId'),
+        validationExaminator
     ];
 }
-
-const availableAmenities = ["amtTV", "amtMicrophone", "amtProjector", "amtPhone"];
-
-const availableDows = ["dowMonday", "dowTuesday", "dowWednesday",
-    "dowThursday", "dowFriday", "dowSaturday", "dowSunday"];
 
 export default router;

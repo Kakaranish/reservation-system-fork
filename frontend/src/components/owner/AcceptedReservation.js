@@ -9,7 +9,7 @@ const AcceptedReservation = ({ reservation }) => {
     const history = useHistory();
 
     const onReject = async () => {
-        const uri = `/reservations/${reservation._id}/modify/reject`;
+        const uri = `/owner/reservations/${reservation._id}/reject`;
         const action = async () => axios.put(uri, {}, { validateStatus: false });
         await requestHandler(action, {
             status: 200,

@@ -10,7 +10,7 @@ const CancellableReservation = ({ reservation }) => {
     const history = useHistory();
 
     const onCancel = async () => {
-        const uri = `/reservations/${reservation._id}/modify/cancel`;
+        const uri = `/user/reservations/${reservation._id}/cancel`;
         const action = async () => axios.put(uri, {}, { validateStatus: false });
         await requestHandler(action, {
             status: 200,

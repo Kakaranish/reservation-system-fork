@@ -1,11 +1,11 @@
 import express from 'express';
-import { withAsyncRequestHandler } from '../common';
-import User from '../models/user-model';
-import RefreshToken from '../models/refresh-token-model';
-import { tokenValidatorMW, adminValidatorMW } from '../auth/auth-validators';
-import { validationExaminator } from '../common-middlewares';
 import { param, body } from 'express-validator';
-import { createRefreshToken } from '../auth/auth-utils';
+import { withAsyncRequestHandler } from '../../common';
+import User from '../../models/user-model';
+import RefreshToken from '../../models/refresh-token-model';
+import { tokenValidatorMW, adminValidatorMW } from '../../auth/auth-validators';
+import { validationExaminator } from '../../common-middlewares';
+import { createRefreshToken } from '../../auth/auth-utils';
 
 const router = express.Router();
 

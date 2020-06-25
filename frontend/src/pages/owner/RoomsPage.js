@@ -9,7 +9,7 @@ const RoomsPage = () => {
     const [state, setState] = useState({ loading: true });
     useEffect(() => {
         const fetch = async () => {
-            const action = async () => axios.get('/rooms/owner',
+            const action = async () => axios.get('/owner/rooms',
                 { validateStatus: false });
             const rooms = await requestHandler(action);
             setState({ loading: false, rooms });

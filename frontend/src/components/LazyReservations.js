@@ -13,11 +13,14 @@ const LazyReservations = ({ currentTab, status, showReservations, role }) => {
         const fetch = async () => {
             const statusUpper = status.toUpperCase();
 
-            const uri = role === 'ADMIN'
-                ? `/reservations?status=${statusUpper}`
-                : `/reservations/user?status=${statusUpper}`;
+            const uri = role === 'OWNER'
+                ? `/owner/reservations/status/${statusUpper}`
+                : `/user/reservations/status/${statusUpper}`;
             const action = async () => axios.get(uri, { validateStatus: false });
-            const result = await requestHandler(action);
+            const result = await requestHandler(action, {
+                status: 400,
+                callback: async res => console.log(res)
+            });
             setReservations(result);
         };
 

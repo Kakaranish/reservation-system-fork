@@ -30,7 +30,7 @@ const EditReservationPage = (props) => {
             status: 200,
             callback: async () => {
                 toast('Reservation updated. Pending for admin acceptation.');
-                history.push('/user/manage-reservations');
+                history.push('/user/reservations');
             }
         });
     };

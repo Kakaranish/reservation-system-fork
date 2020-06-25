@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import PendingReservation from "../../components/admin/PendingReservation";
-import AcceptedReservation from "../../components/admin/AcceptedReservation";
-import RejectedReservation from "../../components/admin/RejectedReservation";
+import PendingReservation from "../../components/owner/PendingReservation";
+import AcceptedReservation from "../../components/owner/AcceptedReservation";
+import RejectedReservation from "../../components/owner/RejectedReservation";
 import ReservationInfo from "../../components/ReservationInfo";
 import LazyReservations from "../../components/LazyReservations";
 import TabHeader from "../../components/TabHeader";
 
-const ManageReservations = () => {
+const ReservationsPage = () => {
 
 	const [currentTab, setCurrentTab] = useState('navbar-pending');
 
@@ -29,7 +29,7 @@ const ManageReservations = () => {
 
 		<div className="tab-content bg-white">
 
-			<LazyReservations currentTab={currentTab} status='pending' role="ADMIN"
+			<LazyReservations currentTab={currentTab} status='pending' role="OWNER"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -43,7 +43,7 @@ const ManageReservations = () => {
 					</div>
 				} />
 
-			<LazyReservations currentTab={currentTab} status='accepted' role="ADMIN"
+			<LazyReservations currentTab={currentTab} status='accepted' role="OWNER"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -57,7 +57,7 @@ const ManageReservations = () => {
 					</div>
 				} />
 
-			<LazyReservations currentTab={currentTab} status='rejected' role="ADMIN"
+			<LazyReservations currentTab={currentTab} status='rejected' role="OWNER"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -71,7 +71,7 @@ const ManageReservations = () => {
 					</div>
 				} />
 
-			<LazyReservations currentTab={currentTab} status='cancelled' role="ADMIN"
+			<LazyReservations currentTab={currentTab} status='cancelled' role="OWNER"
 				showReservations={reservations =>
 
 					<div className="container p-4">
@@ -88,4 +88,4 @@ const ManageReservations = () => {
 	</>
 };
 
-export default ManageReservations;
+export default ReservationsPage;

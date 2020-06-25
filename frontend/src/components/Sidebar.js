@@ -60,7 +60,7 @@ const Sidebar = (props) => {
 
                 {
                     props.identity &&
-                    <Link to="/user/manage-reservations">
+                    <Link to="/user/reservations">
                         <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                             <img src={reservationsIcon} className="icon" />
                             Your Reservations
@@ -70,13 +70,6 @@ const Sidebar = (props) => {
 
                 {
                     props.identity?.role === 'ADMIN' && <>
-                        <Link to="/admin/manage-reservations">
-                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
-                                <img src={settingsIcon} className="icon" />
-                                Users Reservations
-                            </div>
-                        </Link>
-
                         <Link to="/users">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={usersIcon} className="icon" />
@@ -88,13 +81,19 @@ const Sidebar = (props) => {
 
                 {
                     props.identity?.role === 'OWNER' && <>
-                        
+                        <Link to="/owner/reservations">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                <img src={settingsIcon} className="icon" />
+                                Users Reservations
+                            </div>
+                        </Link>
+
                         <Link to="/owner/rooms">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 Your Rooms
                             </div>
                         </Link>
-                        
+
                         <Link to="/owner/rooms/create">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={createRoomIcon} className="icon" />

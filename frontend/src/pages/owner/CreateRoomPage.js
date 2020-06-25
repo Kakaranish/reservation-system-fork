@@ -26,7 +26,7 @@ const CreateRoomPage = () => {
             return;
         }
 
-        const action = async () => axios.post('/rooms', formData, {
+        const action = async () => axios.post('/owner/rooms', formData, {
             validateStatus: false,
             headers: { 'Content-Type': 'multipart/form-data' }
         });
