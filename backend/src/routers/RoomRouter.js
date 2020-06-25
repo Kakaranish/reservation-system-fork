@@ -49,6 +49,13 @@ router.get('/with-phrase/:phrase', [
     });
 });
 
+router.get('/owner', getOwnerRoomsValidationMWs(), async (req, res) => {
+    withAsyncRequestHandler(res, async () => {
+        const rooms = await Room.find({ ownerId: req.user._id });
+        res.status(200).json(rooms);
+    });
+});
+
 router.get('/:id', [
     param('id').customSanitizer(id => parseObjectId(id))
         .notEmpty().withMessage('invalid mongo ObjectId'),
@@ -82,6 +89,7 @@ router.post('/', tokenValidatorMW, createRoomValidationMiddlewares(),
     uploadImageMW, async (req, res) => {
         withAsyncRequestHandler(res, async () => {
             const room = new Room({
+                ownerId: req.user._id,
                 name: req.body.name,
                 location: req.body.location,
                 capacity: req.body.capacity,
@@ -150,6 +158,13 @@ function createRoomValidationMiddlewares() {
             .withMessage('Content-Type must be multipart/form-data'),
         validationExaminator
     ]
+}
+
+function getOwnerRoomsValidationMWs() {
+    return [
+        tokenValidatorMW,
+        ownerValidatorMW
+    ];
 }
 
 const availableAmenities = ["amtTV", "amtMicrophone", "amtProjector", "amtPhone"];

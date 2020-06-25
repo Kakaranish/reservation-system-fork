@@ -1,9 +1,11 @@
 import express from 'express';
 import { withAsyncRequestHandler } from '../common';
 import User from '../models/user-model';
+import RefreshToken from '../models/refresh-token-model';
 import { tokenValidatorMW, adminValidatorMW } from '../auth/auth-validators';
 import { validationExaminator } from '../common-middlewares';
 import { param, body } from 'express-validator';
+import { createRefreshToken } from '../auth/auth-utils';
 
 const router = express.Router();
 
@@ -25,6 +27,8 @@ router.put('/:id/role/:role', updateUserValidationMWs(), async (req, res) => {
     withAsyncRequestHandler(res, async () => {
         req.user.role = req.params.role;
         await req.user.save();
+        await RefreshToken.deleteOne({ userId: req.user._id });
+        await createRefreshToken(req.user);
 
         res.sendStatus(200);
     });

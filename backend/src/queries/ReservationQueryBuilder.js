@@ -44,9 +44,8 @@ class ReservationQueryBuilder {
             throw Error('Provided illegal reservation status/es')
         }
 
-        this.filter.status = {
-            $in: statuses
-        };
+        this.filter.status = { $in: statuses };
+        
         return this;
     }
 
@@ -59,12 +58,9 @@ class ReservationQueryBuilder {
         if (!isValidDate(endDate)) throw Error(`'endDate' must be Date type`)
         if (startDate > endDate) throw Error(`'startDate' is after 'endDate'`);
 
-        this.filter.fromDate = {
-            $lte: endDate
-        };
-        this.filter.toDate = {
-            $gte: startDate
-        }
+        this.filter.fromDate = { $lte: endDate };
+        this.filter.toDate = { $gte: startDate }
+        
         return this;
     }
 

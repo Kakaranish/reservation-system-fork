@@ -88,6 +88,7 @@ router.post('/reservations', createReservationValidationMWs(),
             const queryBuilder = new ExistReservationQueryBuilder();
             const otherReservationExists = await queryBuilder.withRoomId(req.body.roomId.toHexString())
                 .overlappingDateIterval(req.body.fromDate.toDate(), req.body.toDate.toDate())
+                .withStatus('ACCEPTED')
                 .build();
             if (otherReservationExists) return res.status(400).json({
                 errors: [`other reservation/reservations on this room and date interval already exist(s)`]

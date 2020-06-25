@@ -88,7 +88,14 @@ const Sidebar = (props) => {
 
                 {
                     props.identity?.role === 'OWNER' && <>
-                        <Link to="/create-room">
+                        
+                        <Link to="/owner/rooms">
+                            <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
+                                Your Rooms
+                            </div>
+                        </Link>
+                        
+                        <Link to="/owner/rooms/create">
                             <div className="sidebar-item list-group-item list-group-item-action d-flex align-items-center">
                                 <img src={createRoomIcon} className="icon" />
                                 Create Room

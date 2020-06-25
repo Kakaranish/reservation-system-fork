@@ -2,6 +2,10 @@ import mongoose, {Schema} from 'mongoose'
 import ImageSchema from './image-schema';
 
 const roomSchema = new Schema({
+    ownerId: {
+        type: Schema.Types.ObjectId,
+        required: true
+    },
     name: {
         type: String,
         required: true

@@ -18,6 +18,8 @@ import RefreshPage from './pages/special/RefreshPage';
 import ErrorPage from './pages/special/ErrorPage';
 import DashboardLayout from './route-types/DashbordLayout';
 import AuthOnlyRoute from './route-types/AuthOnlyRoute';
+import OwnerRoomsPage from './pages/owner/RoomsPage';
+import EditRoomPage from './pages/owner/EditRoomPage';
 
 const App = () => <>
   <BrowserRouter>
@@ -42,8 +44,12 @@ const App = () => <>
           <AuthOnlyRoute path="/admin/manage-reservations"
             component={AdminManageReservations} roles={['ADMIN']} />
 
-          <AuthOnlyRoute path="/create-room" component={CreateRoomPage}
+          <AuthOnlyRoute path="/owner/rooms/create" component={CreateRoomPage}
             roles={['OWNER']} />
+          <AuthOnlyRoute path="/owner/rooms/:id/edit" component={EditRoomPage}
+            roles={['OWNER']} />
+          <AuthOnlyRoute path='/owner/rooms' component={OwnerRoomsPage}
+            roles={["OWNER"]} />
 
           <Route path='/error/:code' component={ErrorPage} />
           <Route path='/refresh' component={RefreshPage} />

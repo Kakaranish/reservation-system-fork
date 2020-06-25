@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import queryString from 'query-string';
-import { Redirect } from 'react-router-dom';
+import { Redirect, Link } from 'react-router-dom';
 import RoomCard from '../components/RoomCard';
 import { requestHandler } from '../common/utils';
 
@@ -29,7 +29,13 @@ const SearchRoomsPage = (props) => {
 		<div className="row">
 			{
 				state.rooms.map(roomData =>
-					<RoomCard key={`room-${roomData["_id"]}`} roomData={roomData} />
+					<RoomCard key={`room-${roomData["_id"]}`} roomData={roomData}>
+						<Link to={`/rooms/${roomData["_id"]}`}>
+							<button type="button" className="btn btn-lg btn-block mt-2 primary-btn show-more-details-btn">
+								Show more information
+                        </button>
+						</Link>
+					</RoomCard>
 				)
 			}
 		</div>

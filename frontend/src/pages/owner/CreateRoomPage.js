@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import Checkbox from "../../components/Checkbox";
-import ImageUploader from "../../components/ImageUploader";
-import ValidationErrors from "../../components/ValidationErrors";
 import { requestHandler } from "../../common/utils";
+import RoomForm from "../../components/owner/RoomForm";
 
 const CreateRoomPage = () => {
 
@@ -43,61 +41,7 @@ const CreateRoomPage = () => {
                     <h2>Create conference room</h2>
                 </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group row">
-                        <label htmlFor="Name" className="col-sm-2 col-form-label">Name</label>
-                        <div className="col-sm-10">
-                            <input type="name" className="form-control" id="name" name="name" placeholder="Name..." required />
-                        </div>
-                    </div>
-                    <div className="form-group row">
-                        <label htmlFor="Capacity" className="col-sm-2 col-form-label">Capacity</label>
-                        <div className="col-sm-10">
-                            <input type="number" className="form-control" id="capacity" name="capacity" placeholder="Capacity..." required />
-                        </div>
-                    </div>
-                    <div className="form-group row">
-                        <label htmlFor="Location" className="col-sm-2 col-form-label">Location</label>
-                        <div className="col-sm-10">
-                            <input type="location" className="form-control" id="location" name="location" placeholder="Location..." required />
-                        </div>
-                    </div>
-                    <div className="form-group row">
-                        <label htmlFor="PricePerDay" className="col-2 col-form-label" placeholder="Price Per Day" required>Price/Day [PLN]</label>
-                        <div className="col-sm-10">
-                            <input className="form-control" name="pricePerDay" id="pricePerDay" type="number" step="0.01" required />
-                        </div>
-                    </div>
-                    <div className="form-group row">
-                        <label htmlFor="description" className="col-2 col-form-label" placeholder="Description..." >Description</label>
-                        <div className="col-sm-10">
-                            <textarea className="form-control" id="description" name="description" rows="3" required></textarea>
-                        </div>
-                    </div>
-                    <div className="form-group row">
-                        <label htmlFor="Amenities" className="col-sm-2 col-form-label">Amenities</label>
-                        <div id="amenities" className="col-10 text-left align-self-center">
-                            {amenities.map(x => < Checkbox key={x.name} name={x.name} label={x.label} checkedByDefault={x.checkedByDefault} />)}
-                        </div>
-                    </div>
-                    <div className="form-group row">
-                        <label htmlFor="Availability" className="col-sm-2 col-form-label">Availability</label>
-                        <div className="col-10 text-left align-self-center ">
-                            {dows.map(x => <Checkbox key={x.name} name={x.name} label={x.label} checkedByDefault={x.checkedByDefault} />)}
-                        </div>
-                    </div>
-                    <div className="row">
-                        <div className="col-12">
-                            <ImageUploader onChange={handleFileChange} />
-                        </div>
-
-                        <ValidationErrors errors={validationErrors} />
-
-                        <div className="col-12 mt-2">
-                            <button type="submit" className="btn btn-block primary-btn">Create Room</button>
-                        </div>
-                    </div>
-                </form>
+                <RoomForm handleSubmit={handleSubmit} setFile={setFile} />
             </div>
         </>
     );
@@ -117,7 +61,7 @@ const dows = [
     { name: "dowFriday", label: "Friday", "checkedByDefault": true },
     { name: "dowSaturday", label: "Satursday", "checkedByDefault": false },
     { name: "dowSunday", label: "Sunday", "checkedByDefault": false },
-]
+];
 
 function processFormData(formData) {
     const formDataKeyValues = Array.from(formData.entries()).map(x => {
